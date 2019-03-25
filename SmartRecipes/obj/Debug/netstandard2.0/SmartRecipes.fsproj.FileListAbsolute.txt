@@ -1,7 +1,0 @@
-/Users/pepa/Projects/SmartRecipes.Client/SmartRecipes/bin/Debug/netstandard2.0/SmartRecipes.deps.json
-/Users/pepa/Projects/SmartRecipes.Client/SmartRecipes/bin/Debug/netstandard2.0/SmartRecipes.dll
-/Users/pepa/Projects/SmartRecipes.Client/SmartRecipes/bin/Debug/netstandard2.0/SmartRecipes.pdb
-/Users/pepa/Projects/SmartRecipes.Client/SmartRecipes/obj/Debug/netstandard2.0/XamlC.stamp
-/Users/pepa/Projects/SmartRecipes.Client/SmartRecipes/obj/Debug/netstandard2.0/SmartRecipes.dll
-/Users/pepa/Projects/SmartRecipes.Client/SmartRecipes/obj/Debug/netstandard2.0/SmartRecipes.pdb
-/Users/pepa/Projects/SmartRecipes.Client/SmartRecipes/obj/Debug/netstandard2.0/SmartRecipes.fsprojAssemblyReference.cache
