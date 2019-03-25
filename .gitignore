@@ -1,13 +1,5 @@
-# Created by .ignore support plugin (hsz.mobi)
-### Example user template template
-### Example user template
-
-# IntelliJ project files
 .idea
 .vs
-*.iml
-out
-gen
-SmartRecipes.Android/obj/*
-SmartRecipes.iOS/bin/*
-packages/*
+SmartRecipes.Android/obj
+SmartRecipes.iOS/bin
+packages
