@@ -1,5 +1,6 @@
 .idea
 .vs
+SmartRecipes/obj
 SmartRecipes.Android/obj
 SmartRecipes.iOS/bin
 packages
