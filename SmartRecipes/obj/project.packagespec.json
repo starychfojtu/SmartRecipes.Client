@@ -1,0 +1,66 @@
+﻿{
+  "version": "1.0.0",
+  "restore": {
+    "projectUniqueName": "/Users/pepa/Projects/SmartRecipes.Client/SmartRecipes/SmartRecipes.fsproj",
+    "projectName": "SmartRecipes",
+    "projectPath": "/Users/pepa/Projects/SmartRecipes.Client/SmartRecipes/SmartRecipes.fsproj",
+    "outputPath": "/Users/pepa/Projects/SmartRecipes.Client/SmartRecipes/obj/",
+    "projectStyle": "PackageReference",
+    "fallbackFolders": [
+      "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
+    ],
+    "originalTargetFrameworks": [
+      "netstandard2.0"
+    ],
+    "frameworks": {
+      "netstandard2.0": {
+        "projectReferences": {}
+      }
+    }
+  },
+  "frameworks": {
+    "netstandard2.0": {
+      "dependencies": {
+        "FSharp.Core": {
+          "target": "Package",
+          "version": "[4.2.*, )"
+        },
+        "Fabulous.Core": {
+          "target": "Package",
+          "version": "[0.33.1, )"
+        },
+        "Fabulous.CustomControls": {
+          "target": "Package",
+          "version": "[0.33.1, )"
+        },
+        "Fabulous.LiveUpdate": {
+          "target": "Package",
+          "version": "[0.33.1, )"
+        },
+        "NETStandard.Library": {
+          "suppressParent": "All",
+          "target": "Package",
+          "version": "[2.0.3, )",
+          "autoReferenced": true
+        },
+        "Newtonsoft.Json": {
+          "target": "Package",
+          "version": "[11.0.2, )"
+        },
+        "Xamarin.Essentials": {
+          "target": "Package",
+          "version": "[0.6.0-preview, )"
+        },
+        "Xamarin.Forms": {
+          "target": "Package",
+          "version": "[3.4.0.1009999, )"
+        }
+      },
+      "imports": [
+        "net461"
+      ],
+      "assetTargetFallback": true,
+      "warn": true
+    }
+  }
+}

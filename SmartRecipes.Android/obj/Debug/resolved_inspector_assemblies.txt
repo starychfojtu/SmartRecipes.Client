@@ -1,0 +1,2 @@
+/Applications/Visual Studio.app/Contents/Resources/lib/monodevelop/AddIns/Xamarin.Interactive.XS/Xamarin Inspector.app/Contents/SharedSupport/Agents/Android/Xamarin.Interactive.dll
+/Applications/Visual Studio.app/Contents/Resources/lib/monodevelop/AddIns/Xamarin.Interactive.XS/Xamarin Inspector.app/Contents/SharedSupport/Agents/Android/Xamarin.Interactive.Android.dll
