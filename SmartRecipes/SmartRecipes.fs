@@ -4,35 +4,43 @@ open Fabulous.Core
 open Xamarin.Forms
 
 module App =
+
     type Page =
         | LoginPage
+        | ShoppingListPage
     
     type Model = {
-        AccessToken: string option
-        CurrentPage: Page
-        LoginPage: LoginPage.Model
+         CurrentPage: Page
+         LoginPage: LoginPage.Model
+         ShoppingListPage: ShoppingListPage.Model
     }
-
+            
     type Message = 
         | LoginPageMessage of LoginPage.Message
+        | ShoppingListPageMessage of ShoppingListPage.Message
 
     let initModel = {
-        AccessToken = None
         CurrentPage = LoginPage
         LoginPage = LoginPage.initModel
+        ShoppingListPage = ShoppingListPage.initModel
     }
 
     let init () = initModel, Cmd.none
     
     let update msg model =
         match msg with
-        | LoginPageMessage loginPageMsg ->
-             let (newModel, cmd) = LoginPage.update loginPageMsg model.LoginPage
-             ({ model with LoginPage = newModel }, Cmd.map (LoginPageMessage) cmd)
+        | LoginPageMessage msg ->
+             let (newModel, cmd) = LoginPage.update msg model.LoginPage
+             { model with LoginPage = newModel }, Cmd.map (LoginPageMessage) cmd
+        | ShoppingListPageMessage msg ->
+             let (newModel, cmd) = ShoppingListPage.update model.ShoppingListPage msg
+             { model with ShoppingListPage = newModel }, Cmd.map (ShoppingListPageMessage) cmd
+         
 
     let view model dispatch =    
         match model.CurrentPage with
-        | LoginPage -> LoginPage.view model.LoginPage (fun msg -> dispatch (LoginPageMessage msg))
+        | LoginPage -> LoginPage.view model.LoginPage (LoginPageMessage >> dispatch)
+        | ShoppingListPage -> ShoppingListPage.view model.ShoppingListPage (ShoppingListPageMessage >> dispatch)
 
     let program = Program.mkProgram init update view
 

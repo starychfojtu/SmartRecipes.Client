@@ -7,7 +7,9 @@
 
   <ItemGroup>
     <Compile Include="Api.fs" />
+    <Compile Include="Elements.fs" />
     <Compile Include="LoginPage.fs" />
+    <Compile Include="ShoppingListPage.fs" />
     <Compile Include="SmartRecipes.fs" />
   </ItemGroup>
   <ItemGroup>
