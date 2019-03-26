@@ -8,6 +8,7 @@ module App =
         | LoginPage
     
     type Model = {
+        AccessToken: string option
         CurrentPage: Page
         LoginPage: LoginPage.Model
     }
@@ -16,6 +17,7 @@ module App =
         | LoginPageMessage of LoginPage.Message
 
     let initModel = {
+        AccessToken = None
         CurrentPage = LoginPage
         LoginPage = LoginPage.initModel
     }
@@ -26,7 +28,7 @@ module App =
         match msg with
         | LoginPageMessage loginPageMsg ->
              let (newModel, cmd) = LoginPage.update loginPageMsg model.LoginPage
-             ({ model with LoginPage = newModel }, cmd)
+             ({ model with LoginPage = newModel }, Cmd.map (LoginPageMessage) cmd)
 
     let view model dispatch =    
         match model.CurrentPage with

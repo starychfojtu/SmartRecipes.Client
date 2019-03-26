@@ -3,40 +3,54 @@ namespace SmartRecipes
 open Fabulous.Core
 open Fabulous.DynamicViews
 open Xamarin.Forms
+open Api
 
 module LoginPage =
     
-    type EmailError =
-        | EmailIsNotValid
-        
-    type PasswordError =
-        | PasswordIsShorterThan of int
-      
     type Model = {
         Email: string
-        EmailError: EmailError option
+        EmailError: string option
         Password: string
-        PasswordError: PasswordError option
+        PasswordError: string option
+        Error: string option
+        IsLoading: bool
     }
     
     type Message = 
         | EmailInputChanged of string 
         | PasswordInputChanged of string 
         | SignIn
+        | SignInResponseRecieved of Result<SignInResponse, SignInError>
         | GoToSignUp
     
     let initModel = {
-        Email = "";
-        EmailError = None;
-        Password = "";
-        PasswordError = None;
+        Email = ""
+        EmailError = None
+        Password = ""
+        PasswordError = None
+        Error = None
+        IsLoading = false
     }
     
-    let update msg model =
+    let signIn (model: Model) =
+        let message =  async {
+            let! response = sendSignInRequest model.Email model.Password
+            return SignInResponseRecieved response
+        }
+        ({ model with IsLoading = true }, message |> Cmd.ofAsyncMsg )
+         
+    let processError error model =
+        (model, Cmd.none)
+    
+    let update msg (model: Model) =
         match msg with
         | EmailInputChanged email -> { model with Email = email }, Cmd.none
         | PasswordInputChanged password -> { model with Password = password }, Cmd.none
-        | SignIn -> model, Cmd.none
+        | SignIn -> signIn model
+        | SignInResponseRecieved response ->
+            match response with
+            | Ok _ -> model, Cmd.none
+            | Error e -> processError e model
         | GoToSignUp -> model, Cmd.none
         
     let entry value callback =
