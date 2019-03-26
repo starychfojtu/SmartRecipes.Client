@@ -37,10 +37,10 @@ module LoginPage =
             let! response = sendSignInRequest model.Email model.Password
             return SignInResponseRecieved response
         }
-        ({ model with IsLoading = true }, message |> Cmd.ofAsyncMsg )
+        ({ model with IsLoading = true }, message |> Cmd.ofAsyncMsg)
          
-    let processError error model =
-        (model, Cmd.none)
+    let processError (error: SignInError) (model: Model) =
+        ({ model with Error = Some error.Error; EmailError = error.EmailError; PasswordError = error.PasswordError }, Cmd.none)
     
     let update msg (model: Model) =
         match msg with
@@ -53,15 +53,19 @@ module LoginPage =
             | Error e -> processError e model
         | GoToSignUp -> model, Cmd.none
         
-    let entry value callback =
-        View.Entry(
+    let entry value error callback = seq {
+        yield View.Entry(
             text = value,
             completed = (fun v -> if v <> value then callback v),
             created = (fun e -> e.Unfocused.Add(fun args -> if value <> e.Text then callback e.Text)),
             verticalOptions = LayoutOptions.FillAndExpand
         )
         
-    let passwordEntry value callback = entry value callback |> ViewElementExtensions.isPassword true
+        if Option.isSome error then
+            yield  View.Label(text = Option.get error)
+    }
+        
+    let passwordEntry value error callback = entry value error callback |> Seq.map (ViewElementExtensions.isPassword true)
         
     let view (model: Model) dispatch =
         View.ContentPage(
@@ -70,12 +74,13 @@ module LoginPage =
                 margin = 8.0,
                 verticalOptions = LayoutOptions.CenterAndExpand,
                 children = [
-                    View.Label(text = "Smart Recipes", horizontalTextAlignment = TextAlignment.Center)
-                    View.Label(text = "Organize cooking", horizontalTextAlignment = TextAlignment.Center)
-                    entry model.Email (fun s -> dispatch (EmailInputChanged s))
-                    passwordEntry model.Password (fun s -> dispatch (PasswordInputChanged s))
-                    View.Button(text = "Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignIn))
-                    View.Button(text = "Don't have an account yet? Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch GoToSignUp))
+                    yield View.Label(text = "Smart Recipes", horizontalTextAlignment = TextAlignment.Center)
+                    yield View.Label(text = "Organize cooking", horizontalTextAlignment = TextAlignment.Center)
+                    if Option.isSome model.Error then yield  View.Label(text = Option.get model.Error)
+                    for e in entry model.Email model.EmailError (fun s -> dispatch (EmailInputChanged s)) do yield e
+                    for e in passwordEntry model.Password model.PasswordError (fun s -> dispatch (PasswordInputChanged s)) do yield e
+                    yield View.Button(text = "Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignIn))
+                    yield View.Button(text = "Don't have an account yet? Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch GoToSignUp))
                 ]
             )
         )

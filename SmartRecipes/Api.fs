@@ -74,6 +74,7 @@ module Api =
     let sendSignInRequest email password: Async<Result<SignInResponse, SignInError>> =
 //        let body = JsonConvert.SerializeObject({ Email = email; Password = password; })
 //        sendRequest "/signIn" body parseSignInResponse parseSignInError
-        async { return Ok { AccessToken = "fake"; AccountId = "fake"; ExpirationUtc = DateTime.UtcNow } }
+        // async { return Ok { AccessToken = "fake"; AccountId = "fake"; ExpirationUtc = DateTime.UtcNow } }
+        async { return Error { Error = "Something is wrong"; EmailError = Some "Nope"; PasswordError = Some "Also nope" } }
         
         
