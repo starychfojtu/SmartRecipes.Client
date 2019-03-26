@@ -1,5 +1,6 @@
 namespace SmartRecipes
 
+[<RequireQualifiedAccess>]
 module ShoppingListPage =
     open Fabulous.Core
     open Fabulous.DynamicViews

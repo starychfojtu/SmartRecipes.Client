@@ -30,8 +30,11 @@ module App =
     let update msg model =
         match msg with
         | LoginPageMessage msg ->
-             let (newModel, cmd) = LoginPage.update msg model.LoginPage
-             { model with LoginPage = newModel }, Cmd.map (LoginPageMessage) cmd
+             let result = LoginPage.update msg model.LoginPage
+             match result with
+             | LoginPage.UpdateResult.ModelUpdated (m, cmd) -> { model with LoginPage = m }, Cmd.map (LoginPageMessage) cmd
+             | LoginPage.UpdateResult.SignedIn -> { model with CurrentPage = ShoppingListPage }, Cmd.none // TODO: cmd for init
+             | LoginPage.UpdateResult.SignUp -> failwith "Not implemented"
         | ShoppingListPageMessage msg ->
              let (newModel, cmd) = ShoppingListPage.update model.ShoppingListPage msg
              { model with ShoppingListPage = newModel }, Cmd.map (ShoppingListPageMessage) cmd

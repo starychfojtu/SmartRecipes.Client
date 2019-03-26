@@ -5,6 +5,7 @@ open Fabulous.DynamicViews
 open Xamarin.Forms
 open Api
 
+[<RequireQualifiedAccess>]
 module LoginPage =
     
     type Model = {
@@ -19,7 +20,7 @@ module LoginPage =
     type Message = 
         | EmailInputChanged of string 
         | PasswordInputChanged of string 
-        | SignIn
+        | SignInRequested
         | SignInResponseRecieved of Result<SignInResponse, SignInError>
         | GoToSignUp
     
@@ -41,17 +42,22 @@ module LoginPage =
          
     let processError (error: SignInError) (model: Model) =
         ({ model with Error = Some error.Error; EmailError = error.EmailError; PasswordError = error.PasswordError }, Cmd.none)
+        
+    type UpdateResult =
+        | SignUp
+        | SignedIn
+        | ModelUpdated of Model * Cmd<Message>
     
     let update msg (model: Model) =
         match msg with
-        | EmailInputChanged email -> { model with Email = email }, Cmd.none
-        | PasswordInputChanged password -> { model with Password = password }, Cmd.none
-        | SignIn -> signIn model
+        | EmailInputChanged email -> ModelUpdated ({ model with Email = email }, Cmd.none)
+        | PasswordInputChanged password -> ModelUpdated ({ model with Password = password }, Cmd.none)
+        | SignInRequested -> signIn model |> ModelUpdated
         | SignInResponseRecieved response ->
             match response with
-            | Ok _ -> model, Cmd.none
-            | Error e -> processError e model
-        | GoToSignUp -> model, Cmd.none
+            | Ok _ -> SignedIn
+            | Error e -> processError e model |> ModelUpdated
+        | GoToSignUp -> SignUp
         
     let view (model: Model) dispatch =
         View.ContentPage(
@@ -65,7 +71,7 @@ module LoginPage =
                     if Option.isSome model.Error then yield  View.Label(text = Option.get model.Error)
                     for e in Elements.entry model.Email model.EmailError (fun s -> dispatch (EmailInputChanged s)) do yield e
                     for e in Elements.passwordEntry model.Password model.PasswordError (fun s -> dispatch (PasswordInputChanged s)) do yield e
-                    yield View.Button(text = "Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignIn))
+                    yield View.Button(text = "Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignInRequested))
                     yield View.Button(text = "Don't have an account yet? Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch GoToSignUp))
                 ]
             )
