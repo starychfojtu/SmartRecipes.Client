@@ -3,10 +3,10 @@ namespace SmartRecipes
 open Fabulous.Core
 open Fabulous.DynamicViews
 open Xamarin.Forms
-open Api
 
 [<RequireQualifiedAccess>]
 module LoginPage =
+    open Domain
     
     type Model = {
         Email: string
@@ -21,7 +21,7 @@ module LoginPage =
         | EmailInputChanged of string 
         | PasswordInputChanged of string 
         | SignInRequested
-        | SignInResponseRecieved of Result<SignInResponse, SignInError>
+        | SignInResponseRecieved of Result<Api.SignInResponse, Api.SignInError>
         | GoToSignUp
     
     let initModel = {
@@ -35,17 +35,17 @@ module LoginPage =
     
     let signIn (model: Model) =
         let message =  async {
-            let! response = sendSignInRequest model.Email model.Password
+            let! response = Api.sendSignInRequest model.Email model.Password
             return SignInResponseRecieved response
         }
         ({ model with IsLoading = true }, message |> Cmd.ofAsyncMsg)
          
-    let processError (error: SignInError) (model: Model) =
+    let processError (error: Api.SignInError) (model: Model) =
         ({ model with Error = Some error.Error; EmailError = error.EmailError; PasswordError = error.PasswordError }, Cmd.none)
         
     type UpdateResult =
         | SignUp
-        | SignedIn
+        | SignedIn of AccessToken
         | ModelUpdated of Model * Cmd<Message>
     
     let update msg (model: Model) =
@@ -55,7 +55,7 @@ module LoginPage =
         | SignInRequested -> signIn model |> ModelUpdated
         | SignInResponseRecieved response ->
             match response with
-            | Ok _ -> SignedIn
+            | Ok r -> SignedIn r.AccessToken
             | Error e -> processError e model |> ModelUpdated
         | GoToSignUp -> SignUp
         

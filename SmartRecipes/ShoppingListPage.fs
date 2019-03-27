@@ -2,41 +2,26 @@ namespace SmartRecipes
 
 [<RequireQualifiedAccess>]
 module ShoppingListPage =
+    open Domain
     open Fabulous.Core
     open Fabulous.DynamicViews
     open Xamarin.Forms
-    
-    type FoodstuffId = FoodstuffId of string
-    
-    type Amount = {
-        Value: float
-        Unit: string
-    }
-    
-    type Foodstuff = {
-        Id: FoodstuffId
-        Name: string
-        Unit: string
-        AmounStep: Amount
-    }
     
     type Item = {
         Foodstuff: Foodstuff
         Amount: float
     }
     
-    type Model = {
-        Items: Item list
-        IsLoading: bool
+    type LoadedModel = {
+        Items: Item seq
     }
     
-    let initModel = {
-        Items = List.empty
-        IsLoading = true
-    }
-    
+    type Model =
+        | Loading
+        | Loaded of LoadedModel
+        
     type Message =
-        | PageLoaded of Item list
+        | PageLoaded of LoadedModel
         | ItemAmountIncreaseRequested of Item
         | ItemAmountIncreased of Item
         | ItemAmountDecreaseRequested of Item
@@ -44,14 +29,59 @@ module ShoppingListPage =
         | ItemRemoved of Item
         | AddItem
         
-    let update model = function
-        | PageLoaded items -> ({ model with Items = items; IsLoading = false }, Cmd.none)
-        | ItemAmountIncreaseRequested id -> (model, Cmd.none)
-        | ItemAmountDecreased id -> (model, Cmd.none)
-        | ItemAmountDecreaseRequested id -> (model, Cmd.none)
-        | ItemAmountIncreased id -> (model, Cmd.none)
-        | ItemRemoved id -> (model, Cmd.none)
-        | AddItem -> (model, Cmd.none)
+    // Initialization
+    
+    let initModel = Loading
+    
+    let private getShoppingList accessToken = async {
+        let! shoppingListResponse = Api.sendGetShoppingListRequest accessToken
+        return shoppingListResponse.ShoppingList;
+    }
+    
+    let private getFoodstuffs (shoppingList: ShoppingList) accessToken = async {
+        let foodstuffIds = Seq.map (fun i -> i.FoodstuffId) shoppingList.Items
+        let! foodstuffResponse = Api.sendGetFoodstuffsByIdRequest foodstuffIds accessToken
+        let foodstuffs = foodstuffResponse.Foodstuffs;
+        return Seq.map (fun (f: Foodstuff) -> (f.Id, f)) foodstuffs |> Map.ofSeq
+    }
+    
+    let private toItems foodstuffs =
+         Seq.map (fun i -> { Foodstuff = Map.find i.FoodstuffId foodstuffs; Amount = i.Amount })
+    
+    let init accessToken = async {
+        let! shoppingList = getShoppingList accessToken;
+        let! foodstuffs = getFoodstuffs shoppingList accessToken;
+        let items = toItems foodstuffs shoppingList.Items
+        return PageLoaded { Items = items }
+    }
+    
+    // Update
+    
+    let update model msg =
+        match model with
+        | Loading ->
+            match msg with
+            | PageLoaded loadedModel ->
+                Loaded loadedModel, Cmd.none
+            | _ ->
+                failwith "Unhandled message"
+        | Loaded m ->
+            match msg with
+            | ItemAmountIncreaseRequested id ->
+                (Loaded m, Cmd.none)
+            | ItemAmountDecreased id ->
+                (Loaded m, Cmd.none)
+            | ItemAmountDecreaseRequested id ->
+                (Loaded m, Cmd.none)
+            | ItemAmountIncreased id ->
+                (Loaded m, Cmd.none)
+            | ItemRemoved id ->
+                (Loaded m, Cmd.none)
+            | AddItem ->
+                (Loaded m, Cmd.none)
+            | _ -> failwith "Unhandled message"
+        
+    // View
 
     let itemView increase decrease item =
         View.ViewCell(
@@ -67,7 +97,7 @@ module ShoppingListPage =
                                 verticalOptions = LayoutOptions.Center
                             )
                             yield View.Label(
-                                text = item.Amount.ToString() + " " + item.Foodstuff.Unit,
+                                text = item.Amount.ToString() + " " + item.Foodstuff.AmountStep.Unit.ToString(),
                                 verticalOptions = LayoutOptions.Center
                             )
                         ]                 
@@ -98,16 +128,19 @@ module ShoppingListPage =
             )        
         )
         
-    let view model dispatch =
-        let createItemView = itemView (ItemAmountDecreaseRequested >> dispatch) (ItemAmountIncreaseRequested >> dispatch)
-        View.ContentPage(
-            content = View.StackLayout(
-                padding = 16.0,
-                children = [
-                    yield View.ListView(
-                        items = List.map createItemView model.Items,
-                        rowHeight = 64
-                    )
-                ]
+    let view dispatch = function
+        | Loading -> View.ContentPage()
+        | Loaded m -> 
+            let createItemView = itemView (ItemAmountDecreaseRequested >> dispatch) (ItemAmountIncreaseRequested >> dispatch)
+            View.ContentPage(
+                content = View.StackLayout(
+                    padding = 16.0,
+                    children = [
+                        yield View.Label "Yay"
+                        yield View.ListView(
+                            items = Seq.map createItemView m.Items,
+                            rowHeight = 64
+                        )
+                    ]
+                )
             )
-        )
