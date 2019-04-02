@@ -10,8 +10,10 @@
     <Compile Include="Domain.fs" />
     <Compile Include="Api.fs" />
     <Compile Include="Elements.fs" />
+    <Compile Include="SignUpPage.fs" />
     <Compile Include="LoginPage.fs" />
     <Compile Include="ShoppingListPage.fs" />
+    <Compile Include="ShoppingListRecipePage.fs" />
     <Compile Include="SmartRecipes.fs" />
   </ItemGroup>
   <ItemGroup>

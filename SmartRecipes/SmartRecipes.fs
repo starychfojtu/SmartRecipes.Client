@@ -23,6 +23,7 @@ module App =
         CurrentPage: Page
         AccessToken: AccessToken
         ShoppingListPage: ShoppingListPage.Model
+        ShoppingListRecipePage: ShoppingListRecipePage.Model
     }
     
     type Model = 
@@ -32,6 +33,7 @@ module App =
     type Message = 
         | LoginPageMessage of LoginPage.Message
         | ShoppingListPageMessage of ShoppingListPage.Message
+        | ShoppingListRecipeMessage of ShoppingListRecipePage.Message
         | ChangePage of Page
 
     let initModel = Unauthorized {
@@ -45,10 +47,13 @@ module App =
         CurrentPage = ShoppingListPage
         AccessToken = accessToken
         ShoppingListPage = ShoppingListPage.initModel
+        ShoppingListRecipePage = ShoppingListRecipePage.initModel
     }
     
     let initAuthorizedCommand accessToken =
-        ShoppingListPage.init accessToken |> Cmd.ofAsyncMsg |> Cmd.map ShoppingListPageMessage
+        let shoppingListPageInit = ShoppingListPage.init accessToken |> Cmd.ofAsyncMsg |> Cmd.map ShoppingListPageMessage
+        let shoppingListRecipePageInit = ShoppingListRecipePage.init accessToken |> Cmd.ofAsyncMsg |> Cmd.map ShoppingListRecipeMessage
+        Cmd.batch [ shoppingListPageInit; shoppingListRecipePageInit ]
     
     let update msg = function
         | Unauthorized m -> 
@@ -71,6 +76,9 @@ module App =
             | ShoppingListPageMessage msg ->
                  let (newModel, cmd) = ShoppingListPage.update m.ShoppingListPage msg
                  Authorized { m with ShoppingListPage = newModel }, Cmd.map (ShoppingListPageMessage) cmd
+            | ShoppingListRecipeMessage msg ->
+                 let (newModel, cmd) = ShoppingListRecipePage.update m.ShoppingListRecipePage msg
+                 Authorized { m with ShoppingListRecipePage = newModel }, Cmd.map (ShoppingListRecipeMessage) cmd
             | _ ->
                 failwith "Unhandled message."
               
@@ -88,10 +96,10 @@ module App =
             )
         )
         
-    let shoppingListTabPage shoppingListPage =     
+    let shoppingListTabPage chidren =     
          View.TabbedPage(
             title = "Shopping list",
-            children = [ shoppingListPage ]
+            children = chidren
         )
 
     let view dispatch = function  
@@ -101,10 +109,10 @@ module App =
                 LoginPage.view m.LoginPage (LoginPageMessage >> dispatch)
         | Authorized m -> 
             match m.CurrentPage with
-            | ShoppingListPage -> 
-                ShoppingListPage.view (ShoppingListPageMessage >> dispatch) m.ShoppingListPage 
-                |> shoppingListTabPage 
-                |> (appContainer dispatch)
+            | ShoppingListPage ->
+                let mainPage = ShoppingListPage.view (ShoppingListPageMessage >> dispatch) m.ShoppingListPage
+                let recipePage = ShoppingListRecipePage.view (ShoppingListRecipeMessage >> dispatch) m.ShoppingListRecipePage
+                shoppingListTabPage [ mainPage; recipePage ] |> (appContainer dispatch)
                 
     let programView model dispatch = view dispatch model    
     let program = Program.mkProgram init update programView

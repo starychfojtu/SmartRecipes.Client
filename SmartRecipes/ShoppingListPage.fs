@@ -84,49 +84,47 @@ module ShoppingListPage =
     // View
 
     let itemView increase decrease item =
-        View.ViewCell(
-            view = View.StackLayout(
-                orientation = StackOrientation.Horizontal, 
-                children = [
-                    yield View.StackLayout(
-                        verticalOptions = LayoutOptions.CenterAndExpand,
-                        children = [
-                            yield View.Label(
-                                text = item.Foodstuff.Name,
-                                horizontalOptions = LayoutOptions.Start,
-                                verticalOptions = LayoutOptions.Center
-                            )
-                            yield View.Label(
-                                text = item.Amount.ToString() + " " + item.Foodstuff.AmountStep.Unit.ToString(),
-                                verticalOptions = LayoutOptions.Center
-                            )
-                        ]                 
-                    )
-                    yield View.StackLayout(
-                        horizontalOptions = LayoutOptions.EndAndExpand,
-                        orientation = StackOrientation.Horizontal,
-                        children = [
-                            yield View.Button(
-                                image = "remove",
-                                cornerRadius = 24,
-                                widthRequest = 48.0,
-                                heightRequest = 48.0,
-                                verticalOptions = LayoutOptions.Center,
-                                command = (fun () -> decrease item)
-                            )
-                            yield View.Button(
-                                image = "add",
-                                cornerRadius = 24,
-                                widthRequest = 48.0,
-                                heightRequest = 48.0,
-                                verticalOptions = LayoutOptions.Center,
-                                command = (fun () -> increase item)
-                            )
-                        ]                 
-                    )
-                ]         
-            )        
-        )
+        View.StackLayout(
+            orientation = StackOrientation.Horizontal, 
+            children = [
+                yield View.StackLayout(
+                    verticalOptions = LayoutOptions.CenterAndExpand,
+                    children = [
+                        yield View.Label(
+                            text = item.Foodstuff.Name,
+                            horizontalOptions = LayoutOptions.Start,
+                            verticalOptions = LayoutOptions.Center
+                        )
+                        yield View.Label(
+                            text = item.Amount.ToString() + " " + item.Foodstuff.AmountStep.Unit.ToString(),
+                            verticalOptions = LayoutOptions.Center
+                        )
+                    ]                 
+                )
+                yield View.StackLayout(
+                    horizontalOptions = LayoutOptions.EndAndExpand,
+                    orientation = StackOrientation.Horizontal,
+                    children = [
+                        yield View.Button(
+                            text = "remove",
+                            cornerRadius = 24,
+                            widthRequest = 48.0,
+                            heightRequest = 48.0,
+                            verticalOptions = LayoutOptions.Center,
+                            command = (fun () -> decrease item)
+                        )
+                        yield View.Button(
+                            text = "add",
+                            cornerRadius = 24,
+                            widthRequest = 48.0,
+                            heightRequest = 48.0,
+                            verticalOptions = LayoutOptions.Center,
+                            command = (fun () -> increase item)
+                        )
+                    ]                 
+                )
+            ]         
+        )        
         
     let view dispatch = function
         | Loading -> View.ContentPage()
@@ -136,7 +134,6 @@ module ShoppingListPage =
                 content = View.StackLayout(
                     padding = 16.0,
                     children = [
-                        yield View.Label "Yay"
                         yield View.ListView(
                             items = Seq.map createItemView m.Items,
                             rowHeight = 64
