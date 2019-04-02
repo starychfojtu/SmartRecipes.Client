@@ -10,6 +10,7 @@ module App =
 
     type UnauthorizedPage =     
         | LoginPage
+        | SignUpPage
     
     type Page =
         | ShoppingListPage
@@ -17,6 +18,7 @@ module App =
     type UnauthorizedModel = {
         CurrentPage: UnauthorizedPage
         LoginPage: LoginPage.Model
+        SignUpPage: SignUpPage.Model
     }
     
     type AuthorizedModel = {
@@ -32,6 +34,7 @@ module App =
             
     type Message = 
         | LoginPageMessage of LoginPage.Message
+        | SignUpPageMessage of SignUpPage.Message
         | ShoppingListPageMessage of ShoppingListPage.Message
         | ShoppingListRecipeMessage of ShoppingListRecipePage.Message
         | ChangePage of Page
@@ -39,6 +42,7 @@ module App =
     let initModel = Unauthorized {
         CurrentPage = LoginPage
         LoginPage = LoginPage.initModel
+        SignUpPage = SignUpPage.initModel
     }
 
     let init () = initModel, Cmd.none
@@ -66,7 +70,16 @@ module App =
                 | LoginPage.UpdateResult.SignedIn token -> 
                     initAuthorizedModel token, initAuthorizedCommand token
                 | LoginPage.UpdateResult.SignUp -> 
-                    failwith "Not implemented"
+                    Unauthorized { m with CurrentPage = SignUpPage }, Cmd.none
+            | SignUpPageMessage msg ->
+                let result = SignUpPage.update msg m.SignUpPage
+                match result with
+                | SignUpPage.UpdateResult.ModelUpdated (newModel, cmd) -> 
+                    Unauthorized { m with SignUpPage = newModel }, Cmd.map (SignUpPageMessage) cmd
+                | SignUpPage.UpdateResult.SignedUp -> 
+                    Unauthorized { m with CurrentPage = LoginPage }, Cmd.none
+                | SignUpPage.UpdateResult.SignIn -> 
+                    Unauthorized { m with CurrentPage = LoginPage }, Cmd.none
             | _ ->
                 failwith "Unhandled message."
         | Authorized m ->     
@@ -107,6 +120,8 @@ module App =
             match m.CurrentPage with
             | LoginPage -> 
                 LoginPage.view m.LoginPage (LoginPageMessage >> dispatch)
+            | SignUpPage -> 
+                SignUpPage.view m.SignUpPage (SignUpPageMessage >> dispatch)
         | Authorized m -> 
             match m.CurrentPage with
             | ShoppingListPage ->

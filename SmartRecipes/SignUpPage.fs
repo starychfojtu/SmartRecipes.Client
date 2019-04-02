@@ -6,7 +6,6 @@ open Xamarin.Forms
 
 [<RequireQualifiedAccess>]
 module SignUpPage =
-    open Domain
     
     type Model = {
         Email: string
@@ -71,8 +70,8 @@ module SignUpPage =
                     if Option.isSome model.Error then yield  View.Label(text = Option.get model.Error)
                     for e in Elements.entry model.Email model.EmailError (fun s -> dispatch (EmailInputChanged s)) do yield e
                     for e in Elements.passwordEntry model.Password model.PasswordError (fun s -> dispatch (PasswordInputChanged s)) do yield e
-                    yield View.Button(text = "Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignInRequested))
-                    yield View.Button(text = "Don't have an account yet? Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch GoToSignUp))
+                    yield View.Button(text = "Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignUpRequested))
+                    yield View.Button(text = "Already have an account? Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch GoToSignIn))
                 ]
             )
         )

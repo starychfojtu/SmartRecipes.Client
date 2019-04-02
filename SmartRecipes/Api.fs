@@ -90,6 +90,8 @@ module Api =
             then async { return Ok { AccessToken = { Value = "Fake"; ExpirationUtc = DateTime.UtcNow } } }
             else async { return Error { Error = "Something is wrong"; EmailError = Some "Nope"; PasswordError = Some "Also nope" } }
             
+    // Sign up
+            
     // Get shopping list
     
     type GetShoppingListResponse = {
