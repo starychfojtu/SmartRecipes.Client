@@ -189,13 +189,6 @@
     <AndroidResource Include="Resources\mipmap-xxhdpi\launcher_foreground.png" />
     <AndroidResource Include="Resources\mipmap-xxxhdpi\Icon.png" />
     <AndroidResource Include="Resources\mipmap-xxxhdpi\launcher_foreground.png" />
-    <None Include="packages.config" />
-    <ProjectReference Include="..\SmartRecipes\SmartRecipes.fsproj">
-      <Project>{5F03AB34-2904-4691-AF3F-BECEC59B1DBC}</Project>
-      <Name>SmartRecipes</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="Resources\drawable-hdpi\add.png" />
     <Content Include="Resources\drawable-hdpi\add_cart.png" />
     <Content Include="Resources\drawable-hdpi\delete.png" />
@@ -226,6 +219,11 @@
     <Content Include="Resources\drawable\blurbg.jpg" />
     <Content Include="Resources\drawable\icon.png" />
     <Content Include="Resources\drawable\rounded_corners.xml" />
+    <None Include="packages.config" />
+    <ProjectReference Include="..\SmartRecipes\SmartRecipes.fsproj">
+      <Project>{5F03AB34-2904-4691-AF3F-BECEC59B1DBC}</Project>
+      <Name>SmartRecipes</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.FSharp.targets" />
   <Import Project="..\packages\Xamarin.Android.Support.Compat.27.0.2.1\build\MonoAndroid81\Xamarin.Android.Support.Compat.targets" Condition="Exists('..\packages\Xamarin.Android.Support.Compat.27.0.2.1\build\MonoAndroid81\Xamarin.Android.Support.Compat.targets')" />

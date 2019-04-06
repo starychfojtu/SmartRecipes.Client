@@ -2,6 +2,8 @@ namespace SmartRecipes
 
 [<RequireQualifiedAccess>]
 module Api =
+    open System.IO
+    open System.Net
     open System.Net.Mail
     open Domain
     open FSharp.Data
@@ -20,6 +22,8 @@ module Api =
             "message": "Must containt @"
         }]
     } """>
+    
+    let private unhandledError () = failwith "Unhandled API error."
 
     let private baseUri = System.Uri("https://smart-recipes.herokuapp.com/")
     
@@ -30,20 +34,21 @@ module Api =
             
     let private sendRequest httpMethod (path: string) body accessToken parseSuccess parseError: Async<Result<'a, 'b>> =
         async {
-            let! response = Http.AsyncRequest(
-                Uri(baseUri, path).ToString(),
-                httpMethod = httpMethod,
-                body = TextRequest body,
-                headers = seq {
-                    if Option.isSome accessToken then yield ("AccessToken", Option.get accessToken)
-                    yield ("Content-Type", "application/json")
-                }
-            )
-            let body = response.Body.ToString();
-            return
-                if response.StatusCode = HttpStatusCodes.OK
-                then body |> parseSuccess |> Ok
-                else body |> parseApiError |> parseError |> Error
+            try
+                let! response = Http.AsyncRequest(
+                    Uri(baseUri, path).ToString(),
+                    httpMethod = httpMethod,
+                    body = TextRequest body,
+                    headers = seq {
+                        if Option.isSome accessToken then yield ("AccessToken", Option.get accessToken)
+                        yield ("Content-Type", "application/json")
+                    }
+                )
+                return response.Body.ToString() |> parseSuccess |> Ok
+            with
+            | :? WebException as ex ->
+                use sr = new StreamReader(ex.Response.GetResponseStream())
+                return sr.ReadToEnd () |> parseApiError |> parseError |> Error
         }
         
     let private get path body accessToken parseSuccess parseError: Async<Result<'a, 'b>> =
@@ -63,11 +68,8 @@ module Api =
         AccessToken: AccessToken
     }
     
-    type SignInError = {
-        EmailError: string option
-        PasswordError: string option
-        Error: string
-    }
+    type SignInError =
+        | InvalidCredentials
     
     type private SignInResponseJson = JsonProvider<""" {
         "value": "random-token-hash",
@@ -80,9 +82,9 @@ module Api =
         { AccessToken = { Value = json.Value; ExpirationUtc = json.ExpirationUtc } }
         
     let private parseSignInError apiError =
-        let emailError = Map.tryFind "Email" apiError.ParameterErrors
-        let passwordError = Map.tryFind "Password" apiError.ParameterErrors
-        { EmailError = emailError; PasswordError = passwordError;  Error = apiError.Message }
+        match apiError.Message with
+        | "Invalid credentials." -> InvalidCredentials
+        | _ -> unhandledError ()
 
     let sendSignInRequest email password: Async<Result<SignInResponse, SignInError>> =
         let body = JsonConvert.SerializeObject({ Email = email; Password = password; })
@@ -100,8 +102,8 @@ module Api =
     }
     
     type SignUpParametersError = {
-        Email: string option
-        Password: string option
+        EmailError: string option
+        PasswordError: string option
     }
     
     type SignUpError =
@@ -123,8 +125,8 @@ module Api =
         | "Invalid parameters." ->
             let emailError = Map.tryFind "Email" apiError.ParameterErrors
             let passwordError = Map.tryFind "Password" apiError.ParameterErrors
-            InvalidSignUpParameters { Email = emailError; Password = passwordError }
-        | _ -> failwith "Unhandled API error."
+            InvalidSignUpParameters { EmailError = emailError; PasswordError = passwordError }
+        | _ -> unhandledError ()
 
     let sendSignUpRequest email password: Async<Result<SignUpResponse, SignUpError>> =
         let body = JsonConvert.SerializeObject({ Email = email; Password = password; })

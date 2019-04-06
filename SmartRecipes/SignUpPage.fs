@@ -6,13 +6,12 @@ open Xamarin.Forms
 
 [<RequireQualifiedAccess>]
 module SignUpPage =
+    open Domain
     
     type Model = {
         Email: string
-        EmailError: string option
         Password: string
-        PasswordError: string option
-        Error: string option
+        Error: Api.SignUpError option
         IsLoading: bool
     }
     
@@ -20,30 +19,28 @@ module SignUpPage =
         | EmailInputChanged of string 
         | PasswordInputChanged of string 
         | SignUpRequested
-        | SignUpResponseRecieved of Result<Api.SignInResponse, Api.SignInError>
+        | SignUpResponseRecieved of Result<Api.SignUpResponse, Api.SignUpError>
         | GoToSignIn
     
     let initModel = {
         Email = ""
-        EmailError = None
         Password = ""
-        PasswordError = None
         Error = None
         IsLoading = false
     }
     
     let signIn (model: Model) =
         let message =  async {
-            let! response = Api.sendSignInRequest model.Email model.Password
+            let! response = Api.sendSignUpRequest model.Email model.Password
             return SignUpResponseRecieved response
         }
         ({ model with IsLoading = true }, message |> Cmd.ofAsyncMsg)
          
-    let processError (error: Api.SignInError) (model: Model) =
-        ({ model with Error = Some error.Error; EmailError = error.EmailError; PasswordError = error.PasswordError }, Cmd.none)
+    let processError (error: Api.SignUpError) (model: Model) =
+        ({ model with Error = Some error }, Cmd.none)
         
     type UpdateResult =
-        | SignedUp
+        | SignedUp of Account
         | SignIn
         | ModelUpdated of Model * Cmd<Message>
     
@@ -54,9 +51,29 @@ module SignUpPage =
         | SignUpRequested -> signIn model |> ModelUpdated
         | SignUpResponseRecieved response ->
             match response with
-            | Ok r -> SignedUp
+            | Ok r -> SignedUp r.Account
             | Error e -> processError e model |> ModelUpdated
         | GoToSignIn -> SignIn
+
+    let mapInvalidParameters f = function
+        | Api.SignUpError.AccountAlreadyExists -> None
+        | Api.SignUpError.InvalidSignUpParameters e -> f e
+        
+    let emailEntry dispatch model =
+        let error = Option.bind (mapInvalidParameters (fun e -> e.EmailError)) model.Error
+        Elements.validatableEntry model.Email error (fun s -> dispatch (EmailInputChanged s))
+        
+    let passwordEntry dispatch model =
+        let error = Option.bind (mapInvalidParameters (fun e -> e.PasswordError)) model.Error
+        Elements.passwordValidatableEntry model.Password error (fun s -> dispatch (PasswordInputChanged s))
+    
+    let toErrorMessage = function
+        | Api.SignUpError.AccountAlreadyExists -> Some "Account already exists."
+        | Api.SignUpError.InvalidSignUpParameters _ -> None
+        
+    let errorEntry model =
+        Option.bind (toErrorMessage) model.Error
+        |> Option.map (fun e -> View.Label(text = e))
         
     let view (model: Model) dispatch =
         View.ContentPage(
@@ -67,9 +84,9 @@ module SignUpPage =
                 children = [
                     yield View.Label(text = "Smart Recipes", horizontalTextAlignment = TextAlignment.Center)
                     yield View.Label(text = "Organize cooking", horizontalTextAlignment = TextAlignment.Center)
-                    if Option.isSome model.Error then yield  View.Label(text = Option.get model.Error)
-                    for e in Elements.entry model.Email model.EmailError (fun s -> dispatch (EmailInputChanged s)) do yield e
-                    for e in Elements.passwordEntry model.Password model.PasswordError (fun s -> dispatch (PasswordInputChanged s)) do yield e
+                    for e in errorEntry model |> Option.toArray do yield e
+                    for e in emailEntry dispatch model do yield e
+                    for e in passwordEntry dispatch model do yield e
                     yield View.Button(text = "Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignUpRequested))
                     yield View.Button(text = "Already have an account? Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch GoToSignIn))
                 ]

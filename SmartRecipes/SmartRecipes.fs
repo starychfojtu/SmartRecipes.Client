@@ -76,8 +76,9 @@ module App =
                 match result with
                 | SignUpPage.UpdateResult.ModelUpdated (newModel, cmd) -> 
                     Unauthorized { m with SignUpPage = newModel }, Cmd.map (SignUpPageMessage) cmd
-                | SignUpPage.UpdateResult.SignedUp -> 
-                    Unauthorized { m with CurrentPage = LoginPage }, Cmd.none
+                | SignUpPage.UpdateResult.SignedUp account ->
+                    let loginPageModel = { m.LoginPage with Email = account.Email.Address }
+                    Unauthorized { m with CurrentPage = LoginPage; LoginPage = loginPageModel }, Cmd.none
                 | SignUpPage.UpdateResult.SignIn -> 
                     Unauthorized { m with CurrentPage = LoginPage }, Cmd.none
             | _ ->

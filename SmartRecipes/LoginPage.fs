@@ -10,10 +10,8 @@ module LoginPage =
     
     type Model = {
         Email: string
-        EmailError: string option
         Password: string
-        PasswordError: string option
-        Error: string option
+        Error: Api.SignInError option
         IsLoading: bool
     }
     
@@ -26,9 +24,7 @@ module LoginPage =
     
     let initModel = {
         Email = ""
-        EmailError = None
         Password = ""
-        PasswordError = None
         Error = None
         IsLoading = false
     }
@@ -41,7 +37,7 @@ module LoginPage =
         ({ model with IsLoading = true }, message |> Cmd.ofAsyncMsg)
          
     let processError (error: Api.SignInError) (model: Model) =
-        ({ model with Error = Some error.Error; EmailError = error.EmailError; PasswordError = error.PasswordError }, Cmd.none)
+        ({ model with Error = Some error }, Cmd.none)
         
     type UpdateResult =
         | SignUp
@@ -59,6 +55,9 @@ module LoginPage =
             | Error e -> processError e model |> ModelUpdated
         | GoToSignUp -> SignUp
         
+    let toErrorMessage = function
+        | Api.SignInError.InvalidCredentials -> "Invalid credentials."
+        
     let view (model: Model) dispatch =
         View.ContentPage(
             content = View.StackLayout(
@@ -68,9 +67,9 @@ module LoginPage =
                 children = [
                     yield View.Label(text = "Smart Recipes", horizontalTextAlignment = TextAlignment.Center)
                     yield View.Label(text = "Organize cooking", horizontalTextAlignment = TextAlignment.Center)
-                    if Option.isSome model.Error then yield  View.Label(text = Option.get model.Error)
-                    for e in Elements.entry model.Email model.EmailError (fun s -> dispatch (EmailInputChanged s)) do yield e
-                    for e in Elements.passwordEntry model.Password model.PasswordError (fun s -> dispatch (PasswordInputChanged s)) do yield e
+                    if Option.isSome model.Error then yield  View.Label(text = (Option.get model.Error |> toErrorMessage))
+                    yield Elements.entry model.Email (fun s -> dispatch (EmailInputChanged s))
+                    yield Elements.passwordEntry model.Password (fun s -> dispatch (PasswordInputChanged s))
                     yield View.Button(text = "Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignInRequested))
                     yield View.Button(text = "Don't have an account yet? Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch GoToSignUp))
                 ]
