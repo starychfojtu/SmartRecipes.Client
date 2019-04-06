@@ -1,11 +1,12 @@
 namespace SmartRecipes
 
-open FSharp.Data
-open System
-
 [<RequireQualifiedAccess>]
 module Api =
+    open System.Net.Mail
     open Domain
+    open FSharp.Data
+    open Newtonsoft.Json
+    open System
 
     type ApiError = {
         Message: string
@@ -19,7 +20,7 @@ module Api =
             "message": "Must containt @"
         }]
     } """>
-    
+
     let private baseUri = System.Uri("https://smart-recipes.herokuapp.com/")
     
     let private parseApiError value =
@@ -27,15 +28,15 @@ module Api =
         let parameterErrors = json.ParameterErrors |> Array.map (fun (e: ApiErrorJson.ParameterError) -> (e.Parameter, e.Message)) |> Map.ofSeq
         { Message = json.Message; ParameterErrors = parameterErrors }
             
-    let private sendRequest (path: string) httpMethod body accessToken parseSuccess parseError =
+    let private sendRequest httpMethod (path: string) body accessToken parseSuccess parseError: Async<Result<'a, 'b>> =
         async {
-            do! Async.SwitchToThreadPool ()
             let! response = Http.AsyncRequest(
                 Uri(baseUri, path).ToString(),
                 httpMethod = httpMethod,
                 body = TextRequest body,
                 headers = seq {
                     if Option.isSome accessToken then yield ("AccessToken", Option.get accessToken)
+                    yield ("Content-Type", "application/json")
                 }
             )
             let body = response.Body.ToString();
@@ -45,11 +46,11 @@ module Api =
                 else body |> parseApiError |> parseError |> Error
         }
         
-    let private get path body accessToken parseSuccess parseError =
-        sendRequest path "GET" accessToken parseSuccess parseError
+    let private get path body accessToken parseSuccess parseError: Async<Result<'a, 'b>> =
+        sendRequest HttpMethod.Get path body accessToken parseSuccess parseError
         
-    let private post path body accessToken parseSuccess parseError =
-        sendRequest path "POST" accessToken parseSuccess parseError
+    let private post path body accessToken parseSuccess parseError: Async<Result<'a, 'b>> =
+        sendRequest HttpMethod.Post path body accessToken parseSuccess parseError
         
     // Sign in
         
@@ -84,13 +85,50 @@ module Api =
         { EmailError = emailError; PasswordError = passwordError;  Error = apiError.Message }
 
     let sendSignInRequest email password: Async<Result<SignInResponse, SignInError>> =
-//        let body = JsonConvert.SerializeObject({ Email = email; Password = password; })
-//        post "/signIn" body None parseSignInResponse parseSignInError
-        if String.IsNullOrEmpty email
-            then async { return Ok { AccessToken = { Value = "Fake"; ExpirationUtc = DateTime.UtcNow } } }
-            else async { return Error { Error = "Something is wrong"; EmailError = Some "Nope"; PasswordError = Some "Also nope" } }
+        let body = JsonConvert.SerializeObject({ Email = email; Password = password; })
+        post "/signIn" body None parseSignInResponse parseSignInError
             
     // Sign up
+    
+    type private SignUpRequest = {
+        Email: string
+        Password: string
+    }
+    
+    type SignUpResponse = {
+        Account: Account
+    }
+    
+    type SignUpParametersError = {
+        Email: string option
+        Password: string option
+    }
+    
+    type SignUpError =
+        | AccountAlreadyExists
+        | InvalidSignUpParameters of SignUpParametersError
+    
+    type private SignUpResponseJson = JsonProvider<""" {
+        "id": "random-token-hash",
+        "email": "test@gmail.com"
+    } """>
+    
+    let private parseSignUpResponse value =
+        let json = SignUpResponseJson.Parse value
+        { Account = { Id = AccountId json.Id; Email = MailAddress json.Email } }
+        
+    let private parseSignUpError apiError =
+        match apiError.Message with
+        | "Account already exists." -> AccountAlreadyExists
+        | "Invalid parameters." ->
+            let emailError = Map.tryFind "Email" apiError.ParameterErrors
+            let passwordError = Map.tryFind "Password" apiError.ParameterErrors
+            InvalidSignUpParameters { Email = emailError; Password = passwordError }
+        | _ -> failwith "Unhandled API error."
+
+    let sendSignUpRequest email password: Async<Result<SignUpResponse, SignUpError>> =
+        let body = JsonConvert.SerializeObject({ Email = email; Password = password; })
+        post "/signUp" body None parseSignUpResponse parseSignUpError
             
     // Get shopping list
     

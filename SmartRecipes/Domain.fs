@@ -1,9 +1,15 @@
 namespace SmartRecipes
 
 module Domain =
+    open System.Net.Mail
     open System
     
     type AccountId = AccountId of string
+    
+    type Account = {
+        Id: AccountId
+        Email: MailAddress
+    }
     
     type AccessToken = {
         Value: string
