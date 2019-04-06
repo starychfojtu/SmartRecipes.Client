@@ -40,7 +40,7 @@ module Api =
                     httpMethod = httpMethod,
                     body = TextRequest body,
                     headers = seq {
-                        if Option.isSome accessToken then yield ("AccessToken", Option.get accessToken)
+                        if Option.isSome accessToken then yield ("authorization", Option.get accessToken)
                         yield ("Content-Type", "application/json")
                     }
                 )
@@ -58,8 +58,8 @@ module Api =
         sendRequest HttpMethod.Post path body accessToken parseSuccess parseError
         
     // Sign in
-        
-    type private SignInRequest = {
+
+    type SignInRequest = {
         Email: string
         Password: string
     }
@@ -80,19 +80,19 @@ module Api =
     let private parseSignInResponse value =
         let json = SignInResponseJson.Parse value
         { AccessToken = { Value = json.Value; ExpirationUtc = json.ExpirationUtc } }
-        
+
     let private parseSignInError apiError =
         match apiError.Message with
         | "Invalid credentials." -> InvalidCredentials
         | _ -> unhandledError ()
 
     let sendSignInRequest email password: Async<Result<SignInResponse, SignInError>> =
-        let body = JsonConvert.SerializeObject({ Email = email; Password = password; })
+        let body = JsonConvert.SerializeObject { Email = email; Password = password }
         post "/signIn" body None parseSignInResponse parseSignInError
             
     // Sign up
-    
-    type private SignUpRequest = {
+
+    type SignUpRequest = {
         Email: string
         Password: string
     }
@@ -129,7 +129,7 @@ module Api =
         | _ -> unhandledError ()
 
     let sendSignUpRequest email password: Async<Result<SignUpResponse, SignUpError>> =
-        let body = JsonConvert.SerializeObject({ Email = email; Password = password; })
+        let body = JsonConvert.SerializeObject { Email = email; Password = password }
         post "/signUp" body None parseSignUpResponse parseSignUpError
             
     // Get shopping list

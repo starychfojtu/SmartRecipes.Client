@@ -16,7 +16,7 @@ module SignUpPage =
     }
     
     type Message = 
-        | EmailInputChanged of string 
+        | EmailChanged of string 
         | PasswordInputChanged of string 
         | SignUpRequested
         | SignUpResponseRecieved of Result<Api.SignUpResponse, Api.SignUpError>
@@ -29,7 +29,7 @@ module SignUpPage =
         IsLoading = false
     }
     
-    let signIn (model: Model) =
+    let signUp (model: Model) =
         let message =  async {
             let! response = Api.sendSignUpRequest model.Email model.Password
             return SignUpResponseRecieved response
@@ -46,9 +46,9 @@ module SignUpPage =
     
     let update msg (model: Model) =
         match msg with
-        | EmailInputChanged email -> ModelUpdated ({ model with Email = email }, Cmd.none)
+        | EmailChanged email -> ModelUpdated ({ model with Email = email }, Cmd.none)
         | PasswordInputChanged password -> ModelUpdated ({ model with Password = password }, Cmd.none)
-        | SignUpRequested -> signIn model |> ModelUpdated
+        | SignUpRequested -> signUp model |> ModelUpdated
         | SignUpResponseRecieved response ->
             match response with
             | Ok r -> SignedUp r.Account
@@ -61,8 +61,8 @@ module SignUpPage =
         
     let emailEntry dispatch model =
         let error = Option.bind (mapInvalidParameters (fun e -> e.EmailError)) model.Error
-        Elements.validatableEntry model.Email error (fun s -> dispatch (EmailInputChanged s))
-        
+        Elements.validatableEntry model.Email error (fun s -> dispatch (EmailChanged s))
+
     let passwordEntry dispatch model =
         let error = Option.bind (mapInvalidParameters (fun e -> e.PasswordError)) model.Error
         Elements.passwordValidatableEntry model.Password error (fun s -> dispatch (PasswordInputChanged s))
