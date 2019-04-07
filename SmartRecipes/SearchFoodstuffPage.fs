@@ -34,6 +34,25 @@ module SearchFoodstuffPage =
         | FoodstuffSelected foodstuff ->
             failwith "not implemented"
             
+    let searchBar dispatch =
+        View.SearchBar(textChanged = (fun args -> dispatch TermChanged args.NewTextValue))
+        
+    let resultTableItem (foodstuff: Foodstuff) =
+        View.Label foodstuff.Name
+        
+    let resultTable results =
+        View.ListView(
+            rowHeight = 64,
+            items = Seq.map resultTableItem results
+        )
+            
     let view dispatch model =
-        View.ContentPage()
+        View.ContentPage(
+            content = View.StackLayout(
+                children = [
+                    yield searchBar dispatch
+                    yield resultTable model.Results
+                ]                 
+            )
+        )
 
