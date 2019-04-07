@@ -2,12 +2,14 @@ namespace SmartRecipes
 
 module SearchFoodstuffPage =
     open Domain
+    open FSharpx.Control
     open Fabulous.Core
     open Fabulous.DynamicViews
     
     type Model = {
-        term: string
-        results: Foodstuff seq
+        Term: string
+        Results: Foodstuff seq
+        AccessToken: AccessToken
     }
     
     type Message =
@@ -15,19 +17,20 @@ module SearchFoodstuffPage =
         | NewResults of Foodstuff seq
         | FoodstuffSelected of Foodstuff
         
-    let initModel = {
-        term = ""
-        results = Seq.empty
+    let initModel accessToken = {
+        Term = ""
+        Results = Seq.empty
+        AccessToken = accessToken
     }
 
-    let search term =
-        async { return Seq.empty }
+    let search accessToken term =
+        Api.sendSearchFoodstuffsRequest accessToken term |> Async.map (fun r -> r.Foodstuffs)
     
     let update model = function
         | TermChanged term ->
-            { model with term = term }, search term |> Cmd.ofAsyncMsg
+            { model with Term = term }, search model.AccessToken term |> Cmd.ofAsyncMsg
         | NewResults results ->
-            { model with results = results }, Cmd.none
+            { model with Results = results }, Cmd.none
         | FoodstuffSelected foodstuff ->
             failwith "not implemented"
             

@@ -187,16 +187,12 @@ module Api =
         
          
     // Get Foodstuffs by id
-    
-    type GetFoodstuffsByIdRequest = {
-        Ids: string seq
-    }
 
     type GetFoodstuffByIdResponse = {
         Foodstuffs: Foodstuff seq
     }
         
-    type private GetFoodstuffsByIdResponseJson = JsonProvider<""" [{
+    type private FoodstuffsResponseJson = JsonProvider<""" [{
         "id": "guid",
         "name": "tomato",
         "amountStep": { "unit": "grams", "value": "20.0" }
@@ -208,7 +204,7 @@ module Api =
         | "liters" -> Liter
         | _ -> failwith "Unknown unit."
     
-    let private parseFoodstuff (item: GetFoodstuffsByIdResponseJson.Root) =
+    let private parseFoodstuff (item: FoodstuffsResponseJson.Root) =
         {
             Id = FoodstuffId item.Id
             Name = item.Name
@@ -218,14 +214,25 @@ module Api =
             }
         }
     
-    let private parseGetFoodstuffsByIdResponse value =
-        let values = GetFoodstuffsByIdResponseJson.Parse value
+    let private parseFoodstuffsResponse value =
+        let values = FoodstuffsResponseJson.Parse value
         let foodstuffs = Array.map parseFoodstuff values
         { Foodstuffs = foodstuffs }
         
     let sendGetFoodstuffsByIdRequest accessToken ids: Async<GetFoodstuffByIdResponse> =
          let query = List.map (fun (FoodstuffId id) -> ("ids[]", id)) ids
-         getWithQuery "/foodstuffs" query (Some accessToken) parseGetFoodstuffsByIdResponse (fun _ -> failwith "Unhandled error.") |> Async.map getOk
+         getWithQuery "/foodstuffs" query (Some accessToken) parseFoodstuffsResponse (fun _ -> failwith "Unhandled error.") |> Async.map getOk
+         
+    // Search Foodstuffs
+
+    type SearchFoodstuffsResponse = {
+        Foodstuffs: Foodstuff seq
+    }
+    
+    let sendSearchFoodstuffsRequest accessToken (term: string): Async<GetFoodstuffByIdResponse> =
+         let query = [("query", term)]
+         getWithQuery "/foodstuffs/search" query (Some accessToken) parseFoodstuffsResponse (fun _ -> failwith "Unhandled error.") |> Async.map getOk
+
          
     // Get Recipes by id
     
