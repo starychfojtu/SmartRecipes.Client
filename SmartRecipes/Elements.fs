@@ -8,6 +8,7 @@ module Elements =
         View.Entry(
             text = value,
             completed = (fun v -> if v <> value then callback v),
+            textChanged = (fun args -> callback args.NewTextValue),
             created = (fun e -> e.Unfocused.Add(fun args -> if value <> e.Text then callback e.Text)),
             verticalOptions = LayoutOptions.FillAndExpand
         )
