@@ -40,8 +40,8 @@ module ShoppingListRecipePage =
     }
     
     let private getIngredients (recipes: Recipe seq) accessToken = async {
-        let foodstuffIds = Seq.collect (fun (r: Recipe) -> Seq.map (fun (i: Ingredient) -> i.FoodstuffId) r.Ingredients) recipes
-        let! foodstuffResponse = Api.sendGetFoodstuffsByIdRequest foodstuffIds accessToken
+        let foodstuffIds = Seq.collect (fun (r: Recipe) -> Seq.map (fun (i: Ingredient) -> i.FoodstuffId) r.Ingredients) recipes |> Seq.toList
+        let! foodstuffResponse = Api.sendGetFoodstuffsByIdRequest accessToken foodstuffIds
         return foodstuffResponse.Foodstuffs
     }
     

@@ -39,8 +39,8 @@ module ShoppingListPage =
     }
     
     let private getFoodstuffs (shoppingList: ShoppingList) accessToken = async {
-        let foodstuffIds = Seq.map (fun i -> i.FoodstuffId) shoppingList.Items
-        let! foodstuffResponse = Api.sendGetFoodstuffsByIdRequest foodstuffIds accessToken
+        let foodstuffIds = Seq.map (fun i -> i.FoodstuffId) shoppingList.Items |> Seq.toList
+        let! foodstuffResponse = Api.sendGetFoodstuffsByIdRequest accessToken foodstuffIds
         let foodstuffs = foodstuffResponse.Foodstuffs;
         return Seq.map (fun (f: Foodstuff) -> (f.Id, f)) foodstuffs |> Map.ofSeq
     }

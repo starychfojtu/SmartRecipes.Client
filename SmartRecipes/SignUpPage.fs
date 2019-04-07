@@ -82,7 +82,7 @@ module SignUpPage =
                 margin = 8.0,
                 verticalOptions = LayoutOptions.CenterAndExpand,
                 children = [
-                    // This positioning is a hotifx of bug in Fabulous.
+                    // This positioning is a hotfix of bug in Fabulous.
                     for e in emailEntry dispatch model do yield e
                     for e in passwordEntry dispatch model do yield e
                     yield View.Label(text = "Smart Recipes", horizontalTextAlignment = TextAlignment.Center)
