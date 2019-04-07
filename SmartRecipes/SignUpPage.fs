@@ -82,11 +82,12 @@ module SignUpPage =
                 margin = 8.0,
                 verticalOptions = LayoutOptions.CenterAndExpand,
                 children = [
+                    // This positioning is a hotifx of bug in Fabulous.
+                    for e in emailEntry dispatch model do yield e
+                    for e in passwordEntry dispatch model do yield e
                     yield View.Label(text = "Smart Recipes", horizontalTextAlignment = TextAlignment.Center)
                     yield View.Label(text = "Organize cooking", horizontalTextAlignment = TextAlignment.Center)
                     for e in errorEntry model |> Option.toArray do yield e
-                    for e in emailEntry dispatch model do yield e
-                    for e in passwordEntry dispatch model do yield e
                     yield View.Button(text = "Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignUpRequested))
                     yield View.Button(text = "Already have an account? Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch GoToSignIn))
                 ]

@@ -44,7 +44,11 @@ module Api =
                         yield ("Content-Type", "application/json")
                     }
                 )
-                return response.Body.ToString() |> parseSuccess |> Ok
+                
+                return
+                    match response.Body with
+                    | Text t -> t |> parseSuccess |> Ok
+                    | _ -> failwith "Invalid response body."
             with
             | :? WebException as ex ->
                 use sr = new StreamReader(ex.Response.GetResponseStream())
