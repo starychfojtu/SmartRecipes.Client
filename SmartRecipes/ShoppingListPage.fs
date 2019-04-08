@@ -14,6 +14,9 @@ module ShoppingListPage =
     
     type LoadedModel = {
         Items: Item seq
+        AccessToken: AccessToken
+        AddFoodstuffPage: SearchFoodstuffPage.Model
+        ShowAddFoodstuffPage: bool
     }
     
     type Model =
@@ -27,7 +30,8 @@ module ShoppingListPage =
         | ItemAmountDecreaseRequested of Item
         | ItemAmountDecreased of Item
         | ItemRemoved of Item
-        | AddItem
+        | GoToAddFoodstuffPage
+        | AddFoodstuffPage of SearchFoodstuffPage.Message
         
     // Initialization
     
@@ -52,7 +56,12 @@ module ShoppingListPage =
         let! shoppingList = getShoppingList accessToken;
         let! foodstuffs = getFoodstuffs shoppingList accessToken;
         let items = toItems foodstuffs shoppingList.Items
-        return PageLoaded { Items = items }
+        return PageLoaded {
+            Items = items
+            AccessToken = accessToken
+            AddFoodstuffPage = SearchFoodstuffPage.initModel accessToken
+            ShowAddFoodstuffPage = false
+        }
     }
     
     // Update
@@ -68,17 +77,20 @@ module ShoppingListPage =
         | Loaded m ->
             match msg with
             | ItemAmountIncreaseRequested id ->
-                (Loaded m, Cmd.none)
+                Loaded m, Cmd.none
             | ItemAmountDecreased id ->
-                (Loaded m, Cmd.none)
+                Loaded m, Cmd.none
             | ItemAmountDecreaseRequested id ->
-                (Loaded m, Cmd.none)
+                Loaded m, Cmd.none
             | ItemAmountIncreased id ->
-                (Loaded m, Cmd.none)
+                Loaded m, Cmd.none
             | ItemRemoved id ->
-                (Loaded m, Cmd.none)
-            | AddItem ->
-                (Loaded m, Cmd.none)
+                Loaded m, Cmd.none
+            | GoToAddFoodstuffPage ->
+                Loaded { m with ShowAddFoodstuffPage = true }, Cmd.none
+            | AddFoodstuffPage addFoodstuffPageMessage ->
+                let (newModel, cmd) = SearchFoodstuffPage.update m.AddFoodstuffPage addFoodstuffPageMessage
+                Loaded { m with AddFoodstuffPage = newModel }, Cmd.map AddFoodstuffPage cmd
             | _ -> failwith "Unhandled message"
         
     // View
@@ -124,20 +136,37 @@ module ShoppingListPage =
                     ]                 
                 )
             ]         
-        )        
+        )
+        
+    let addFoodstuffButton dispatch =
+        View.Button(text = "Add", command = (fun () -> dispatch GoToAddFoodstuffPage))
+        
+    let page model dispatch =
+        let createItemView = itemView (ItemAmountDecreaseRequested >> dispatch) (ItemAmountIncreaseRequested >> dispatch)
+        View.ContentPage(
+            content = View.StackLayout(
+                padding = 16.0,
+                children = [
+                    yield addFoodstuffButton dispatch
+                    yield View.ListView(
+                        items = Seq.map createItemView model.Items,
+                        rowHeight = 64
+                    )
+                ]
+            )
+        )
+        
+    let addFoodstuffPage model dispatch =
+        SearchFoodstuffPage.view (AddFoodstuffPage >> dispatch) model.AddFoodstuffPage 
         
     let view dispatch = function
         | Loading -> View.ContentPage()
-        | Loaded m -> 
-            let createItemView = itemView (ItemAmountDecreaseRequested >> dispatch) (ItemAmountIncreaseRequested >> dispatch)
-            View.ContentPage(
-                content = View.StackLayout(
-                    padding = 16.0,
-                    children = [
-                        yield View.ListView(
-                            items = Seq.map createItemView m.Items,
-                            rowHeight = 64
-                        )
-                    ]
-                )
+        | Loaded model -> 
+            View.NavigationPage(
+                pages = [
+                    yield page model dispatch
+                    if model.ShowAddFoodstuffPage then
+                        yield addFoodstuffPage model dispatch
+                ]
             )
+            

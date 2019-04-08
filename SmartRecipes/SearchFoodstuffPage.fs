@@ -24,7 +24,7 @@ module SearchFoodstuffPage =
     }
 
     let search accessToken term =
-        Api.sendSearchFoodstuffsRequest accessToken term |> Async.map (fun r -> r.Foodstuffs)
+        Api.sendSearchFoodstuffsRequest accessToken term |> Async.map (fun r -> NewResults r.Foodstuffs)
     
     let update model = function
         | TermChanged term ->
@@ -35,7 +35,7 @@ module SearchFoodstuffPage =
             failwith "not implemented"
             
     let searchBar dispatch =
-        View.SearchBar(textChanged = (fun args -> dispatch TermChanged args.NewTextValue))
+        View.SearchBar(textChanged = (fun args -> TermChanged args.NewTextValue |> dispatch))
         
     let resultTableItem (foodstuff: Foodstuff) =
         View.Label foodstuff.Name
@@ -45,6 +45,7 @@ module SearchFoodstuffPage =
             rowHeight = 64,
             items = Seq.map resultTableItem results
         )
+        
             
     let view dispatch model =
         View.ContentPage(
