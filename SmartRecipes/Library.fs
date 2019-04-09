@@ -6,3 +6,6 @@ module Library =
     let getOk = function
         | Ok a -> a
         | Error e -> e.ToString () |> failwith
+        
+module Async =
+    let id value = async { return value } 

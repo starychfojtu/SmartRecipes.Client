@@ -39,7 +39,7 @@ module App =
         | ShoppingListRecipeMessage of ShoppingListRecipePage.Message
         | ChangePage of Page
         
-    let api = Api.herokuInstance
+    let api = ProductionApi.instance
 
     let initModel = Unauthorized {
         CurrentPage = LoginPage
