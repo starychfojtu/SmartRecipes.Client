@@ -8,6 +8,7 @@ module Api =
     open Domain
     open FSharp.Data
     open FSharpx.Control
+    open FSharpx.Control
     open Newtonsoft.Json
     open System
     open Library
@@ -230,8 +231,12 @@ module Api =
     }
     
     let sendSearchFoodstuffsRequest accessToken (term: string): Async<GetFoodstuffByIdResponse> =
-         let query = [("query", term)]
-         getWithQuery "/foodstuffs/search" query (Some accessToken) parseFoodstuffsResponse (fun _ -> failwith "Unhandled error.") |> Async.map getOk
+        if String.IsNullOrEmpty term
+        then
+            async { return { Foodstuffs = [] } } // TODO: fix this in API
+        else
+            let query = [("query", term)]
+            getWithQuery "/foodstuffs/search" query (Some accessToken) parseFoodstuffsResponse (fun _ -> failwith "Unhandled error.") |> Async.map getOk
 
          
     // Get Recipes by id

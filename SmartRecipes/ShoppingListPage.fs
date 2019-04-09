@@ -31,6 +31,7 @@ module ShoppingListPage =
         | ItemAmountDecreased of Item
         | ItemRemoved of Item
         | GoToAddFoodstuffPage
+        | GoToRootPage
         | AddFoodstuffPage of SearchFoodstuffPage.Message
         
     // Initialization
@@ -88,6 +89,8 @@ module ShoppingListPage =
                 Loaded m, Cmd.none
             | GoToAddFoodstuffPage ->
                 Loaded { m with ShowAddFoodstuffPage = true }, Cmd.none
+            | GoToRootPage ->
+                Loaded { m with ShowAddFoodstuffPage = false }, Cmd.none
             | AddFoodstuffPage addFoodstuffPageMessage ->
                 let (newModel, cmd) = SearchFoodstuffPage.update m.AddFoodstuffPage addFoodstuffPageMessage
                 Loaded { m with AddFoodstuffPage = newModel }, Cmd.map AddFoodstuffPage cmd
@@ -156,13 +159,17 @@ module ShoppingListPage =
             )
         )
         
+    let withBackButton value (view: ViewElement) =
+        view.HasBackButton(value)
+        
     let addFoodstuffPage model dispatch =
-        SearchFoodstuffPage.view (AddFoodstuffPage >> dispatch) model.AddFoodstuffPage 
+        SearchFoodstuffPage.view (AddFoodstuffPage >> dispatch) model.AddFoodstuffPage |> withBackButton true
         
     let view dispatch = function
         | Loading -> View.ContentPage()
         | Loaded model -> 
             View.NavigationPage(
+                popped = (fun args -> dispatch GoToRootPage),
                 pages = [
                     yield page model dispatch
                     if model.ShowAddFoodstuffPage then
