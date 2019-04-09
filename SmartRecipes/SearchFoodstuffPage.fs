@@ -11,6 +11,7 @@ module SearchFoodstuffPage =
         Term: string
         Results: Foodstuff seq
         AccessToken: AccessToken
+        Api: Api.SmartRecipesApi
     }
     
     type Message =
@@ -18,18 +19,19 @@ module SearchFoodstuffPage =
         | NewResults of Foodstuff seq
         | FoodstuffSelected of Foodstuff
         
-    let initModel accessToken = {
+    let initModel accessToken api = {
         Term = ""
         Results = Seq.empty
         AccessToken = accessToken
+        Api = api
     }
 
-    let search accessToken term =
-        Api.sendSearchFoodstuffsRequest accessToken term |> Async.map (fun r -> NewResults r.Foodstuffs)
+    let search (api: Api.SmartRecipesApi) accessToken term =
+        api.SearchFoodstuffs { Term = term; AccessToken = accessToken } |> Async.map (fun r -> NewResults r.Foodstuffs)
     
     let update model = function
         | TermChanged term ->
-            { model with Term = term }, search model.AccessToken term |> Cmd.ofAsyncMsg
+            { model with Term = term }, search model.Api model.AccessToken term |> Cmd.ofAsyncMsg
         | NewResults results ->
             { model with Results = results }, Cmd.none
         | FoodstuffSelected foodstuff ->

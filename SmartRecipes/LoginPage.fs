@@ -13,6 +13,7 @@ module LoginPage =
         Password: string
         Error: Api.SignInError option
         IsLoading: bool
+        Api: Api.SmartRecipesApi
     }
     
     type Message = 
@@ -22,16 +23,17 @@ module LoginPage =
         | SignInResponseRecieved of Result<Api.SignInResponse, Api.SignInError>
         | GoToSignUp
     
-    let initModel = {
+    let initModel api = {
         Email = ""
         Password = ""
         Error = None
         IsLoading = false
+        Api = api
     }
     
     let signIn (model: Model) =
         let message =  async {
-            let! response = Api.sendSignInRequest model.Email model.Password
+            let! response = model.Api.SignIn { Email = model.Email; Password = model.Password }
             return SignInResponseRecieved response
         }
         ({ model with IsLoading = true }, message |> Cmd.ofAsyncMsg)

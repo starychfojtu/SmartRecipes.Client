@@ -38,14 +38,14 @@ module ShoppingListPage =
     
     let initModel = Loading
     
-    let private getShoppingList accessToken = async {
-        let! shoppingListResponse = Api.sendGetShoppingListRequest accessToken
+    let private getShoppingList (api: Api.SmartRecipesApi) accessToken = async {
+        let! shoppingListResponse = api.GetShoppingList { AccessToken = accessToken }
         return shoppingListResponse.ShoppingList;
     }
     
-    let private getFoodstuffs (shoppingList: ShoppingList) accessToken = async {
-        let foodstuffIds = Seq.map (fun i -> i.FoodstuffId) shoppingList.Items |> Seq.toList
-        let! foodstuffResponse = Api.sendGetFoodstuffsByIdRequest accessToken foodstuffIds
+    let private getFoodstuffs  (api: Api.SmartRecipesApi) accessToken (shoppingList: ShoppingList) = async {
+        let foodstuffIds = Seq.map (fun i -> i.FoodstuffId) shoppingList.Items
+        let! foodstuffResponse = api.GetFoodstuffsById { Ids = foodstuffIds; AccessToken = accessToken }
         let foodstuffs = foodstuffResponse.Foodstuffs;
         return Seq.map (fun (f: Foodstuff) -> (f.Id, f)) foodstuffs |> Map.ofSeq
     }
@@ -53,14 +53,14 @@ module ShoppingListPage =
     let private toItems foodstuffs =
          Seq.map (fun i -> { Foodstuff = Map.find i.FoodstuffId foodstuffs; Amount = i.Amount })
     
-    let init accessToken = async {
-        let! shoppingList = getShoppingList accessToken;
-        let! foodstuffs = getFoodstuffs shoppingList accessToken;
+    let init api accessToken = async {
+        let! shoppingList = getShoppingList api accessToken;
+        let! foodstuffs = getFoodstuffs api accessToken shoppingList ;
         let items = toItems foodstuffs shoppingList.Items
         return PageLoaded {
             Items = items
             AccessToken = accessToken
-            AddFoodstuffPage = SearchFoodstuffPage.initModel accessToken
+            AddFoodstuffPage = SearchFoodstuffPage.initModel accessToken api
             ShowAddFoodstuffPage = false
         }
     }

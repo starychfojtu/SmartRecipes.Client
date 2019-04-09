@@ -28,20 +28,20 @@ module ShoppingListRecipePage =
     
     let initModel = Loading
     
-    let private getShoppingList accessToken = async {
-        let! shoppingListResponse = Api.sendGetShoppingListRequest accessToken
+    let private getShoppingList (api: Api.SmartRecipesApi) accessToken = async {
+        let! shoppingListResponse = api.GetShoppingList { AccessToken = accessToken }
         return shoppingListResponse.ShoppingList
     }
     
-    let private getRecipes shoppingList accessToken = async {
+    let private getRecipes (api: Api.SmartRecipesApi) accessToken shoppingList = async {
         let recipeIds = Seq.map (fun i -> i.RecipeId) shoppingList.RecipeItems
-        let! recipeResponse = Api.sendGetRecipesByIdRequest recipeIds accessToken
+        let! recipeResponse = api.GetRecipesById { Ids = recipeIds; AccessToken = accessToken }
         return recipeResponse.Recipes
     }
     
-    let private getIngredients (recipes: Recipe seq) accessToken = async {
-        let foodstuffIds = Seq.collect (fun (r: Recipe) -> Seq.map (fun (i: Ingredient) -> i.FoodstuffId) r.Ingredients) recipes |> Seq.toList
-        let! foodstuffResponse = Api.sendGetFoodstuffsByIdRequest accessToken foodstuffIds
+    let private getIngredients (api: Api.SmartRecipesApi) accessToken (recipes: Recipe seq) = async {
+        let foodstuffIds = Seq.collect (fun (r: Recipe) -> Seq.map (fun (i: Ingredient) -> i.FoodstuffId) r.Ingredients) recipes
+        let! foodstuffResponse = api.GetFoodstuffsById { Ids = foodstuffIds; AccessToken =  accessToken }
         return foodstuffResponse.Foodstuffs
     }
     
@@ -55,10 +55,10 @@ module ShoppingListRecipePage =
         let ingredientsByFoodstuffId = Seq.map (fun (i: Foodstuff) -> (i.Id, i)) ingredients |> Map.ofSeq
         Seq.map (createItem recipesById ingredientsByFoodstuffId) shoppingList.RecipeItems
     
-    let init accessToken = async {
-        let! shoppingList = getShoppingList accessToken
-        let! recipes = getRecipes shoppingList accessToken
-        let! ingredients = getIngredients recipes accessToken
+    let init api accessToken = async {
+        let! shoppingList = getShoppingList api accessToken
+        let! recipes = getRecipes api accessToken shoppingList
+        let! ingredients = getIngredients api accessToken recipes
         let items = createItems shoppingList recipes ingredients
         return PageLoaded { Items = items }
     }

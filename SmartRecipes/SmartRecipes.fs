@@ -38,11 +38,13 @@ module App =
         | ShoppingListPageMessage of ShoppingListPage.Message
         | ShoppingListRecipeMessage of ShoppingListRecipePage.Message
         | ChangePage of Page
+        
+    let api = Api.herokuInstance
 
     let initModel = Unauthorized {
         CurrentPage = LoginPage
-        LoginPage = LoginPage.initModel
-        SignUpPage = SignUpPage.initModel
+        LoginPage = LoginPage.initModel api
+        SignUpPage = SignUpPage.initModel api
     }
 
     let init () = initModel, Cmd.none
@@ -55,8 +57,8 @@ module App =
     }
     
     let initAuthorizedCommand accessToken =
-        let shoppingListPageInit = ShoppingListPage.init accessToken |> Cmd.ofAsyncMsg |> Cmd.map ShoppingListPageMessage
-        let shoppingListRecipePageInit = ShoppingListRecipePage.init accessToken |> Cmd.ofAsyncMsg |> Cmd.map ShoppingListRecipeMessage
+        let shoppingListPageInit = ShoppingListPage.init api accessToken |> Cmd.ofAsyncMsg |> Cmd.map ShoppingListPageMessage
+        let shoppingListRecipePageInit = ShoppingListRecipePage.init api accessToken |> Cmd.ofAsyncMsg |> Cmd.map ShoppingListRecipeMessage
         Cmd.batch [ shoppingListPageInit; shoppingListRecipePageInit ]
     
     let update msg = function

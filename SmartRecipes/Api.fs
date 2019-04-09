@@ -8,7 +8,6 @@ module Api =
     open Domain
     open FSharp.Data
     open FSharpx.Control
-    open FSharpx.Control
     open Newtonsoft.Json
     open System
     open Library
@@ -111,8 +110,8 @@ module Api =
         | "Invalid credentials." -> InvalidCredentials
         | _ -> unhandledError ()
 
-    let sendSignInRequest email password: Async<Result<SignInResponse, SignInError>> =
-        let body = JsonConvert.SerializeObject { Email = email; Password = password }
+    let private sendSignInRequest request: Async<Result<SignInResponse, SignInError>> =
+        let body = JsonConvert.SerializeObject request
         post "/signIn" body None parseSignInResponse parseSignInError
             
     // Sign up
@@ -153,11 +152,15 @@ module Api =
             InvalidSignUpParameters { EmailError = emailError; PasswordError = passwordError }
         | _ -> unhandledError ()
 
-    let sendSignUpRequest email password: Async<Result<SignUpResponse, SignUpError>> =
-        let body = JsonConvert.SerializeObject { Email = email; Password = password }
+    let private sendSignUpRequest (request: SignUpRequest): Async<Result<SignUpResponse, SignUpError>> =
+        let body = JsonConvert.SerializeObject request
         post "/signUp" body None parseSignUpResponse parseSignUpError
             
     // Get shopping list
+    
+    type GetShoppingListRequest = {
+        AccessToken: AccessToken
+    }
     
     type GetShoppingListResponse = {
         ShoppingList: ShoppingList
@@ -183,12 +186,17 @@ module Api =
             }
         }
 
-    let sendGetShoppingListRequest accessToken: Async<GetShoppingListResponse> =
-        get "/shoppingList" (Some accessToken) parseGetShoppingListResponse (fun _ -> failwith "Unhandled error") |> Async.map getOk
+    let private sendGetShoppingListRequest request: Async<GetShoppingListResponse> =
+        get "/shoppingList" (Some request.AccessToken) parseGetShoppingListResponse (fun _ -> failwith "Unhandled error") |> Async.map getOk
         
          
     // Get Foodstuffs by id
 
+    type GetFoodstuffsByIdRequest = {
+        Ids: FoodstuffId seq
+        AccessToken: AccessToken
+    }
+        
     type GetFoodstuffByIdResponse = {
         Foodstuffs: Foodstuff seq
     }
@@ -220,36 +228,47 @@ module Api =
         let foodstuffs = Array.map parseFoodstuff values
         { Foodstuffs = foodstuffs }
         
-    let sendGetFoodstuffsByIdRequest accessToken ids: Async<GetFoodstuffByIdResponse> =
-         let query = List.map (fun (FoodstuffId id) -> ("ids[]", id)) ids
-         getWithQuery "/foodstuffs" query (Some accessToken) parseFoodstuffsResponse (fun _ -> failwith "Unhandled error.") |> Async.map getOk
+    let private sendGetFoodstuffsByIdRequest (request: GetFoodstuffsByIdRequest): Async<GetFoodstuffByIdResponse> =
+         let query = Seq.map (fun (FoodstuffId id) -> ("ids[]", id)) request.Ids |> Seq.toList
+         getWithQuery "/foodstuffs" query (Some request.AccessToken) parseFoodstuffsResponse (fun _ -> failwith "Unhandled error.") |> Async.map getOk
          
     // Search Foodstuffs
 
+    type SearchFoodstuffsRequest = {
+        Term: string
+        AccessToken: AccessToken
+    }
+        
     type SearchFoodstuffsResponse = {
         Foodstuffs: Foodstuff seq
     }
     
-    let sendSearchFoodstuffsRequest accessToken (term: string): Async<GetFoodstuffByIdResponse> =
-        if String.IsNullOrEmpty term
+    let private parseSearchFoodstuffsResponse value: SearchFoodstuffsResponse =
+        let values = FoodstuffsResponseJson.Parse value
+        let foodstuffs = Array.map parseFoodstuff values
+        { Foodstuffs = foodstuffs }
+    
+    let private sendSearchFoodstuffsRequest request: Async<SearchFoodstuffsResponse> =
+        if String.IsNullOrEmpty request.Term
         then
             async { return { Foodstuffs = [] } } // TODO: fix this in API
         else
-            let query = [("query", term)]
-            getWithQuery "/foodstuffs/search" query (Some accessToken) parseFoodstuffsResponse (fun _ -> failwith "Unhandled error.") |> Async.map getOk
+            let query = [("query", request.Term)]
+            getWithQuery "/foodstuffs/search" query (Some request.AccessToken) parseSearchFoodstuffsResponse (fun _ -> failwith "Unhandled error.") |> Async.map getOk
 
          
     // Get Recipes by id
     
     type GetRecipesByIdRequest = {
-        Ids: string seq
+        Ids: RecipeId seq
+        AccessToken: AccessToken
     }
     
     type GetRecipesByIdResponse = {
         Recipes: Recipe seq
     }
     
-    let sendGetRecipesByIdRequest accessToken ids: Async<GetRecipesByIdResponse> =
+    let private sendGetRecipesByIdRequest (request: GetRecipesByIdRequest): Async<GetRecipesByIdResponse> =
          async {
              return {
                  Recipes = [
@@ -267,5 +286,23 @@ module Api =
                  ]
              }
         }
+         
+    // API Interface
     
+    type SmartRecipesApi = {
+        SignIn: SignInRequest -> Async<Result<SignInResponse, SignInError>>
+        SignUp: SignUpRequest -> Async<Result<SignUpResponse, SignUpError>>
+        GetShoppingList: GetShoppingListRequest -> Async<GetShoppingListResponse>
+        GetFoodstuffsById: GetFoodstuffsByIdRequest -> Async<GetFoodstuffByIdResponse>
+        GetRecipesById: GetRecipesByIdRequest -> Async<GetRecipesByIdResponse>
+        SearchFoodstuffs: SearchFoodstuffsRequest -> Async<SearchFoodstuffsResponse>
+    }
     
+    let herokuInstance = {
+        SignIn = sendSignInRequest
+        SignUp = sendSignUpRequest
+        GetShoppingList = sendGetShoppingListRequest
+        GetFoodstuffsById = sendGetFoodstuffsByIdRequest
+        GetRecipesById = sendGetRecipesByIdRequest
+        SearchFoodstuffs = sendSearchFoodstuffsRequest
+    }
