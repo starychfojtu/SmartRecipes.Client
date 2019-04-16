@@ -45,7 +45,7 @@ module MockedApi =
     let private sampleRecipesMap = 
         sampleRecipes |> Seq.map (fun r -> (r.Id, r)) |> Map.ofSeq
     
-    let private sampleShoppingList: ShoppingList = {
+    let mutable private sampleShoppingList: ShoppingList = {
         Id = ShoppingListId "1"
         OwnerId = sampleAccount.Id
         Items = [
@@ -57,11 +57,16 @@ module MockedApi =
         ]
     }
     
-    let herokuInstance: Api.SmartRecipesApi = {
+    let instance = {
         SignIn = fun _ -> { SignInResponse.AccessToken = sampleAccessToken } |> Ok |> Async.id
         SignUp = fun _ -> { Account = sampleAccount } |> Ok |> Async.id
         GetShoppingList = fun _ -> { ShoppingList = sampleShoppingList } |> Async.id
         GetFoodstuffsById = fun r -> { GetFoodstuffsByIdResponse.Foodstuffs = Seq.map (fun id -> Map.find id sampleFoodstuffsMap) r.Ids } |> Async.id
         GetRecipesById = fun r -> { Recipes = Seq.map (fun id -> Map.find id sampleRecipesMap) r.Ids } |> Async.id
         SearchFoodstuffs = fun r -> { Foodstuffs = Seq.filter (fun f -> f.Name = r.Term) sampleFoodstuffs } |> Async.id
+        AddFoodstuffsToShoppingList = fun r ->
+            let foodstuffs = Seq.map (fun id -> Map.find id sampleFoodstuffsMap) r.Ids
+            let items = Seq.map (fun (f: Foodstuff) -> { FoodstuffId = f.Id; Amount = f.AmountStep.Value }) foodstuffs
+            let newItems = Seq.concat [ sampleShoppingList.Items; items ]
+            sampleShoppingList = { sampleShoppingList with Items = newItems } |> ignore |> Async.id
     }

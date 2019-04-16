@@ -2,7 +2,9 @@ namespace SmartRecipes
 
 [<RequireQualifiedAccess>]
 module ShoppingListPage =
+    open Api
     open Domain
+    open FSharpx.Control
     open Fabulous.Core
     open Fabulous.DynamicViews
     open Xamarin.Forms
@@ -17,6 +19,7 @@ module ShoppingListPage =
         AccessToken: AccessToken
         AddFoodstuffPage: SearchFoodstuffPage.Model
         ShowAddFoodstuffPage: bool
+        Api: SmartRecipesApi
     }
     
     type Model =
@@ -33,6 +36,7 @@ module ShoppingListPage =
         | GoToAddFoodstuffPage
         | GoToRootPage
         | AddFoodstuffPage of SearchFoodstuffPage.Message
+        | ShoppingListChanged of ShoppingList
         
     // Initialization
     
@@ -62,10 +66,15 @@ module ShoppingListPage =
             AccessToken = accessToken
             AddFoodstuffPage = SearchFoodstuffPage.initModel accessToken api
             ShowAddFoodstuffPage = false
+            Api = api
         }
     }
     
     // Update
+    
+    let tryAddFoodstuff model (foodstuff: Foodstuff) =
+        model.Api.AddFoodstuffsToShoppingList { Ids = [| foodstuff.Id |]; AccessToken = model.AccessToken }
+        |> Async.map (fun r -> ShoppingListChanged r.ShoppingList)
     
     let update model msg =
         match model with
@@ -92,8 +101,13 @@ module ShoppingListPage =
             | GoToRootPage ->
                 Loaded { m with ShowAddFoodstuffPage = false }, Cmd.none
             | AddFoodstuffPage addFoodstuffPageMessage ->
-                let (newModel, cmd) = SearchFoodstuffPage.update m.AddFoodstuffPage addFoodstuffPageMessage
-                Loaded { m with AddFoodstuffPage = newModel }, Cmd.map AddFoodstuffPage cmd
+                let result = SearchFoodstuffPage.update m.AddFoodstuffPage addFoodstuffPageMessage
+                match result with
+                | SearchFoodstuffPage.UpdateResult.ModelUpdated (newModel, cmd) ->
+                    Loaded { m with AddFoodstuffPage = newModel }, Cmd.map AddFoodstuffPage cmd
+                | SearchFoodstuffPage.UpdateResult.FoodstuffSelected f ->
+                    Loaded m, tryAddFoodstuff m f |> Cmd.ofAsyncMsg
+            | ShoppingListChanged shoppingList ->
             | _ -> failwith "Unhandled message"
         
     // View

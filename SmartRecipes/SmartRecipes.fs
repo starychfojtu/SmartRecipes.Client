@@ -39,7 +39,8 @@ module App =
         | ShoppingListRecipeMessage of ShoppingListRecipePage.Message
         | ChangePage of Page
         
-    let api = ProductionApi.instance
+//    let api = ProductionApi.instance
+    let api = MockedApi.instance
 
     let initModel = Unauthorized {
         CurrentPage = LoginPage

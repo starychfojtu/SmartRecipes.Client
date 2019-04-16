@@ -69,6 +69,17 @@ module Api =
         Foodstuffs: Foodstuff seq
     }
     
+    // Add foodstuffs to shopping list
+
+    type AddFoodstuffsToShoppingListRequest = {
+        Ids: FoodstuffId seq
+        AccessToken: AccessToken
+    }
+    
+    type AddFoodstuffsToShoppingListResponse = {
+        ShoppingList: ShoppingList
+    }
+    
     // Get Recipes by id
     
     type GetRecipesByIdRequest = {
@@ -89,4 +100,5 @@ module Api =
         GetFoodstuffsById: GetFoodstuffsByIdRequest -> Async<GetFoodstuffsByIdResponse>
         GetRecipesById: GetRecipesByIdRequest -> Async<GetRecipesByIdResponse>
         SearchFoodstuffs: SearchFoodstuffsRequest -> Async<SearchFoodstuffsResponse>
+        AddFoodstuffsToShoppingList: AddFoodstuffsToShoppingListRequest -> Async<AddFoodstuffsToShoppingListResponse>
     }

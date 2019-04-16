@@ -17,7 +17,7 @@ module SearchFoodstuffPage =
     type Message =
         | TermChanged of string
         | NewResults of Foodstuff seq
-        | FoodstuffSelected of Foodstuff
+        | TryAddFoodstuff of Foodstuff
         
     let initModel accessToken api = {
         Term = ""
@@ -26,24 +26,28 @@ module SearchFoodstuffPage =
         Api = api
     }
 
-    let search (api: Api.SmartRecipesApi) accessToken term =
+    let private search (api: Api.SmartRecipesApi) accessToken term =
         api.SearchFoodstuffs { Term = term; AccessToken = accessToken } |> Async.map (fun r -> NewResults r.Foodstuffs)
     
+    type UpdateResult = 
+        | ModelUpdated of Model * Cmd<Message>
+        | FoodstuffSelected of Foodstuff
+            
     let update model = function
         | TermChanged term ->
-            { model with Term = term }, search model.Api model.AccessToken term |> Cmd.ofAsyncMsg
+            ModelUpdated ({ model with Term = term }, search model.Api model.AccessToken term |> Cmd.ofAsyncMsg)
         | NewResults results ->
-            { model with Results = results }, Cmd.none
-        | FoodstuffSelected foodstuff ->
-            model, Cmd.none
+            ModelUpdated ({ model with Results = results }, Cmd.none)
+        | TryAddFoodstuff foodstuff ->
+            FoodstuffSelected foodstuff
             
-    let searchBar dispatch =
+    let private searchBar dispatch =
         View.SearchBar(textChanged = (fun args -> TermChanged args.NewTextValue |> dispatch))
         
-    let amountToString amount =
+    let private amountToString amount =
         amount.Value.ToString () + " " + amount.Unit.ToString ()
         
-    let resultTableItem dispatch (foodstuff: Foodstuff) =
+    let private resultTableItem dispatch (foodstuff: Foodstuff) =
         View.StackLayout(
             children = [
                 yield View.StackLayout(
@@ -69,14 +73,14 @@ module SearchFoodstuffPage =
                             verticalOptions = LayoutOptions.Center,
                             widthRequest = 64.0,
                             heightRequest = 64.0,
-                            command = fun () -> FoodstuffSelected foodstuff |> dispatch
+                            command = fun () -> TryAddFoodstuff foodstuff |> dispatch
                         )
                     ]
                 )
             ]
         )
         
-    let resultTable dispatch results =
+    let private resultTable dispatch results =
         View.ListView(
             rowHeight = 64,
             items = Seq.map (resultTableItem dispatch) results
