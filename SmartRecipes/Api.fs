@@ -39,10 +39,6 @@ module Api =
         
     // Get shopping list
     
-    type GetShoppingListRequest = {
-        AccessToken: AccessToken
-    }
-    
     type GetShoppingListResponse = {
         ShoppingList: ShoppingList
     }
@@ -51,7 +47,6 @@ module Api =
 
     type GetFoodstuffsByIdRequest = {
         Ids: FoodstuffId seq
-        AccessToken: AccessToken
     }
         
     type GetFoodstuffsByIdResponse = {
@@ -62,7 +57,6 @@ module Api =
 
     type SearchFoodstuffsRequest = {
         Term: string
-        AccessToken: AccessToken
     }
         
     type SearchFoodstuffsResponse = {
@@ -73,7 +67,6 @@ module Api =
 
     type AddFoodstuffsToShoppingListRequest = {
         Ids: FoodstuffId seq
-        AccessToken: AccessToken
     }
     
     type AddFoodstuffsToShoppingListResponse = {
@@ -84,7 +77,6 @@ module Api =
     
     type GetRecipesByIdRequest = {
         Ids: RecipeId seq
-        AccessToken: AccessToken
     }
     
     type GetRecipesByIdResponse = {
@@ -93,10 +85,13 @@ module Api =
     
     // API Interface
     
-    type SmartRecipesApi = {
+    type UnauthorizedApi = {
         SignIn: SignInRequest -> Async<Result<SignInResponse, SignInError>>
         SignUp: SignUpRequest -> Async<Result<SignUpResponse, SignUpError>>
-        GetShoppingList: GetShoppingListRequest -> Async<GetShoppingListResponse>
+    }
+    
+    type AuthorizedApi = {
+        GetShoppingList: unit -> Async<GetShoppingListResponse>
         GetFoodstuffsById: GetFoodstuffsByIdRequest -> Async<GetFoodstuffsByIdResponse>
         GetRecipesById: GetRecipesByIdRequest -> Async<GetRecipesByIdResponse>
         SearchFoodstuffs: SearchFoodstuffsRequest -> Async<SearchFoodstuffsResponse>

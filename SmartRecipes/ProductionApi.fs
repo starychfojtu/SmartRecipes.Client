@@ -149,8 +149,8 @@ module ProductionApi =
             }
         }
 
-    let private sendGetShoppingListRequest (request: GetShoppingListRequest): Async<GetShoppingListResponse> =
-        get "/shoppingList" (Some request.AccessToken) parseGetShoppingListResponse (fun _ -> failwith "Unhandled error") |> Async.map getOk
+    let private sendGetShoppingListRequest accessToken: Async<GetShoppingListResponse> =
+        get "/shoppingList" (Some accessToken) parseGetShoppingListResponse (fun _ -> failwith "Unhandled error") |> Async.map getOk
         
          
     // Get Foodstuffs by id
@@ -182,9 +182,9 @@ module ProductionApi =
         let foodstuffs = Array.map parseFoodstuff values
         { Foodstuffs = foodstuffs }
         
-    let private sendGetFoodstuffsByIdRequest (request: GetFoodstuffsByIdRequest): Async<GetFoodstuffsByIdResponse> =
+    let private sendGetFoodstuffsByIdRequest accessToken (request: GetFoodstuffsByIdRequest): Async<GetFoodstuffsByIdResponse> =
          let query = Seq.map (fun (FoodstuffId id) -> ("ids[]", id)) request.Ids |> Seq.toList
-         getWithQuery "/foodstuffs" query (Some request.AccessToken) parseGetFoodstuffsByIdResponse (fun _ -> failwith "Unhandled error.") |> Async.map getOk
+         getWithQuery "/foodstuffs" query (Some accessToken) parseGetFoodstuffsByIdResponse (fun _ -> failwith "Unhandled error.") |> Async.map getOk
          
     // Search Foodstuffs
     
@@ -193,18 +193,18 @@ module ProductionApi =
         let foodstuffs = Array.map parseFoodstuff values
         { Foodstuffs = foodstuffs }
     
-    let private sendSearchFoodstuffsRequest request: Async<SearchFoodstuffsResponse> =
+    let private sendSearchFoodstuffsRequest accessToken request: Async<SearchFoodstuffsResponse> =
         if String.IsNullOrEmpty request.Term
         then
             async { return { Foodstuffs = [] } } // TODO: fix this in API
         else
             let query = [("query", request.Term)]
-            getWithQuery "/foodstuffs/search" query (Some request.AccessToken) parseSearchFoodstuffsResponse (fun _ -> failwith "Unhandled error.") |> Async.map getOk
+            getWithQuery "/foodstuffs/search" query (Some accessToken) parseSearchFoodstuffsResponse (fun _ -> failwith "Unhandled error.") |> Async.map getOk
 
          
     // Get Recipes by id
 
-    let private sendGetRecipesByIdRequest (request: GetRecipesByIdRequest): Async<GetRecipesByIdResponse> =
+    let private sendGetRecipesByIdRequest accessToken (request: GetRecipesByIdRequest): Async<GetRecipesByIdResponse> =
          async {
              return {
                  Recipes = [
@@ -225,12 +225,15 @@ module ProductionApi =
          
     // API Interface
     
-    let instance = {
+    let unauthorized = {
         SignIn = sendSignInRequest
         SignUp = sendSignUpRequest
-        GetShoppingList = sendGetShoppingListRequest
-        GetFoodstuffsById = sendGetFoodstuffsByIdRequest
-        GetRecipesById = sendGetRecipesByIdRequest
-        SearchFoodstuffs = sendSearchFoodstuffsRequest
+    }
+    
+    let authorized accessToken = {
+        GetShoppingList = fun () -> sendGetShoppingListRequest accessToken
+        GetFoodstuffsById = sendGetFoodstuffsByIdRequest accessToken
+        GetRecipesById = sendGetRecipesByIdRequest accessToken
+        SearchFoodstuffs = sendSearchFoodstuffsRequest accessToken
         AddFoodstuffsToShoppingList = fun _ -> failwith "Not implemented."
     }

@@ -3,6 +3,10 @@ namespace SmartRecipes
 [<RequireQualifiedAccess>]
 module ShoppingListRecipePage =
     open Domain
+    open FSharpPlus.Data
+    open FSharpx.Control
+    open AppEnvironment
+    open FSharpPlus
     open Fabulous.Core
     open Fabulous.DynamicViews
     open Xamarin.Forms
@@ -28,21 +32,23 @@ module ShoppingListRecipePage =
     
     let initModel = Loading
     
-    let private getShoppingList (api: Api.SmartRecipesApi) accessToken = async {
-        let! shoppingListResponse = api.GetShoppingList { AccessToken = accessToken }
-        return shoppingListResponse.ShoppingList
-    }
+    let private getShoppingList = ReaderT(fun env ->
+        env.Api.GetShoppingList () |> Async.map (fun r -> r.ShoppingList))
     
-    let private getRecipes (api: Api.SmartRecipesApi) accessToken shoppingList = async {
+    let private getRecipesById ids = ReaderT(fun env ->
+        env.Api.GetRecipesById { Ids = ids } |> Async.map (fun r -> r.Recipes))
+    
+    let private getFoodstuffById ids = ReaderT(fun env ->
+        env.Api.GetFoodstuffsById { Ids = ids } |> Async.map (fun r -> r.Foodstuffs))
+    
+    let private getRecipes shoppingList = monad {
         let recipeIds = Seq.map (fun i -> i.RecipeId) shoppingList.RecipeItems
-        let! recipeResponse = api.GetRecipesById { Ids = recipeIds; AccessToken = accessToken }
-        return recipeResponse.Recipes
+        return! getRecipesById recipeIds
     }
     
-    let private getIngredients (api: Api.SmartRecipesApi) accessToken (recipes: Recipe seq) = async {
+    let private getIngredients (recipes: Recipe seq) = monad {
         let foodstuffIds = Seq.collect (fun (r: Recipe) -> Seq.map (fun (i: Ingredient) -> i.FoodstuffId) r.Ingredients) recipes
-        let! foodstuffResponse = api.GetFoodstuffsById { Ids = foodstuffIds; AccessToken =  accessToken }
-        return foodstuffResponse.Foodstuffs
+        return! getFoodstuffById foodstuffIds
     }
     
     let private createItem (recipes: Map<RecipeId, Recipe>) ingredients recipeItem =
@@ -55,10 +61,10 @@ module ShoppingListRecipePage =
         let ingredientsByFoodstuffId = Seq.map (fun (i: Foodstuff) -> (i.Id, i)) ingredients |> Map.ofSeq
         Seq.map (createItem recipesById ingredientsByFoodstuffId) shoppingList.RecipeItems
     
-    let init api accessToken = async {
-        let! shoppingList = getShoppingList api accessToken
-        let! recipes = getRecipes api accessToken shoppingList
-        let! ingredients = getIngredients api accessToken recipes
+    let init = monad {
+        let! shoppingList = getShoppingList
+        let! recipes = getRecipes shoppingList
+        let! ingredients = getIngredients recipes
         let items = createItems shoppingList recipes ingredients
         return PageLoaded { Items = items }
     }

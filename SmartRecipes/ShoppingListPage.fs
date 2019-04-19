@@ -3,6 +3,7 @@ namespace SmartRecipes
 [<RequireQualifiedAccess>]
 module ShoppingListPage =
     open Api
+    open AppEnvironment
     open Domain
     open FSharpPlus
     open FSharpPlus.Data
@@ -18,10 +19,8 @@ module ShoppingListPage =
     
     type LoadedModel = {
         Items: Item seq
-        AccessToken: AccessToken
         AddFoodstuffPage: SearchFoodstuffPage.Model
         ShowAddFoodstuffPage: bool
-        Api: SmartRecipesApi
     }
     
     type Model =
@@ -44,11 +43,11 @@ module ShoppingListPage =
     
     let initModel = Loading
     
-    let private getShoppingList () = ReaderT(fun (api, accessToken) -> 
-        api.GetShoppingList { AccessToken = accessToken } |> Async.map (fun r -> r.ShoppingList))
+    let private getShoppingList = ReaderT(fun env -> 
+        env.Api.GetShoppingList () |> Async.map (fun r -> r.ShoppingList))
     
-    let private getFoodstuffsByIds foodstuffIds = ReaderT(fun (api, accessToken) ->
-        api.GetFoodstuffsById { Ids = foodstuffIds; AccessToken = accessToken } |> Async.map (fun r -> r.Foodstuffs))
+    let private getFoodstuffsByIds foodstuffIds = ReaderT(fun env ->
+        env.Api.GetFoodstuffsById { Ids = foodstuffIds } |> Async.map (fun r -> r.Foodstuffs))
     
     let private getFoodstuffs (shoppingList: ShoppingList) = monad {
         let foodstuffIds = Seq.map (fun i -> i.FoodstuffId) shoppingList.Items
@@ -64,30 +63,27 @@ module ShoppingListPage =
         return toItems foodstuffs shoppingList.Items
     }
          
-    let private getItems () = monad {
-        let! shoppingList = getShoppingList ()
+    let private getItems = monad {
+        let! shoppingList = getShoppingList
         return! shoppingListToItems shoppingList
     }
     
-    let private createModel items = ReaderT(fun (api, accessToken) -> async {
-        return PageLoaded {
+    let private createModel items =
+        PageLoaded {
             Items = items
-            AccessToken = accessToken
-            AddFoodstuffPage = SearchFoodstuffPage.initModel accessToken api
+            AddFoodstuffPage = SearchFoodstuffPage.initModel
             ShowAddFoodstuffPage = false
-            Api = api
         }
-    })
     
-    let init () = monad {
-        let! items = getItems ()
-        return! createModel items
+    let init = monad {
+        let! items = getItems
+        return createModel items
     }
     
     // Update
     
-    let addFoodstuffToShoppingList id = ReaderT(fun (api, accessToken) ->
-        api.AddFoodstuffsToShoppingList { Ids = [| id |]; AccessToken = accessToken })
+    let addFoodstuffToShoppingList id = ReaderT(fun env ->
+        env.Api.AddFoodstuffsToShoppingList { Ids = [| id |] })
     
     let tryAddFoodstuff (foodstuff: Foodstuff) = monad {
         let! response = addFoodstuffToShoppingList foodstuff.Id
@@ -95,7 +91,7 @@ module ShoppingListPage =
         return ShoppingListChanged items
     }
     
-    let update model msg =
+    let update model msg env =
         match model with
         | Loading ->
             match msg with
@@ -120,12 +116,12 @@ module ShoppingListPage =
             | GoToRootPage ->
                 Loaded { m with ShowAddFoodstuffPage = false }, Cmd.none
             | AddFoodstuffPage addFoodstuffPageMessage ->
-                let result = SearchFoodstuffPage.update m.AddFoodstuffPage addFoodstuffPageMessage
-                match result with
+                let updateResult = SearchFoodstuffPage.update m.AddFoodstuffPage addFoodstuffPageMessage env
+                match updateResult with
                 | SearchFoodstuffPage.UpdateResult.ModelUpdated (newModel, cmd) ->
                     Loaded { m with AddFoodstuffPage = newModel }, Cmd.map AddFoodstuffPage cmd
                 | SearchFoodstuffPage.UpdateResult.FoodstuffSelected f ->
-                    Loaded m,  ReaderT.run (tryAddFoodstuff f) (m.Api, m.AccessToken) |> Cmd.ofAsyncMsg
+                    Loaded m,  tryAddFoodstuff f |> Cmd.ofReader env
             | ShoppingListChanged items ->
                 Loaded { m with Items = items }, Cmd.none
             | _ -> failwith "Unhandled message"

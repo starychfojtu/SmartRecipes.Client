@@ -7,7 +7,13 @@ open Library
 open Domain
 
 module App =
+    open AppEnvironment
+    open FSharpPlus
+    open FSharpPlus
     open FSharpPlus.Data
+    open Fabulous.Core
+    open Fabulous.Core
+    open Library
 
     type UnauthorizedPage =     
         | LoginPage
@@ -20,13 +26,14 @@ module App =
         CurrentPage: UnauthorizedPage
         LoginPage: LoginPage.Model
         SignUpPage: SignUpPage.Model
+        Environment: Environment
     }
     
     type AuthorizedModel = {
         CurrentPage: Page
-        AccessToken: AccessToken
         ShoppingListPage: ShoppingListPage.Model
         ShoppingListRecipePage: ShoppingListRecipePage.Model
+        Environment: AuthorizedEnvironment
     }
     
     type Model = 
@@ -39,44 +46,55 @@ module App =
         | ShoppingListPageMessage of ShoppingListPage.Message
         | ShoppingListRecipeMessage of ShoppingListRecipePage.Message
         | ChangePage of Page
-        
-//    let api = ProductionApi.instance
-    let api = MockedApi.instance
 
-    let initModel = Unauthorized {
+    let initModel (env: Environment) = Unauthorized {
         CurrentPage = LoginPage
-        LoginPage = LoginPage.initModel api
-        SignUpPage = SignUpPage.initModel api
+        LoginPage = LoginPage.initModel
+        SignUpPage = SignUpPage.initModel
+        Environment = env
+    }
+    
+    let prodEnvironment = {
+        Unauthorized = { Api = ProductionApi.unauthorized }
+        GetAuthorized = fun token -> { Api = ProductionApi.authorized token }
+    }
+    
+    let devEnvironment = {
+        Unauthorized = { Api = MockedApi.unauthorized }
+        GetAuthorized = fun token -> { Api = MockedApi.authorized token }
     }
 
-    let init () = initModel, Cmd.none
+    let init () = initModel devEnvironment, Cmd.none
     
-    let initAuthorizedModel accessToken = Authorized {
+    let initAuthorizedModel env = Authorized {
         CurrentPage = ShoppingListPage
-        AccessToken = accessToken
         ShoppingListPage = ShoppingListPage.initModel
         ShoppingListRecipePage = ShoppingListRecipePage.initModel
+        Environment = env
     }
-    
-    let initAuthorizedCommand accessToken =
-        let shoppingListPageInit = ReaderT.run (ShoppingListPage.init ()) (api, accessToken) |> Cmd.ofAsyncMsg |> Cmd.map ShoppingListPageMessage
-        let shoppingListRecipePageInit = ShoppingListRecipePage.init api accessToken |> Cmd.ofAsyncMsg |> Cmd.map ShoppingListRecipeMessage
-        Cmd.batch [ shoppingListPageInit; shoppingListRecipePageInit ]
+    let initAuthorizedCommand env =
+        let shoppingListPageInit = ShoppingListPage.init |> Cmd.ofReader env
+        let shoppingListRecipePageInit = ShoppingListRecipePage.init |> Cmd.ofReader env
+        Cmd.batch [
+            shoppingListPageInit |> Cmd.map ShoppingListPageMessage
+            shoppingListRecipePageInit |> Cmd.map ShoppingListRecipeMessage 
+        ]
     
     let update msg = function
         | Unauthorized m -> 
             match msg with
             | LoginPageMessage msg ->
-                let result = LoginPage.update msg m.LoginPage
+                let result = LoginPage.update msg m.LoginPage m.Environment.Unauthorized
                 match result with
                 | LoginPage.UpdateResult.ModelUpdated (newModel, cmd) -> 
                     Unauthorized { m with LoginPage = newModel }, Cmd.map (LoginPageMessage) cmd
-                | LoginPage.UpdateResult.SignedIn token -> 
-                    initAuthorizedModel token, initAuthorizedCommand token
+                | LoginPage.UpdateResult.SignedIn token ->
+                    let authorizedEnv = m.Environment.GetAuthorized token
+                    initAuthorizedModel authorizedEnv, initAuthorizedCommand authorizedEnv
                 | LoginPage.UpdateResult.SignUp -> 
                     Unauthorized { m with CurrentPage = SignUpPage }, Cmd.none
             | SignUpPageMessage msg ->
-                let result = SignUpPage.update msg m.SignUpPage
+                let result = SignUpPage.update msg m.SignUpPage m.Environment.Unauthorized
                 match result with
                 | SignUpPage.UpdateResult.ModelUpdated (newModel, cmd) -> 
                     Unauthorized { m with SignUpPage = newModel }, Cmd.map (SignUpPageMessage) cmd
@@ -92,7 +110,7 @@ module App =
             | ChangePage page ->
                 (Authorized m, Cmd.none)
             | ShoppingListPageMessage msg ->
-                 let (newModel, cmd) = ShoppingListPage.update m.ShoppingListPage msg
+                 let (newModel, cmd) = ShoppingListPage.update m.ShoppingListPage msg m.Environment
                  Authorized { m with ShoppingListPage = newModel }, Cmd.map (ShoppingListPageMessage) cmd
             | ShoppingListRecipeMessage msg ->
                  let (newModel, cmd) = ShoppingListRecipePage.update m.ShoppingListRecipePage msg

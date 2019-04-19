@@ -6,14 +6,17 @@ open Xamarin.Forms
 
 [<RequireQualifiedAccess>]
 module SignUpPage =
+    open Api
     open Domain
+    open FSharpPlus.Data
+    open AppEnvironment
+    open FSharpPlus
     
     type Model = {
         Email: string
         Password: string
         Error: Api.SignUpError option
         IsLoading: bool
-        Api: Api.SmartRecipesApi
     }
     
     type Message = 
@@ -23,22 +26,19 @@ module SignUpPage =
         | SignUpResponseRecieved of Result<Api.SignUpResponse, Api.SignUpError>
         | GoToSignIn
     
-    let initModel api = {
+    let initModel = {
         Email = ""
         Password = ""
         Error = None
         IsLoading = false
-        Api = api
     }
     
-    let signUp model =
-        let message =  async {
-            let! response = model.Api.SignUp { Email = model.Email; Password = model.Password }
-            return SignUpResponseRecieved response
-        }
-        ({ model with IsLoading = true }, message |> Cmd.ofAsyncMsg)
+    let trySignUp model (env: UnauthorizedEnvironment) =
+        env.Api.SignUp { Email = model.Email; Password = model.Password }
+        |> Async.map SignUpResponseRecieved
+        |> Cmd.ofAsyncMsg
          
-    let processError (error: Api.SignUpError) (model: Model) =
+    let processError error model =
         ({ model with Error = Some error }, Cmd.none)
         
     type UpdateResult =
@@ -46,11 +46,11 @@ module SignUpPage =
         | SignIn
         | ModelUpdated of Model * Cmd<Message>
     
-    let update msg (model: Model) =
+    let update msg model env =
         match msg with
         | EmailChanged email -> ModelUpdated ({ model with Email = email }, Cmd.none)
         | PasswordInputChanged password -> ModelUpdated ({ model with Password = password }, Cmd.none)
-        | SignUpRequested -> signUp model |> ModelUpdated
+        | SignUpRequested -> ModelUpdated({ model with IsLoading = true }, trySignUp model env)
         | SignUpResponseRecieved response ->
             match response with
             | Ok r -> SignedUp r.Account
@@ -85,11 +85,11 @@ module SignUpPage =
                 verticalOptions = LayoutOptions.CenterAndExpand,
                 children = [
                     // This positioning is a hotfix of bug in Fabulous.
-                    for e in emailEntry dispatch model do yield e
-                    for e in passwordEntry dispatch model do yield e
+                    yield! emailEntry dispatch model
+                    yield! passwordEntry dispatch model
                     yield View.Label(text = "Smart Recipes", horizontalTextAlignment = TextAlignment.Center)
                     yield View.Label(text = "Organize cooking", horizontalTextAlignment = TextAlignment.Center)
-                    for e in errorEntry model |> Option.toArray do yield e
+                    yield! errorEntry model |> Option.toArray
                     yield View.Button(text = "Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignUpRequested))
                     yield View.Button(text = "Already have an account? Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch GoToSignIn))
                 ]

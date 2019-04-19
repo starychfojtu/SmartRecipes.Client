@@ -57,9 +57,12 @@ module MockedApi =
         ]
     }
     
-    let instance = {
+    let unauthorized = {
         SignIn = fun _ -> { SignInResponse.AccessToken = sampleAccessToken } |> Ok |> Async.id
         SignUp = fun _ -> { Account = sampleAccount } |> Ok |> Async.id
+    }
+    
+    let authorized _ = {
         GetShoppingList = fun _ -> { GetShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
         GetFoodstuffsById = fun r -> { GetFoodstuffsByIdResponse.Foodstuffs = Seq.map (fun id -> Map.find id sampleFoodstuffsMap) r.Ids } |> Async.id
         GetRecipesById = fun r -> { Recipes = Seq.map (fun id -> Map.find id sampleRecipesMap) r.Ids } |> Async.id

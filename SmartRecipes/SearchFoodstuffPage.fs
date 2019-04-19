@@ -1,8 +1,10 @@
 namespace SmartRecipes
 
 module SearchFoodstuffPage =
+    open AppEnvironment
     open Domain
-    open FSharpx.Control
+    open FSharpPlus
+    open FSharpPlus.Data
     open Fabulous.Core
     open Fabulous.DynamicViews
     open Xamarin.Forms
@@ -10,8 +12,6 @@ module SearchFoodstuffPage =
     type Model = {
         Term: string
         Results: Foodstuff seq
-        AccessToken: AccessToken
-        Api: Api.SmartRecipesApi
     }
     
     type Message =
@@ -19,23 +19,25 @@ module SearchFoodstuffPage =
         | NewResults of Foodstuff seq
         | TryAddFoodstuff of Foodstuff
         
-    let initModel accessToken api = {
+    let initModel = {
         Term = ""
         Results = Seq.empty
-        AccessToken = accessToken
-        Api = api
     }
 
-    let private search (api: Api.SmartRecipesApi) accessToken term =
-        api.SearchFoodstuffs { Term = term; AccessToken = accessToken } |> Async.map (fun r -> NewResults r.Foodstuffs)
+    let private searchFoodstuff term = ReaderT(fun env -> 
+        env.Api.SearchFoodstuffs { Term = term })
+    
+    let private search term =
+        searchFoodstuff term |> ReaderT.map (fun r -> NewResults r.Foodstuffs)
     
     type UpdateResult = 
         | ModelUpdated of Model * Cmd<Message>
         | FoodstuffSelected of Foodstuff
             
-    let update model = function
+    let update model message env =
+        match message with
         | TermChanged term ->
-            ModelUpdated ({ model with Term = term }, search model.Api model.AccessToken term |> Cmd.ofAsyncMsg)
+            ModelUpdated ({ model with Term = term }, search term |> Cmd.ofReader env)
         | NewResults results ->
             ModelUpdated ({ model with Results = results }, Cmd.none)
         | TryAddFoodstuff foodstuff ->
