@@ -4,6 +4,8 @@ namespace SmartRecipes
 module ShoppingListPage =
     open Api
     open Domain
+    open FSharpPlus
+    open FSharpPlus.Data
     open FSharpx.Control
     open Fabulous.Core
     open Fabulous.DynamicViews
@@ -36,31 +38,38 @@ module ShoppingListPage =
         | GoToAddFoodstuffPage
         | GoToRootPage
         | AddFoodstuffPage of SearchFoodstuffPage.Message
-        | ShoppingListChanged of ShoppingList
+        | ShoppingListChanged of Item seq
         
     // Initialization
     
     let initModel = Loading
     
-    let private getShoppingList (api: Api.SmartRecipesApi) accessToken = async {
-        let! shoppingListResponse = api.GetShoppingList { AccessToken = accessToken }
-        return shoppingListResponse.ShoppingList;
-    }
+    let private getShoppingList () = ReaderT(fun (api, accessToken) -> 
+        api.GetShoppingList { AccessToken = accessToken } |> Async.map (fun r -> r.ShoppingList))
     
-    let private getFoodstuffs  (api: Api.SmartRecipesApi) accessToken (shoppingList: ShoppingList) = async {
+    let private getFoodstuffsByIds foodstuffIds = ReaderT(fun (api, accessToken) ->
+        api.GetFoodstuffsById { Ids = foodstuffIds; AccessToken = accessToken } |> Async.map (fun r -> r.Foodstuffs))
+    
+    let private getFoodstuffs (shoppingList: ShoppingList) = monad {
         let foodstuffIds = Seq.map (fun i -> i.FoodstuffId) shoppingList.Items
-        let! foodstuffResponse = api.GetFoodstuffsById { Ids = foodstuffIds; AccessToken = accessToken }
-        let foodstuffs = foodstuffResponse.Foodstuffs;
+        let! foodstuffs = getFoodstuffsByIds foodstuffIds
         return Seq.map (fun (f: Foodstuff) -> (f.Id, f)) foodstuffs |> Map.ofSeq
     }
     
     let private toItems foodstuffs =
          Seq.map (fun i -> { Foodstuff = Map.find i.FoodstuffId foodstuffs; Amount = i.Amount })
+         
+    let private shoppingListToItems shoppingList = monad {
+        let! foodstuffs = getFoodstuffs shoppingList 
+        return toItems foodstuffs shoppingList.Items
+    }
+         
+    let private getItems () = monad {
+        let! shoppingList = getShoppingList ()
+        return! shoppingListToItems shoppingList
+    }
     
-    let init api accessToken = async {
-        let! shoppingList = getShoppingList api accessToken;
-        let! foodstuffs = getFoodstuffs api accessToken shoppingList ;
-        let items = toItems foodstuffs shoppingList.Items
+    let private createModel items = ReaderT(fun (api, accessToken) -> async {
         return PageLoaded {
             Items = items
             AccessToken = accessToken
@@ -68,13 +77,23 @@ module ShoppingListPage =
             ShowAddFoodstuffPage = false
             Api = api
         }
+    })
+    
+    let init () = monad {
+        let! items = getItems ()
+        return! createModel items
     }
     
     // Update
     
-    let tryAddFoodstuff model (foodstuff: Foodstuff) =
-        model.Api.AddFoodstuffsToShoppingList { Ids = [| foodstuff.Id |]; AccessToken = model.AccessToken }
-        |> Async.map (fun r -> ShoppingListChanged r.ShoppingList)
+    let addFoodstuffToShoppingList id = ReaderT(fun (api, accessToken) ->
+        api.AddFoodstuffsToShoppingList { Ids = [| id |]; AccessToken = accessToken })
+    
+    let tryAddFoodstuff (foodstuff: Foodstuff) = monad {
+        let! response = addFoodstuffToShoppingList foodstuff.Id
+        let! items = shoppingListToItems response.ShoppingList
+        return ShoppingListChanged items
+    }
     
     let update model msg =
         match model with
@@ -106,8 +125,9 @@ module ShoppingListPage =
                 | SearchFoodstuffPage.UpdateResult.ModelUpdated (newModel, cmd) ->
                     Loaded { m with AddFoodstuffPage = newModel }, Cmd.map AddFoodstuffPage cmd
                 | SearchFoodstuffPage.UpdateResult.FoodstuffSelected f ->
-                    Loaded m, tryAddFoodstuff m f |> Cmd.ofAsyncMsg
-            | ShoppingListChanged shoppingList ->
+                    Loaded m,  ReaderT.run (tryAddFoodstuff f) (m.Api, m.AccessToken) |> Cmd.ofAsyncMsg
+            | ShoppingListChanged items ->
+                Loaded { m with Items = items }, Cmd.none
             | _ -> failwith "Unhandled message"
         
     // View

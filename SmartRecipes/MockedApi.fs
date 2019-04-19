@@ -60,7 +60,7 @@ module MockedApi =
     let instance = {
         SignIn = fun _ -> { SignInResponse.AccessToken = sampleAccessToken } |> Ok |> Async.id
         SignUp = fun _ -> { Account = sampleAccount } |> Ok |> Async.id
-        GetShoppingList = fun _ -> { ShoppingList = sampleShoppingList } |> Async.id
+        GetShoppingList = fun _ -> { GetShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
         GetFoodstuffsById = fun r -> { GetFoodstuffsByIdResponse.Foodstuffs = Seq.map (fun id -> Map.find id sampleFoodstuffsMap) r.Ids } |> Async.id
         GetRecipesById = fun r -> { Recipes = Seq.map (fun id -> Map.find id sampleRecipesMap) r.Ids } |> Async.id
         SearchFoodstuffs = fun r -> { Foodstuffs = Seq.filter (fun f -> f.Name = r.Term) sampleFoodstuffs } |> Async.id
@@ -68,5 +68,6 @@ module MockedApi =
             let foodstuffs = Seq.map (fun id -> Map.find id sampleFoodstuffsMap) r.Ids
             let items = Seq.map (fun (f: Foodstuff) -> { FoodstuffId = f.Id; Amount = f.AmountStep.Value }) foodstuffs
             let newItems = Seq.concat [ sampleShoppingList.Items; items ]
-            sampleShoppingList = { sampleShoppingList with Items = newItems } |> ignore |> Async.id
+            sampleShoppingList = { sampleShoppingList with Items = newItems } |> ignore
+            { AddFoodstuffsToShoppingListResponse.ShoppingList = sampleShoppingList  }|> Async.id
     }

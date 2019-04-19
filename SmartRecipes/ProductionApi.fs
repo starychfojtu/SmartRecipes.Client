@@ -136,7 +136,7 @@ module ProductionApi =
         "recipeItems": [{ "recipeId": "guid", "personCount": "4" }]
     } """>
     
-    let private parseGetShoppingListResponse value =
+    let private parseGetShoppingListResponse value: GetShoppingListResponse =
         let json = GetShoppingListResponseJson.Parse value
         let items = Array.map (fun (i: GetShoppingListResponseJson.Item) -> { FoodstuffId = FoodstuffId i.FoodstuffId; Amount = (float)i.Amount }) json.Items
         let recipeItems = Array.map (fun (i: GetShoppingListResponseJson.RecipeItem) -> { RecipeId = RecipeId i.RecipeId; PersonCount = i.PersonCount }) json.RecipeItems

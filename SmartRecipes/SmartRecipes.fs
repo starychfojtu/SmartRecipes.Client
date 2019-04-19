@@ -7,6 +7,7 @@ open Library
 open Domain
 
 module App =
+    open FSharpPlus.Data
 
     type UnauthorizedPage =     
         | LoginPage
@@ -58,7 +59,7 @@ module App =
     }
     
     let initAuthorizedCommand accessToken =
-        let shoppingListPageInit = ShoppingListPage.init api accessToken |> Cmd.ofAsyncMsg |> Cmd.map ShoppingListPageMessage
+        let shoppingListPageInit = ReaderT.run (ShoppingListPage.init ()) (api, accessToken) |> Cmd.ofAsyncMsg |> Cmd.map ShoppingListPageMessage
         let shoppingListRecipePageInit = ShoppingListRecipePage.init api accessToken |> Cmd.ofAsyncMsg |> Cmd.map ShoppingListRecipeMessage
         Cmd.batch [ shoppingListPageInit; shoppingListRecipePageInit ]
     
