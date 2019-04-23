@@ -179,7 +179,7 @@ module ShoppingListPage =
         View.Button(text = "Add", command = (fun () -> dispatch GoToAddFoodstuffPage))
         
     let page model dispatch =
-        let createItemView = itemView (ItemAmountDecreaseRequested >> dispatch) (ItemAmountIncreaseRequested >> dispatch)
+        let createItemView = itemView (ItemAmountIncreaseRequested >> dispatch) (ItemAmountDecreaseRequested >> dispatch)
         View.ContentPage(
             content = View.StackLayout(
                 padding = 16.0,
