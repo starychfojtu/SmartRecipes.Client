@@ -88,12 +88,13 @@ module SearchFoodstuffPage =
             items = Seq.map (resultTableItem dispatch) results
         )
             
-    let view dispatch model =
+    let view dispatch model ignoredFoodstuffs =
+        let foodstuffs = Seq.except ignoredFoodstuffs model.Results
         View.ContentPage(
             content = View.StackLayout(
                 children = [
                     yield searchBar dispatch
-                    yield resultTable dispatch model.Results
+                    yield resultTable dispatch foodstuffs
                 ]                 
             )
         )

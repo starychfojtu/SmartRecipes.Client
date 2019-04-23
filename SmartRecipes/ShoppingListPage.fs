@@ -193,7 +193,8 @@ module ShoppingListPage =
         view.HasBackButton(value)
         
     let addFoodstuffPage model dispatch =
-        SearchFoodstuffPage.view (AddFoodstuffPage >> dispatch) model.AddFoodstuffPage |> withBackButton true
+        let foodstuffs = Seq.map (fun i -> i.Foodstuff) model.Items
+        SearchFoodstuffPage.view (AddFoodstuffPage >> dispatch) model.AddFoodstuffPage foodstuffs |> withBackButton true
         
     let view dispatch = function
         | Loading -> View.ContentPage()
