@@ -1,5 +1,8 @@
 namespace SmartRecipes
 
+open FSharpPlus.Lens
+open Lens
+
 module Domain =
     open System.Net.Mail
     open System
@@ -56,6 +59,9 @@ module Domain =
         Amount: float
     }
     
+    module ShoppingListItem =
+        let inline _amount f item = f item.Amount <&> fun v -> { item with Amount = v }
+    
     type ShoppingListRecipeItem = {
         RecipeId: RecipeId
         PersonCount: int
@@ -69,3 +75,11 @@ module Domain =
         Items: ShoppingListItem seq
         RecipeItems: ShoppingListRecipeItem seq
     }
+
+    module ShoppingList =
+        open ShoppingListItem
+        
+        let inline _items f shoppingList = f shoppingList.Items <&> fun v -> { shoppingList with Items = v }
+        
+        let changeAmount foodstuffId setValue shoppingList: ShoppingList =
+            over (_items << (_where (fun i -> i.FoodstuffId = foodstuffId)) << _amount) setValue shoppingList

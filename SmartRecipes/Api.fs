@@ -83,6 +83,17 @@ module Api =
         Recipes: Recipe seq
     }
     
+    // Set foodstuff amount in shopping list
+
+    type SetFoodstuffAmountRequest = {
+        Id: FoodstuffId
+        Value: float
+    }
+    
+    type SetFoodstuffAmountResponse = {
+        ShoppingList: ShoppingList
+    }
+    
     // API Interface
     
     type UnauthorizedApi = {
@@ -96,4 +107,5 @@ module Api =
         GetRecipesById: GetRecipesByIdRequest -> Async<GetRecipesByIdResponse>
         SearchFoodstuffs: SearchFoodstuffsRequest -> Async<SearchFoodstuffsResponse>
         AddFoodstuffsToShoppingList: AddFoodstuffsToShoppingListRequest -> Async<AddFoodstuffsToShoppingListResponse>
+        SetFoodstuffAmountInShoppingList: SetFoodstuffAmountRequest -> Async<SetFoodstuffAmountResponse>
     }

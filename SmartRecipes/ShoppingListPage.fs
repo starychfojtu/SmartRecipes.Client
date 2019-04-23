@@ -90,7 +90,7 @@ module ShoppingListPage =
         let! items = shoppingListToItems response.ShoppingList
         return ShoppingListChanged items
     }
-    
+
     let update model msg env =
         match model with
         | Loading ->
@@ -101,7 +101,7 @@ module ShoppingListPage =
                 failwith "Unhandled message"
         | Loaded m ->
             match msg with
-            | ItemAmountIncreaseRequested id ->
+            | ItemAmountIncreaseRequested item ->
                 Loaded m, Cmd.none
             | ItemAmountDecreased id ->
                 Loaded m, Cmd.none

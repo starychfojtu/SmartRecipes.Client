@@ -236,4 +236,5 @@ module ProductionApi =
         GetRecipesById = sendGetRecipesByIdRequest accessToken
         SearchFoodstuffs = sendSearchFoodstuffsRequest accessToken
         AddFoodstuffsToShoppingList = fun _ -> failwith "Not implemented."
+        SetFoodstuffAmountInShoppingList = fun _ -> failwith "Not implemented."
     }

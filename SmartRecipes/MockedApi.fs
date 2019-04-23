@@ -6,6 +6,7 @@ module MockedApi =
     open System
     open Domain
     open Api
+    open Domain
     
     let private sampleAccessToken = {
         Value = ""
@@ -73,4 +74,8 @@ module MockedApi =
             let newItems = Seq.concat [ sampleShoppingList.Items; items ]
             sampleShoppingList <- { sampleShoppingList with Items = newItems }
             { AddFoodstuffsToShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
+        SetFoodstuffAmountInShoppingList = fun r ->
+            let foodstuff = Map.find r.Id sampleFoodstuffsMap
+            sampleShoppingList <- ShoppingList.changeAmount r.Id ((+) foodstuff.AmountStep.Value) sampleShoppingList
+            { SetFoodstuffAmountResponse.ShoppingList = sampleShoppingList } |> Async.id
     }

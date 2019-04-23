@@ -1,5 +1,5 @@
 namespace SmartRecipes
-
+    
 module Library =
     let first (a, _) = a
     let second (_, b) = b
@@ -26,3 +26,11 @@ module Cmd =
     
     let ofReader env  =
         ReaderT.execute env >> Cmd.ofAsyncMsg
+        
+module Lens =
+    open FSharpPlus.Control
+    open FSharpPlus.Lens
+    
+    let inline _where p f s =
+        let update old = if p old then f old else Return.InvokeOnInstance old
+        items update s
