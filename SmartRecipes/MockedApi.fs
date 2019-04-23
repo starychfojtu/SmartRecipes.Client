@@ -7,6 +7,8 @@ module MockedApi =
     open Domain
     open Api
     open Domain
+    open FSharpPlus.Lens
+    open ShoppingList
     
     let private sampleAccessToken = {
         Value = ""
@@ -70,12 +72,10 @@ module MockedApi =
         SearchFoodstuffs = fun r -> { Foodstuffs = Seq.filter (fun f -> f.Name = r.Term) sampleFoodstuffs } |> Async.id
         AddFoodstuffsToShoppingList = fun r ->
             let foodstuffs = Seq.map (fun id -> Map.find id sampleFoodstuffsMap) r.Ids
-            let items = Seq.map (fun (f: Foodstuff) -> { FoodstuffId = f.Id; Amount = f.AmountStep.Value }) foodstuffs
-            let newItems = Seq.concat [ sampleShoppingList.Items; items ]
-            sampleShoppingList <- { sampleShoppingList with Items = newItems }
+            let newItems = Seq.map (fun (f: Foodstuff) -> { FoodstuffId = f.Id; Amount = f.AmountStep.Value }) foodstuffs
+            sampleShoppingList <- over _items (fun items -> Seq.concat [newItems; items]) sampleShoppingList
             { AddFoodstuffsToShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
         SetFoodstuffAmountInShoppingList = fun r ->
-            let foodstuff = Map.find r.Id sampleFoodstuffsMap
-            sampleShoppingList <- ShoppingList.changeAmount r.Id ((+) foodstuff.AmountStep.Value) sampleShoppingList
+            sampleShoppingList <- setAmount r.Id r.Value sampleShoppingList
             { SetFoodstuffAmountResponse.ShoppingList = sampleShoppingList } |> Async.id
     }

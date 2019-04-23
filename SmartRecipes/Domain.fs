@@ -81,5 +81,5 @@ module Domain =
         
         let inline _items f shoppingList = f shoppingList.Items <&> fun v -> { shoppingList with Items = v }
         
-        let changeAmount foodstuffId setValue shoppingList: ShoppingList =
-            over (_items << (_where (fun i -> i.FoodstuffId = foodstuffId)) << _amount) setValue shoppingList
+        let setAmount foodstuffId value shoppingList: ShoppingList =
+            setl (_items << (_where (fun i -> i.FoodstuffId = foodstuffId)) << _amount) value shoppingList
