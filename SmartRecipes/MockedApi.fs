@@ -71,6 +71,6 @@ module MockedApi =
             let foodstuffs = Seq.map (fun id -> Map.find id sampleFoodstuffsMap) r.Ids
             let items = Seq.map (fun (f: Foodstuff) -> { FoodstuffId = f.Id; Amount = f.AmountStep.Value }) foodstuffs
             let newItems = Seq.concat [ sampleShoppingList.Items; items ]
-            sampleShoppingList = { sampleShoppingList with Items = newItems } |> ignore
-            { AddFoodstuffsToShoppingListResponse.ShoppingList = sampleShoppingList  }|> Async.id
+            sampleShoppingList <- { sampleShoppingList with Items = newItems }
+            { AddFoodstuffsToShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
     }
