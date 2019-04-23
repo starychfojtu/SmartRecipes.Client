@@ -30,9 +30,7 @@ module ShoppingListPage =
     type Message =
         | PageLoaded of LoadedModel
         | ItemAmountIncreaseRequested of Item
-        | ItemAmountIncreased of Item
         | ItemAmountDecreaseRequested of Item
-        | ItemAmountDecreased of Item
         | ItemRemoved of Item
         | GoToAddFoodstuffPage
         | GoToRootPage
@@ -90,6 +88,16 @@ module ShoppingListPage =
         let! items = shoppingListToItems response.ShoppingList
         return ShoppingListChanged items
     }
+    
+    let setFoodstuffAmount id value = ReaderT(fun env ->
+        env.Api.SetFoodstuffAmountInShoppingList { Id = id; Value = value })
+    
+    let amountStepAction (item: Item) f = monad {
+        let newValue = f item.Amount item.Foodstuff.AmountStep.Value
+        let! response = setFoodstuffAmount item.Foodstuff.Id newValue
+        let! items = shoppingListToItems response.ShoppingList
+        return ShoppingListChanged items
+    }
 
     let update model msg env =
         match model with
@@ -102,13 +110,9 @@ module ShoppingListPage =
         | Loaded m ->
             match msg with
             | ItemAmountIncreaseRequested item ->
-                Loaded m, Cmd.none
-            | ItemAmountDecreased id ->
-                Loaded m, Cmd.none
-            | ItemAmountDecreaseRequested id ->
-                Loaded m, Cmd.none
-            | ItemAmountIncreased id ->
-                Loaded m, Cmd.none
+                Loaded m, amountStepAction item (+) |> Cmd.ofReader env
+            | ItemAmountDecreaseRequested item ->
+                Loaded m, amountStepAction item (-) |> Cmd.ofReader env
             | ItemRemoved id ->
                 Loaded m, Cmd.none
             | GoToAddFoodstuffPage ->
