@@ -18,6 +18,7 @@
     <Compile Include="LoginPage.fs" />
     <Compile Include="ShoppingListPage.fs" />
     <Compile Include="ShoppingListRecipePage.fs" />
+    <Compile Include="RecipeRecommendationPage.fs" />
     <Compile Include="SmartRecipes.fs" />
   </ItemGroup>
   <ItemGroup>
