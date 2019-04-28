@@ -51,6 +51,7 @@ module SearchFoodstuffPage =
         
     let private resultTableItem dispatch (foodstuff: Foodstuff) =
         View.StackLayout(
+            orientation = StackOrientation.Horizontal,
             children = [
                 yield View.StackLayout(
                     verticalOptions = LayoutOptions.CenterAndExpand,
@@ -75,6 +76,7 @@ module SearchFoodstuffPage =
                             verticalOptions = LayoutOptions.Center,
                             widthRequest = 64.0,
                             heightRequest = 64.0,
+                            text = "Add",
                             command = fun () -> TryAddFoodstuff foodstuff |> dispatch
                         )
                     ]
