@@ -50,7 +50,7 @@ module RecipeRecommendationPage =
     
     let recommendationCard dispatch recommendation =
         let recipe = recommendation.Recipe
-        Elements.recipeCard recipe (fun () -> RecipeAdded recipe |> dispatch)
+        Elements.recipeCard recipe [ Elements.actionButton "Add" (fun () -> RecipeAdded recipe |> dispatch) ]
     
     let recommendationList dispatch recommendations =
         let items =

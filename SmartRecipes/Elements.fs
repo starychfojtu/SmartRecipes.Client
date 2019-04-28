@@ -37,7 +37,7 @@ module Elements =
         
     // Recipes
     
-    let recipeCard (recipe: Recipe) addCommand =
+    let recipeCard (recipe: Recipe) acionItems =
         View.Frame(
             margin = Thickness(16.0, 8.0),
             content = View.StackLayout(
@@ -55,9 +55,7 @@ module Elements =
                             yield View.StackLayout(
                                 orientation = StackOrientation.Horizontal,
                                 horizontalOptions = LayoutOptions.EndAndExpand,
-                                children = [
-                                    yield actionButton "Add" addCommand
-                                ]
+                                children = acionItems
                             )
                         ]
                     )

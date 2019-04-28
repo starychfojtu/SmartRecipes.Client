@@ -25,6 +25,7 @@ module ShoppingListRecipePage =
     type Message =
         | ItemsChanged of Item seq
         | RecipeAdded of Recipe
+        | RecipeRemoved of Recipe
         
     // Initialization
     
@@ -91,44 +92,13 @@ module ShoppingListRecipePage =
             { model with Model.Items = items }, Cmd.none
         | RecipeAdded recipe ->
             model, addRecipeToShoppingList recipe |> Cmd.ofReader env
+        | RecipeRemoved recipe ->
+            failwith "Not implemented"
         
     // View
-
-    let itemView item =
-        View.Frame(
-            margin = Thickness(16.0, 8.0),
-            content = View.StackLayout(
-                children = [
-                    yield View.StackLayout(
-                        orientation = StackOrientation.Horizontal,
-                        heightRequest = 64.0,
-                        padding = Thickness(8.0, 0.0),
-                        children = [
-                            yield View.Label(
-                                text = item.Recipe.Name,
-                                horizontalOptions = LayoutOptions.Start,
-                                verticalOptions = LayoutOptions.Center
-                            )
-                        ]
-                    )
-                    yield View.StackLayout(
-                        orientation = StackOrientation.Horizontal,
-                        heightRequest = 40.0,
-                        padding = Thickness(8.0, 4.0),
-                        children = [
-                            yield View.Label(
-                                text = item.PersonCount.ToString (),
-                                margin = Thickness(8.0, 0.0, 0.0, 0.0),
-                                horizontalOptions = LayoutOptions.Start,
-                                textColor = Color.Black,
-                                fontSize = "Medium",
-                                verticalOptions = LayoutOptions.Center
-                            )
-                        ]
-                    )
-                ]
-            )
-        )
+    
+    let recipeItemCard dispatch item =
+        Elements.recipeCard item.Recipe [ Elements.actionButton "Remove" (fun () -> RecipeAdded item.Recipe |> dispatch) ]
         
     let view dispatch model =
         View.NavigationPage(
@@ -139,7 +109,7 @@ module ShoppingListRecipePage =
                         padding = 16.0,
                         children = [
                             yield View.ListView(
-                                items = Seq.map itemView model.Items,
+                                items = Seq.map (recipeItemCard dispatch) model.Items,
                                 rowHeight = 128,
                                 separatorVisibility = SeparatorVisibility.None
                             )
