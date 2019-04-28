@@ -2,6 +2,7 @@ namespace SmartRecipes
 
 [<RequireQualifiedAccess>]
 module RecipeRecommendationPage =
+    open AppEnvironment
     open Domain
     open FSharpPlus
     open FSharpPlus.Data
@@ -10,44 +11,64 @@ module RecipeRecommendationPage =
     open Xamarin.Forms
     
     type Model = {
-        Recipes: Recipe seq
+        Recommendations: Recommendation seq
         IsLoading: bool
     }
     
     type Message =
-        | AddRecipe of Recipe
-        | PageRefreshed of Recipe seq
+        | RecipeAdded of Recipe
+        | PageRefreshed of Recommendation seq
         
     // Initialization
     
     let initModel = {
-        Recipes = Seq.empty
+        Recommendations = Seq.empty
         IsLoading = true
     }
     
+    let getRecommendedRecipes = ReaderT(fun env ->
+        env.Api.GetRecommendedRecipes ())
+    
+    let init =
+        getRecommendedRecipes
+        |> ReaderT.map (fun r -> PageRefreshed r.Recommendations)
+    
     // Update
-
+    
+    type UpdateResult =
+        | ModelUpdated of Model * Message Cmd
+        | RecipeSelected of Recipe
+    
     let update model msg env =
         match msg with
-        | AddRecipe recipe ->
-            model, Cmd.none
-        | PageRefreshed recipes ->
-            { model with Recipes = recipes }, Cmd.none
+        | RecipeAdded recipe ->
+            RecipeSelected recipe
+        | PageRefreshed recommendations ->
+            ModelUpdated ({ model with Recommendations = recommendations }, Cmd.none)
         
     // View
     
-    let recipesList dispatch recipes =
+    let recommendationCard dispatch recommendation =
+        let recipe = recommendation.Recipe
+        Elements.recipeCard recipe (fun () -> RecipeAdded recipe |> dispatch)
+    
+    let recommendationList dispatch recommendations =
+        let items =
+            recommendations
+            |> Seq.sortBy (fun r -> r.Priority)
+            |> Seq.map (recommendationCard dispatch)
+            
         View.ListView(
             rowHeight = 128,
             separatorVisibility = SeparatorVisibility.None,
-            items = Seq.map Elements.recipeCard recipes
+            items = items
         )
         
     let mainContent dispatch model =
         View.StackLayout(
             padding = 16.0,
             children = [
-                yield recipesList dispatch model.Recipes
+                yield recommendationList dispatch model.Recommendations
             ]
         )
     

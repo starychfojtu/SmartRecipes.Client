@@ -24,6 +24,7 @@ module ShoppingListRecipePage =
         
     type Message =
         | ItemsChanged of Item seq
+        | RecipeAdded of Recipe
         
     // Initialization
     
@@ -60,21 +61,36 @@ module ShoppingListRecipePage =
         let recipesById = Seq.map (fun (r: Recipe) -> (r.Id, r)) recipes |> Map.ofSeq
         let ingredientsByFoodstuffId = Seq.map (fun (i: Foodstuff) -> (i.Id, i)) ingredients |> Map.ofSeq
         Seq.map (createItem recipesById ingredientsByFoodstuffId) shoppingList.RecipeItems
+        
+    let private shoppingListToItems shoppingList =  monad {
+        let! recipes = getRecipes shoppingList
+        let! ingredients = getIngredients recipes
+        return createItems shoppingList recipes ingredients
+    }
     
     let init = monad {
         let! shoppingList = getShoppingList
-        let! recipes = getRecipes shoppingList
-        let! ingredients = getIngredients recipes
-        let items = createItems shoppingList recipes ingredients
+        let! items = shoppingListToItems shoppingList
         return ItemsChanged items
     }
     
     // Update
     
-    let update model msg =
+    let addRecipesToShoppingList ids = ReaderT(fun env ->
+        env.Api.AddRecipesToShoppingList { Ids = ids })
+    
+    let addRecipeToShoppingList (recipe: Recipe) = monad {
+        let! response = addRecipesToShoppingList [ recipe.Id ]
+        let! items = shoppingListToItems response.ShoppingList
+        return ItemsChanged items
+    }
+    
+    let update model msg env =
         match msg with
         | ItemsChanged items ->
             { model with Model.Items = items }, Cmd.none
+        | RecipeAdded recipe ->
+            model, addRecipeToShoppingList recipe |> Cmd.ofReader env
         
     // View
 

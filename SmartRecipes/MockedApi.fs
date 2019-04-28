@@ -42,6 +42,18 @@ module MockedApi =
                 { FoodstuffId = FoodstuffId "1"; Amount = { Value = 1.0; Unit = Piece } }
                 { FoodstuffId = FoodstuffId "2"; Amount = { Value = 1.0; Unit = Piece } }
             ]
+        };
+        {
+            Id = RecipeId "2"
+            Name = "Burger"
+            CreatorId = sampleAccount.Id
+            Description = "Test"
+            PersonCount = 4
+            ImageUrl = Uri("https://google.com")
+            Ingredients = [
+                { FoodstuffId = FoodstuffId "1"; Amount = { Value = 1.0; Unit = Piece } }
+                { FoodstuffId = FoodstuffId "2"; Amount = { Value = 1.0; Unit = Piece } }
+            ]
         }
     ]
     
@@ -59,6 +71,9 @@ module MockedApi =
             { RecipeId = RecipeId "1"; PersonCount = 4 }
         ]
     }
+    
+    let recipesNotInShoppingList () =     
+        Seq.filter (fun (r: Recipe) -> not (Seq.exists (fun i -> i.RecipeId = r.Id) sampleShoppingList.RecipeItems)) sampleRecipes
     
     let unauthorized = {
         SignIn = fun _ -> { SignInResponse.AccessToken = sampleAccessToken } |> Ok |> Async.id
@@ -81,4 +96,10 @@ module MockedApi =
         RemoveFoodstuffs = fun r ->
             sampleShoppingList <- setl _items Seq.empty sampleShoppingList
             { RemoveFoodstuffsResponse.ShoppingList = sampleShoppingList } |> Async.id
+        GetRecommendedRecipes = fun () -> 
+            { Recommendations = Seq.map (fun r -> { Recipe = r; Priority = 10; }) (recipesNotInShoppingList ())} |> Async.id
+        AddRecipesToShoppingList = fun r -> 
+            let newRecipes = Seq.map (fun id -> { RecipeId = id; PersonCount = 4 }) r.Ids
+            sampleShoppingList <- over _recipeItems (Seq.append newRecipes) sampleShoppingList
+            { AddRecipesToShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
     }

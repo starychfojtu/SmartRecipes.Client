@@ -75,12 +75,15 @@ module App =
         RecipeRecommendationPage = RecipeRecommendationPage.initModel
         Environment = env
     }
+
     let initAuthorizedCommand env =
         let shoppingListPageInit = ShoppingListPage.init |> Cmd.ofReader env
         let shoppingListRecipePageInit = ShoppingListRecipePage.init |> Cmd.ofReader env
+        let recipeRecommendationPageInit = RecipeRecommendationPage.init |> Cmd.ofReader env
         Cmd.batch [
             shoppingListPageInit |> Cmd.map ShoppingListPageMessage
             shoppingListRecipePageInit |> Cmd.map ShoppingListRecipeMessage 
+            recipeRecommendationPageInit |> Cmd.map RecipeRecommendationPageMessage 
         ]
     
     let update msg = function
@@ -116,11 +119,15 @@ module App =
                  let (newModel, cmd) = ShoppingListPage.update m.ShoppingListPage msg m.Environment
                  Authorized { m with ShoppingListPage = newModel }, Cmd.map (ShoppingListPageMessage) cmd
             | ShoppingListRecipeMessage msg ->
-                 let (newModel, cmd) = ShoppingListRecipePage.update m.ShoppingListRecipePage msg
+                 let (newModel, cmd) = ShoppingListRecipePage.update m.ShoppingListRecipePage msg m.Environment
                  Authorized { m with ShoppingListRecipePage = newModel }, Cmd.map (ShoppingListRecipeMessage) cmd
             | RecipeRecommendationPageMessage msg ->
-                 let (newModel, cmd) = RecipeRecommendationPage.update m.RecipeRecommendationPage msg m.Environment
-                 Authorized { m with RecipeRecommendationPage = newModel }, Cmd.map (RecipeRecommendationPageMessage) cmd
+                let result = RecipeRecommendationPage.update m.RecipeRecommendationPage msg m.Environment
+                match result with
+                | RecipeRecommendationPage.UpdateResult.ModelUpdated (newModel, cmd) ->
+                    Authorized { m with RecipeRecommendationPage = newModel }, Cmd.map (RecipeRecommendationPageMessage) cmd
+                | RecipeRecommendationPage.UpdateResult.RecipeSelected r ->
+                    Authorized m, ShoppingListRecipePage.Message.RecipeAdded r |> ShoppingListRecipeMessage |> Cmd.ofMsg
             | _ ->
                 failwith "Unhandled message."
               

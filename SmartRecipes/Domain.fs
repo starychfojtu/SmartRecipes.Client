@@ -81,6 +81,12 @@ module Domain =
         open ShoppingListItem
         
         let inline _items f shoppingList = f shoppingList.Items <&> fun v -> { shoppingList with Items = v }
+        let inline _recipeItems f shoppingList = f shoppingList.RecipeItems <&> fun v -> { shoppingList with RecipeItems = v }
         
         let setAmount foodstuffId value shoppingList: ShoppingList =
             setl (_items << (_where (fun i -> i.FoodstuffId = foodstuffId)) << _amount) value shoppingList
+            
+    type Recommendation = {
+        Recipe: Recipe
+        Priority: int
+    }

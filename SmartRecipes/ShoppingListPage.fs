@@ -113,30 +113,30 @@ module ShoppingListPage =
     }
 
     let update model msg env =
-            match msg with
-            | PageLoaded loadedModel ->
-                loadedModel, Cmd.none
-            | ItemAmountIncreaseRequested item ->
-                model, amountStepAction item (+) |> Cmd.ofReader env
-            | ItemAmountDecreaseRequested item ->
-                model, amountStepAction item (-) |> Cmd.ofReader env
-            | ItemRemoved id ->
-                model, Cmd.none
-            | GoToAddFoodstuffPage ->
-                { model with ShowAddFoodstuffPage = true }, Cmd.none
-            | GoToRootPage ->
-                { model with ShowAddFoodstuffPage = false }, Cmd.none
-            | AddFoodstuffPage addFoodstuffPageMessage ->
-                let updateResult = SearchFoodstuffPage.update model.AddFoodstuffPage addFoodstuffPageMessage env
-                match updateResult with
-                | SearchFoodstuffPage.UpdateResult.ModelUpdated (newModel, cmd) ->
-                    { model with AddFoodstuffPage = newModel }, Cmd.map AddFoodstuffPage cmd
-                | SearchFoodstuffPage.UpdateResult.FoodstuffSelected f ->
-                    model, tryAddFoodstuff f |> Cmd.ofReader env
-            | ShoppingListChanged items ->
-                { model with Items = items }, Cmd.none
-            | RemoveAllItems ->
-                model, removeAllItems model.Items |> Cmd.ofReader env
+        match msg with
+        | PageLoaded loadedModel ->
+            loadedModel, Cmd.none
+        | ItemAmountIncreaseRequested item ->
+            model, amountStepAction item (+) |> Cmd.ofReader env
+        | ItemAmountDecreaseRequested item ->
+            model, amountStepAction item (-) |> Cmd.ofReader env
+        | ItemRemoved id ->
+            model, Cmd.none
+        | GoToAddFoodstuffPage ->
+            { model with ShowAddFoodstuffPage = true }, Cmd.none
+        | GoToRootPage ->
+            { model with ShowAddFoodstuffPage = false }, Cmd.none
+        | AddFoodstuffPage addFoodstuffPageMessage ->
+            let updateResult = SearchFoodstuffPage.update model.AddFoodstuffPage addFoodstuffPageMessage env
+            match updateResult with
+            | SearchFoodstuffPage.UpdateResult.ModelUpdated (newModel, cmd) ->
+                { model with AddFoodstuffPage = newModel }, Cmd.map AddFoodstuffPage cmd
+            | SearchFoodstuffPage.UpdateResult.FoodstuffSelected f ->
+                model, tryAddFoodstuff f |> Cmd.ofReader env
+        | ShoppingListChanged items ->
+            { model with Items = items }, Cmd.none
+        | RemoveAllItems ->
+            model, removeAllItems model.Items |> Cmd.ofReader env
         
     // View
 
@@ -163,23 +163,8 @@ module ShoppingListPage =
                     orientation = StackOrientation.Horizontal,
                     children = [
                         if item.Amount >= item.Foodstuff.AmountStep then
-                            yield View.Button(
-                                text = "remove",
-                                cornerRadius = 24,
-                                widthRequest = 48.0,
-                                heightRequest = 48.0,
-                                verticalOptions = LayoutOptions.Center,
-                                command = (fun () -> decrease item)
-                            )
-
-                        yield View.Button(
-                            text = "add",
-                            cornerRadius = 24,
-                            widthRequest = 48.0,
-                            heightRequest = 48.0,
-                            verticalOptions = LayoutOptions.Center,
-                            command = (fun () -> increase item)
-                        )
+                            yield Elements.actionButton "remove" (fun () -> decrease item)
+                        yield Elements.actionButton "add" (fun () -> increase item)
                     ]                 
                 )
             ]         

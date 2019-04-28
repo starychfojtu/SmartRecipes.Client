@@ -71,14 +71,8 @@ module SearchFoodstuffPage =
                 yield View.StackLayout(
                     horizontalOptions = LayoutOptions.EndAndExpand,
                     orientation = StackOrientation.Horizontal,
-                    children = [
-                        yield View.Button(
-                            verticalOptions = LayoutOptions.Center,
-                            widthRequest = 64.0,
-                            heightRequest = 64.0,
-                            text = "Add",
-                            command = fun () -> TryAddFoodstuff foodstuff |> dispatch
-                        )
+                    children = [ 
+                        yield Elements.actionButton "add" (fun () -> TryAddFoodstuff foodstuff |> dispatch)
                     ]
                 )
             ]

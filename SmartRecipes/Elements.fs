@@ -26,9 +26,18 @@ module Elements =
     let passwordValidatableEntry value error callback =
         validatableEntry value error callback |> Seq.map (ViewElementExtensions.isPassword true)
         
+    let actionButton text command = View.Button(
+        text = text,
+        cornerRadius = 24,
+        widthRequest = 48.0,
+        heightRequest = 48.0,
+        verticalOptions = LayoutOptions.Center,
+        command = command
+    )
+        
     // Recipes
     
-    let recipeCard (recipe: Recipe) =
+    let recipeCard (recipe: Recipe) addCommand =
         View.Frame(
             margin = Thickness(16.0, 8.0),
             content = View.StackLayout(
@@ -42,6 +51,13 @@ module Elements =
                                 text = recipe.Name,
                                 horizontalOptions = LayoutOptions.Start,
                                 verticalOptions = LayoutOptions.Center
+                            )
+                            yield View.StackLayout(
+                                orientation = StackOrientation.Horizontal,
+                                horizontalOptions = LayoutOptions.EndAndExpand,
+                                children = [
+                                    yield actionButton "Add" addCommand
+                                ]
                             )
                         ]
                     )
