@@ -116,6 +116,7 @@ module ShoppingListRecipePage =
         
     let view dispatch model =
         View.NavigationPage(
+            title = "Recipes",
             pages = [
                 yield View.ContentPage(
                     content = View.StackLayout(

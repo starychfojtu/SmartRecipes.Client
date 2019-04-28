@@ -200,11 +200,11 @@ module ShoppingListPage =
         )
         
     let addFoodstuffPage model dispatch =
-        let foodstuffs = Seq.map (fun i -> i.Foodstuff) model.Items
-        SearchFoodstuffPage.view (AddFoodstuffPage >> dispatch) model.AddFoodstuffPage foodstuffs
+        Seq.map (fun i -> i.Foodstuff) model.Items
+        |> SearchFoodstuffPage.view (AddFoodstuffPage >> dispatch) model.AddFoodstuffPage
         |> ViewElement.withBackButton true
         
-    let view dispatch model = 
+    let view dispatch model =
         let addFoodstuffToolbarItem = View.ToolbarItem(    
             text = "Add",
             command = fun () -> dispatch GoToAddFoodstuffPage
@@ -216,6 +216,7 @@ module ShoppingListPage =
         )
         
         View.NavigationPage(
+            title = "Shopping list",
             popped = (fun args -> dispatch GoToRootPage),
             toolbarItems = [ 
                 if not model.ShowAddFoodstuffPage then
