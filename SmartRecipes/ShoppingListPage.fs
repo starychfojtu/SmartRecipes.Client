@@ -97,7 +97,7 @@ module ShoppingListPage =
         env.Api.SetFoodstuffAmountInShoppingList { Id = id; Value = value })
     
     let amountStepAction (item: Item) f = monad {
-        let newValue = f item.Amount item.Foodstuff.AmountStep.Value
+        let newValue = f item.Amount item.Foodstuff.AmountStep
         let! response = setFoodstuffAmount item.Foodstuff.Id newValue
         let! items = shoppingListToItems response.ShoppingList
         return ShoppingListChanged items
@@ -153,7 +153,7 @@ module ShoppingListPage =
                             verticalOptions = LayoutOptions.Center
                         )
                         yield View.Label(
-                            text = item.Amount.ToString() + " " + item.Foodstuff.AmountStep.Unit.ToString(),
+                            text = item.Amount.ToString() + " " + item.Foodstuff.BaseAmount.Unit.ToString(),
                             verticalOptions = LayoutOptions.Center
                         )
                     ]                 
@@ -162,7 +162,7 @@ module ShoppingListPage =
                     horizontalOptions = LayoutOptions.EndAndExpand,
                     orientation = StackOrientation.Horizontal,
                     children = [
-                        if item.Amount >= item.Foodstuff.AmountStep.Value then
+                        if item.Amount >= item.Foodstuff.AmountStep then
                             yield View.Button(
                                 text = "remove",
                                 cornerRadius = 24,

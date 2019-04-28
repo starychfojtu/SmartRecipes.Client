@@ -34,12 +34,13 @@ module Domain =
     type Foodstuff = {
         Id: FoodstuffId
         Name: string
-        AmountStep: Amount
+        AmountStep: float
+        BaseAmount: Amount
     }
     
     type Ingredient = {
         FoodstuffId: FoodstuffId
-        Amount: float
+        Amount: Amount
     }
     
     type RecipeId = RecipeId of string

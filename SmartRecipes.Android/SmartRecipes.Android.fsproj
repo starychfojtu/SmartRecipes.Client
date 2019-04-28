@@ -59,6 +59,10 @@
       <HintPath>..\packages\FSharp.Data.3.0.1\lib\netstandard2.0\FSharp.Data.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="FSharp.Json, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\FSharp.Json.0.3.7\lib\netstandard2.0\FSharp.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="FSharpPlus, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\packages\FSharpPlus.1.1.0-CI00252\lib\netstandard2.0\FSharpPlus.dll</HintPath>
       <Private>True</Private>

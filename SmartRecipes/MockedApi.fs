@@ -21,10 +21,10 @@ module MockedApi =
     }
     
     let private sampleFoodstuffs = [
-        { Id = FoodstuffId "1"; Name = "Tomato"; AmountStep = { Value = 1.0; Unit = Piece } }
-        { Id = FoodstuffId "2"; Name = "Onion"; AmountStep = { Value = 1.0; Unit = Piece } }
-        { Id = FoodstuffId "3"; Name = "Garlic"; AmountStep = { Value = 1.0; Unit = Piece } }
-        { Id = FoodstuffId "4"; Name = "Carrot"; AmountStep = { Value = 1.0; Unit = Piece } }
+        { Id = FoodstuffId "1"; Name = "Tomato"; BaseAmount = { Value = 1.0; Unit = Piece }; AmountStep = 1.0 }
+        { Id = FoodstuffId "2"; Name = "Onion"; BaseAmount = { Value = 1.0; Unit = Piece }; AmountStep = 1.0 }
+        { Id = FoodstuffId "3"; Name = "Garlic"; BaseAmount = { Value = 1.0; Unit = Piece }; AmountStep = 1.0 }
+        { Id = FoodstuffId "4"; Name = "Carrot"; BaseAmount = { Value = 1.0; Unit = Piece }; AmountStep = 1.0 }
     ]
     
     let private sampleFoodstuffsMap = 
@@ -39,8 +39,8 @@ module MockedApi =
             PersonCount = 4
             ImageUrl = Uri("https://google.com")
             Ingredients = [
-                { FoodstuffId = FoodstuffId "1"; Amount = 1.0 }
-                { FoodstuffId = FoodstuffId "2"; Amount = 1.0 }
+                { FoodstuffId = FoodstuffId "1"; Amount = { Value = 1.0; Unit = Piece } }
+                { FoodstuffId = FoodstuffId "2"; Amount = { Value = 1.0; Unit = Piece } }
             ]
         }
     ]
@@ -72,7 +72,7 @@ module MockedApi =
         SearchFoodstuffs = fun r -> { Foodstuffs = Seq.filter (fun f -> f.Name = r.Term) sampleFoodstuffs } |> Async.id
         AddFoodstuffsToShoppingList = fun r ->
             let foodstuffs = Seq.map (fun id -> Map.find id sampleFoodstuffsMap) r.Ids
-            let newItems = Seq.map (fun (f: Foodstuff) -> { FoodstuffId = f.Id; Amount = f.AmountStep.Value }) foodstuffs
+            let newItems = Seq.map (fun (f: Foodstuff) -> { FoodstuffId = f.Id; Amount = f.BaseAmount.Value }) foodstuffs
             sampleShoppingList <- over _items (fun items -> Seq.concat [newItems; items]) sampleShoppingList
             { AddFoodstuffsToShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
         SetFoodstuffAmountInShoppingList = fun r ->

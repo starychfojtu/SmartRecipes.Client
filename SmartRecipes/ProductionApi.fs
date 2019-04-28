@@ -4,7 +4,6 @@ namespace SmartRecipes
 module ProductionApi =
     open System.IO
     open System.Net
-    open System.Net.Mail
     open Domain
     open FSharp.Data
     open FSharpx.Control
@@ -12,28 +11,33 @@ module ProductionApi =
     open System
     open Library
     open Api
+    open FSharp.Json
 
     type ApiError = {
         Message: string
         ParameterErrors: Map<string, string>
     }
     
-    type private ApiErrorJson = JsonProvider<""" {
-        "message": "Invalid parameters",
-        "parameterErrors": [{
-            "parameter": "Email",
-            "message": "Must containt @"
-        }]
-    } """>
+    type ApiParameterErrorJson = {
+        Parameter: string
+        Message: string
+    }
     
-    let private unhandledError () = failwith "Unhandled API error."
+    type ApiErrorJson = {
+        Message: string
+        ParameterErrors: ApiParameterErrorJson seq
+    }
+    
+    let private unhandledError () =
+        failwith "Unhandled API error."
 
-    let private baseUri = System.Uri("https://smart-recipes.herokuapp.com/")
+    let private baseUri = 
+        System.Uri("https://smart-recipes.herokuapp.com/")
     
     let private parseApiError value =
-        let json = ApiErrorJson.Parse value
-        let parameterErrors = json.ParameterErrors |> Array.map (fun (e: ApiErrorJson.ParameterError) -> (e.Parameter, e.Message)) |> Map.ofSeq
-        { Message = json.Message; ParameterErrors = parameterErrors }
+        let error = Json.deserialize<ApiErrorJson> value
+        let parameterErrors = error.ParameterErrors |> Seq.map (fun e -> (e.Parameter, e.Message)) |> Map.ofSeq
+        { ApiError.Message = error.Message; ParameterErrors = parameterErrors }
             
     let private sendRequest httpMethod (path: string) query body accessToken parseSuccess parseError: Async<Result<'a, 'b>> =
         async {
@@ -41,27 +45,17 @@ module ProductionApi =
                 let authorization = Option.map (fun (t: AccessToken) -> t.Value) accessToken
                 let textRequest = Option.map (TextRequest) body
                 let! response =
-                    match textRequest with // Why doesn't the library accept Option of body ?
-                    | Some r ->
-                        Http.AsyncRequest(
-                            Uri(baseUri, path).ToString(),
-                            query = query,
-                            httpMethod = httpMethod,
-                            body = r,
-                            headers = seq {
-                                if Option.isSome authorization then yield ("authorization", Option.get authorization)
-                                yield ("Content-Type", "application/json")
-                            }
-                        )
-                    | None ->
-                        Http.AsyncRequest(
-                            Uri(baseUri, path).ToString(),
-                            query = query,
-                            httpMethod = httpMethod,
-                            headers = seq {
-                                if Option.isSome authorization then yield ("authorization", Option.get authorization)
-                            }
-                        )
+                    Http.AsyncRequest(
+                        Uri(baseUri, path).ToString(),
+                        query = query,
+                        httpMethod = httpMethod,
+                        ?body = textRequest,
+                        headers = seq {
+                            if Option.isSome authorization then
+                                yield ("authorization", Option.get authorization)
+                            yield ("Content-Type", "application/json")
+                        }
+                    )
                 
                 return
                     match response.Body with
@@ -84,37 +78,18 @@ module ProductionApi =
         
     // Sign in
     
-    type private SignInResponseJson = JsonProvider<""" {
-        "value": "random-token-hash",
-        "accountId": "guid",
-        "expirationUtc": "2019-03-25T23:49:18"
-    } """>
-    
-    let private parseSignInResponse value: SignInResponse =
-        let json = SignInResponseJson.Parse value
-        { AccessToken = { Value = json.Value; ExpirationUtc = json.ExpirationUtc } }
-
-    let private parseSignInError apiError =
+    let private parseSignInError (apiError: ApiError) =
         match apiError.Message with
         | "Invalid credentials." -> InvalidCredentials
         | _ -> unhandledError ()
 
     let private sendSignInRequest request: Async<Result<SignInResponse, SignInError>> =
         let body = JsonConvert.SerializeObject request
-        post "/signIn" body None parseSignInResponse parseSignInError
+        post "/signIn" body None Json.deserialize<SignInResponse> parseSignInError
             
     // Sign up
 
-    type private SignUpResponseJson = JsonProvider<""" {
-        "id": "random-token-hash",
-        "email": "test@gmail.com"
-    } """>
-    
-    let private parseSignUpResponse value =
-        let json = SignUpResponseJson.Parse value
-        { Account = { Id = AccountId json.Id; Email = MailAddress json.Email } }
-        
-    let private parseSignUpError apiError =
+    let private parseSignUpError (apiError: ApiError) =
         match apiError.Message with
         | "Account already exists." -> AccountAlreadyExists
         | "Invalid parameters." ->
@@ -125,103 +100,29 @@ module ProductionApi =
 
     let private sendSignUpRequest (request: SignUpRequest): Async<Result<SignUpResponse, SignUpError>> =
         let body = JsonConvert.SerializeObject request
-        post "/signUp" body None parseSignUpResponse parseSignUpError
+        post "/signUp" body None Json.deserialize<SignUpResponse> parseSignUpError
             
     // Get shopping list
-    
-    type private GetShoppingListResponseJson = JsonProvider<""" {
-        "id": "guid",
-        "ownerId": "guid",
-        "items": [{ "foodstuffId": "guid", "amount": "20.0" }],
-        "recipeItems": [{ "recipeId": "guid", "personCount": "4" }]
-    } """>
-    
-    let private parseGetShoppingListResponse value: GetShoppingListResponse =
-        let json = GetShoppingListResponseJson.Parse value
-        let items = Array.map (fun (i: GetShoppingListResponseJson.Item) -> { FoodstuffId = FoodstuffId i.FoodstuffId; Amount = (float)i.Amount }) json.Items
-        let recipeItems = Array.map (fun (i: GetShoppingListResponseJson.RecipeItem) -> { RecipeId = RecipeId i.RecipeId; PersonCount = i.PersonCount }) json.RecipeItems
-        {
-            ShoppingList = {
-                Id = ShoppingListId json.Id
-                OwnerId = AccountId json.OwnerId
-                Items = items
-                RecipeItems = recipeItems
-            }
-        }
 
     let private sendGetShoppingListRequest accessToken: Async<GetShoppingListResponse> =
-        get "/shoppingList" (Some accessToken) parseGetShoppingListResponse (fun _ -> failwith "Unhandled error") |> Async.map getOk
+        get "/shoppingList" (Some accessToken) Json.deserialize<GetShoppingListResponse> (fun _ -> failwith "Unhandled error") |> Async.map getOk
         
          
     // Get Foodstuffs by id
-
-    type private FoodstuffsResponseJson = JsonProvider<""" [{
-        "id": "guid",
-        "name": "tomato",
-        "amountStep": { "unit": "grams", "value": "20.0" }
-    }] """>
-    
-    let private parseUnit = function
-        | "grams" -> Gram
-        | "pieces" -> Piece
-        | "liters" -> Liter
-        | _ -> failwith "Unknown unit."
-    
-    let private parseFoodstuff (item: FoodstuffsResponseJson.Root) =
-        {
-            Id = FoodstuffId item.Id
-            Name = item.Name
-            AmountStep = {
-                Unit = parseUnit item.AmountStep.Unit
-                Value = (float)item.AmountStep.Value
-            }
-        }
-    
-    let private parseGetFoodstuffsByIdResponse value: GetFoodstuffsByIdResponse =
-        let values = FoodstuffsResponseJson.Parse value
-        let foodstuffs = Array.map parseFoodstuff values
-        { Foodstuffs = foodstuffs }
         
     let private sendGetFoodstuffsByIdRequest accessToken (request: GetFoodstuffsByIdRequest): Async<GetFoodstuffsByIdResponse> =
          let query = Seq.map (fun (FoodstuffId id) -> ("ids[]", id)) request.Ids |> Seq.toList
-         getWithQuery "/foodstuffs" query (Some accessToken) parseGetFoodstuffsByIdResponse (fun _ -> failwith "Unhandled error.") |> Async.map getOk
+         getWithQuery "/foodstuffs" query (Some accessToken) Json.deserialize<GetFoodstuffsByIdResponse> (fun _ -> failwith "Unhandled error.") |> Async.map getOk
          
     // Search Foodstuffs
-    
-    let private parseSearchFoodstuffsResponse value: SearchFoodstuffsResponse =
-        let values = FoodstuffsResponseJson.Parse value
-        let foodstuffs = Array.map parseFoodstuff values
-        { Foodstuffs = foodstuffs }
     
     let private sendSearchFoodstuffsRequest accessToken request: Async<SearchFoodstuffsResponse> =
         if String.IsNullOrEmpty request.Term
         then
-            async { return { Foodstuffs = [] } } // TODO: fix this in API
+            async { return { Foodstuffs = [] } }
         else
             let query = [("query", request.Term)]
-            getWithQuery "/foodstuffs/search" query (Some accessToken) parseSearchFoodstuffsResponse (fun _ -> failwith "Unhandled error.") |> Async.map getOk
-
-         
-    // Get Recipes by id
-
-    let private sendGetRecipesByIdRequest accessToken (request: GetRecipesByIdRequest): Async<GetRecipesByIdResponse> =
-         async {
-             return {
-                 Recipes = [
-                     {
-                         Id = RecipeId "r1"
-                         Name = "Lasagna"
-                         CreatorId = AccountId "guid"
-                         PersonCount = 4
-                         ImageUrl = Uri("https://google.com")
-                         Description = "Very good"
-                         Ingredients = [
-                             { FoodstuffId = FoodstuffId "f1"; Amount = 10.0 }
-                         ]
-                     }
-                 ]
-             }
-        }
+            getWithQuery "/foodstuffs/search" query (Some accessToken) Json.deserialize<SearchFoodstuffsResponse> (fun _ -> failwith "Unhandled error.") |> Async.map getOk
          
     // API Interface
     
@@ -233,7 +134,7 @@ module ProductionApi =
     let authorized accessToken = {
         GetShoppingList = fun () -> sendGetShoppingListRequest accessToken
         GetFoodstuffsById = sendGetFoodstuffsByIdRequest accessToken
-        GetRecipesById = sendGetRecipesByIdRequest accessToken
+        GetRecipesById = fun _ -> failwith "Not implemented."
         SearchFoodstuffs = sendSearchFoodstuffsRequest accessToken
         AddFoodstuffsToShoppingList = fun _ -> failwith "Not implemented."
         SetFoodstuffAmountInShoppingList = fun _ -> failwith "Not implemented."

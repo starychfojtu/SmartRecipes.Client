@@ -64,7 +64,7 @@ module SearchFoodstuffPage =
                         yield View.Label(
                             horizontalOptions = LayoutOptions.Start,
                             verticalOptions = LayoutOptions.Center,
-                            text = amountToString foodstuff.AmountStep
+                            text = amountToString foodstuff.BaseAmount
                         )
                     ]
                 )
