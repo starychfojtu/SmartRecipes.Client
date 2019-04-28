@@ -1,6 +1,7 @@
 namespace SmartRecipes
 
 module Elements =
+    open Domain
     open Fabulous.DynamicViews
     open Xamarin.Forms
     
@@ -24,3 +25,41 @@ module Elements =
         
     let passwordValidatableEntry value error callback =
         validatableEntry value error callback |> Seq.map (ViewElementExtensions.isPassword true)
+        
+    // Recipes
+    
+    let recipeCard (recipe: Recipe) =
+        View.Frame(
+            margin = Thickness(16.0, 8.0),
+            content = View.StackLayout(
+                children = [
+                    yield View.StackLayout(
+                        orientation = StackOrientation.Horizontal,
+                        heightRequest = 64.0,
+                        padding = Thickness(8.0, 0.0),
+                        children = [
+                            yield View.Label(
+                                text = recipe.Name,
+                                horizontalOptions = LayoutOptions.Start,
+                                verticalOptions = LayoutOptions.Center
+                            )
+                        ]
+                    )
+                    yield View.StackLayout(
+                        orientation = StackOrientation.Horizontal,
+                        heightRequest = 40.0,
+                        padding = Thickness(8.0, 4.0),
+                        children = [
+                            yield View.Label(
+                                text = recipe.PersonCount.ToString (),
+                                margin = Thickness(8.0, 0.0, 0.0, 0.0),
+                                horizontalOptions = LayoutOptions.Start,
+                                textColor = Color.Black,
+                                fontSize = "Medium",
+                                verticalOptions = LayoutOptions.Center
+                            )
+                        ]
+                    )
+                ]
+            )
+        )
