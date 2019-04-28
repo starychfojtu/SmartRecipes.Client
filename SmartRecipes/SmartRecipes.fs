@@ -175,7 +175,7 @@ type App () as app =
 #if DEBUG
     // Uncomment this line to enable live update in debug mode. 
     // See https://fsprojects.github.io/Fabulous/tools.html for further  instructions.
-    //do runner.EnableLiveUpdate()
+    // do runner.EnableLiveUpdate()
 #endif    
 
 

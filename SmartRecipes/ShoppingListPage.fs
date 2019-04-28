@@ -17,18 +17,15 @@ module ShoppingListPage =
         Amount: float
     }
     
-    type LoadedModel = {
+    type Model = {
         Items: Item seq
         AddFoodstuffPage: SearchFoodstuffPage.Model
         ShowAddFoodstuffPage: bool
+        IsLoading: bool
     }
-    
-    type Model =
-        | Loading
-        | Loaded of LoadedModel
         
     type Message =
-        | PageLoaded of LoadedModel
+        | PageLoaded of Model
         | ItemAmountIncreaseRequested of Item
         | ItemAmountDecreaseRequested of Item
         | ItemRemoved of Item
@@ -39,7 +36,12 @@ module ShoppingListPage =
         
     // Initialization
     
-    let initModel = Loading
+    let initModel = {
+        Items = Seq.empty
+        AddFoodstuffPage = SearchFoodstuffPage.initModel
+        ShowAddFoodstuffPage = false
+        IsLoading = true
+    }
     
     let private getShoppingList = ReaderT(fun env -> 
         env.Api.GetShoppingList () |> Async.map (fun r -> r.ShoppingList))
@@ -71,6 +73,7 @@ module ShoppingListPage =
             Items = items
             AddFoodstuffPage = SearchFoodstuffPage.initModel
             ShowAddFoodstuffPage = false
+            IsLoading = false
         }
     
     let init = monad {
@@ -100,35 +103,28 @@ module ShoppingListPage =
     }
 
     let update model msg env =
-        match model with
-        | Loading ->
             match msg with
             | PageLoaded loadedModel ->
-                Loaded loadedModel, Cmd.none
-            | _ ->
-                failwith "Unhandled message"
-        | Loaded m ->
-            match msg with
+                loadedModel, Cmd.none
             | ItemAmountIncreaseRequested item ->
-                Loaded m, amountStepAction item (+) |> Cmd.ofReader env
+                model, amountStepAction item (+) |> Cmd.ofReader env
             | ItemAmountDecreaseRequested item ->
-                Loaded m, amountStepAction item (-) |> Cmd.ofReader env
+                model, amountStepAction item (-) |> Cmd.ofReader env
             | ItemRemoved id ->
-                Loaded m, Cmd.none
+                model, Cmd.none
             | GoToAddFoodstuffPage ->
-                Loaded { m with ShowAddFoodstuffPage = true }, Cmd.none
+                { model with ShowAddFoodstuffPage = true }, Cmd.none
             | GoToRootPage ->
-                Loaded { m with ShowAddFoodstuffPage = false }, Cmd.none
+                { model with ShowAddFoodstuffPage = false }, Cmd.none
             | AddFoodstuffPage addFoodstuffPageMessage ->
-                let updateResult = SearchFoodstuffPage.update m.AddFoodstuffPage addFoodstuffPageMessage env
+                let updateResult = SearchFoodstuffPage.update model.AddFoodstuffPage addFoodstuffPageMessage env
                 match updateResult with
                 | SearchFoodstuffPage.UpdateResult.ModelUpdated (newModel, cmd) ->
-                    Loaded { m with AddFoodstuffPage = newModel }, Cmd.map AddFoodstuffPage cmd
+                    { model with AddFoodstuffPage = newModel }, Cmd.map AddFoodstuffPage cmd
                 | SearchFoodstuffPage.UpdateResult.FoodstuffSelected f ->
-                    Loaded m,  tryAddFoodstuff f |> Cmd.ofReader env
+                    model, tryAddFoodstuff f |> Cmd.ofReader env
             | ShoppingListChanged items ->
-                Loaded { m with Items = items }, Cmd.none
-            | _ -> failwith "Unhandled message"
+                { model with Items = items }, Cmd.none
         
     // View
 
@@ -193,22 +189,18 @@ module ShoppingListPage =
             )
         )
         
-    let withBackButton value (view: ViewElement) =
-        view.HasBackButton(value)
-        
     let addFoodstuffPage model dispatch =
         let foodstuffs = Seq.map (fun i -> i.Foodstuff) model.Items
-        SearchFoodstuffPage.view (AddFoodstuffPage >> dispatch) model.AddFoodstuffPage foodstuffs |> withBackButton true
+        SearchFoodstuffPage.view (AddFoodstuffPage >> dispatch) model.AddFoodstuffPage foodstuffs
+        |> ViewElement.withBackButton true
         
-    let view dispatch = function
-        | Loading -> View.ContentPage()
-        | Loaded model -> 
-            View.NavigationPage(
-                popped = (fun args -> dispatch GoToRootPage),
-                pages = [
-                    yield page model dispatch
-                    if model.ShowAddFoodstuffPage then
-                        yield addFoodstuffPage model dispatch
-                ]
-            )
+    let view dispatch model = 
+        View.NavigationPage(
+            popped = (fun args -> dispatch GoToRootPage),
+            pages = [
+                yield page model dispatch
+                if model.ShowAddFoodstuffPage then
+                    yield addFoodstuffPage model dispatch
+            ]
+        )
             

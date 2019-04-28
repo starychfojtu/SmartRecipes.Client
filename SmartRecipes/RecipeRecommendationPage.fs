@@ -33,4 +33,8 @@ module RecipeRecommendationPage =
     // View
     
     let view dispatch model =
-        View.ContentPage()
+        View.NavigationPage(
+            pages = [
+                yield View.ContentPage()
+            ]
+        )

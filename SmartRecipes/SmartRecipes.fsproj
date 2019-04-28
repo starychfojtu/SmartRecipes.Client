@@ -13,9 +13,9 @@
     <Compile Include="ProductionApi.fs" />
     <Compile Include="MockedApi.fs" />
     <Compile Include="Elements.fs" />
-    <Compile Include="SearchFoodstuffPage.fs" />
     <Compile Include="SignUpPage.fs" />
     <Compile Include="LoginPage.fs" />
+    <Compile Include="SearchFoodstuffPage.fs" />
     <Compile Include="ShoppingListPage.fs" />
     <Compile Include="ShoppingListRecipePage.fs" />
     <Compile Include="RecipeRecommendationPage.fs" />

@@ -17,20 +17,20 @@ module ShoppingListRecipePage =
         Ingredients: Foodstuff seq
     }
     
-    type LoadedModel = {
+    type Model = {
         Items: Item seq
+        IsLoading: bool
     }
-    
-    type Model =
-        | Loading
-        | Loaded of LoadedModel
         
     type Message =
-        | PageLoaded of LoadedModel
+        | ItemsChanged of Item seq
         
     // Initialization
     
-    let initModel = Loading
+    let initModel = {
+        Items = Seq.empty
+        IsLoading = true
+    }
     
     let private getShoppingList = ReaderT(fun env ->
         env.Api.GetShoppingList () |> Async.map (fun r -> r.ShoppingList))
@@ -66,22 +66,15 @@ module ShoppingListRecipePage =
         let! recipes = getRecipes shoppingList
         let! ingredients = getIngredients recipes
         let items = createItems shoppingList recipes ingredients
-        return PageLoaded { Items = items }
+        return ItemsChanged items
     }
     
     // Update
     
     let update model msg =
-        match model with
-        | Loading ->
-            match msg with
-            | PageLoaded loadedModel ->
-                Loaded loadedModel, Cmd.none
-            | _ ->
-                failwith "Unhandled message"
-        | Loaded m ->
-            match msg with
-            | _ -> failwith "Unhandled message"
+        match msg with
+        | ItemsChanged items ->
+            { model with Model.Items = items }, Cmd.none
         
     // View
 
@@ -121,18 +114,21 @@ module ShoppingListRecipePage =
             )
         )
         
-    let view dispatch = function
-        | Loading -> View.ContentPage()
-        | Loaded m ->
-            View.ContentPage(
-                content = View.StackLayout(
-                    padding = 16.0,
-                    children = [
-                        yield View.ListView(
-                            items = Seq.map itemView m.Items,
-                            rowHeight = 128,
-                            separatorVisibility = SeparatorVisibility.None
-                        )
-                    ]
+    let view dispatch model =
+        View.NavigationPage(
+            pages = [
+                yield View.ContentPage(
+                    content = View.StackLayout(
+                        padding = 16.0,
+                        children = [
+                            yield View.ListView(
+                                items = Seq.map itemView model.Items,
+                                rowHeight = 128,
+                                separatorVisibility = SeparatorVisibility.None
+                            )
+                        ]
+                    )
                 )
-            )
+            ]
+        )
+        

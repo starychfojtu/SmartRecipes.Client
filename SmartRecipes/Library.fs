@@ -18,6 +18,15 @@ module ReaderT =
     let execute env reader =
         ReaderT.run reader env
         
+module ViewElement =
+    open Fabulous.DynamicViews
+
+    let withBackButton value (view: ViewElement) =
+        view.HasBackButton(value)
+        
+    let withNavbar value (view: ViewElement) =
+        view.HasNavigationBar(value)
+        
 module Cmd =
     open FSharpPlus.Data
     open Fabulous.Core
