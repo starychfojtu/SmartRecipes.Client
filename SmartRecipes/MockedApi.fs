@@ -78,4 +78,7 @@ module MockedApi =
         SetFoodstuffAmountInShoppingList = fun r ->
             sampleShoppingList <- setAmount r.Id r.Value sampleShoppingList
             { SetFoodstuffAmountResponse.ShoppingList = sampleShoppingList } |> Async.id
+        RemoveFoodstuffs = fun r ->
+            sampleShoppingList <- setl _items Seq.empty sampleShoppingList
+            { RemoveFoodstuffsResponse.ShoppingList = sampleShoppingList } |> Async.id
     }

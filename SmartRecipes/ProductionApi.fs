@@ -237,4 +237,5 @@ module ProductionApi =
         SearchFoodstuffs = sendSearchFoodstuffsRequest accessToken
         AddFoodstuffsToShoppingList = fun _ -> failwith "Not implemented."
         SetFoodstuffAmountInShoppingList = fun _ -> failwith "Not implemented."
+        RemoveFoodstuffs = fun _ -> failwith "Not implemented"
     }

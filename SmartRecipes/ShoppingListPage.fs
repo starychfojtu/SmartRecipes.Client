@@ -33,6 +33,7 @@ module ShoppingListPage =
         | GoToRootPage
         | AddFoodstuffPage of SearchFoodstuffPage.Message
         | ShoppingListChanged of Item seq
+        | RemoveAllItems
         
     // Initialization
     
@@ -101,6 +102,15 @@ module ShoppingListPage =
         let! items = shoppingListToItems response.ShoppingList
         return ShoppingListChanged items
     }
+    
+    let removeFoodstuffs ids = ReaderT(fun env ->
+        env.Api.RemoveFoodstuffs { Ids = ids; })
+    
+    let removeAllItems items = monad {
+        let! response = Seq.map (fun i -> i.Foodstuff.Id) items |> removeFoodstuffs 
+        let! items = shoppingListToItems response.ShoppingList
+        return ShoppingListChanged items
+    }
 
     let update model msg env =
             match msg with
@@ -125,6 +135,8 @@ module ShoppingListPage =
                     model, tryAddFoodstuff f |> Cmd.ofReader env
             | ShoppingListChanged items ->
                 { model with Items = items }, Cmd.none
+            | RemoveAllItems ->
+                model, removeAllItems model.Items |> Cmd.ofReader env
         
     // View
 
@@ -150,14 +162,16 @@ module ShoppingListPage =
                     horizontalOptions = LayoutOptions.EndAndExpand,
                     orientation = StackOrientation.Horizontal,
                     children = [
-                        yield View.Button(
-                            text = "remove",
-                            cornerRadius = 24,
-                            widthRequest = 48.0,
-                            heightRequest = 48.0,
-                            verticalOptions = LayoutOptions.Center,
-                            command = (fun () -> decrease item)
-                        )
+                        if item.Amount >= item.Foodstuff.AmountStep.Value then
+                            yield View.Button(
+                                text = "remove",
+                                cornerRadius = 24,
+                                widthRequest = 48.0,
+                                heightRequest = 48.0,
+                                verticalOptions = LayoutOptions.Center,
+                                command = (fun () -> decrease item)
+                            )
+
                         yield View.Button(
                             text = "add",
                             cornerRadius = 24,
@@ -171,16 +185,12 @@ module ShoppingListPage =
             ]         
         )
         
-    let addFoodstuffButton dispatch =
-        View.Button(text = "Add", command = (fun () -> dispatch GoToAddFoodstuffPage))
-        
     let page model dispatch =
         let createItemView = itemView (ItemAmountIncreaseRequested >> dispatch) (ItemAmountDecreaseRequested >> dispatch)
         View.ContentPage(
             content = View.StackLayout(
                 padding = 16.0,
                 children = [
-                    yield addFoodstuffButton dispatch
                     yield View.ListView(
                         items = Seq.map createItemView model.Items,
                         rowHeight = 64
@@ -195,8 +205,23 @@ module ShoppingListPage =
         |> ViewElement.withBackButton true
         
     let view dispatch model = 
+        let addFoodstuffToolbarItem = View.ToolbarItem(    
+            text = "Add",
+            command = fun () -> dispatch GoToAddFoodstuffPage
+        )
+        
+        let clearListToolbarItem = View.ToolbarItem(    
+            text = "Clear",
+            command = fun () -> dispatch RemoveAllItems
+        )
+        
         View.NavigationPage(
             popped = (fun args -> dispatch GoToRootPage),
+            toolbarItems = [ 
+                if not model.ShowAddFoodstuffPage then
+                    yield addFoodstuffToolbarItem 
+                    yield clearListToolbarItem
+            ],
             pages = [
                 yield page model dispatch
                 if model.ShowAddFoodstuffPage then

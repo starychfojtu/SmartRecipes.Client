@@ -94,6 +94,16 @@ module Api =
         ShoppingList: ShoppingList
     }
     
+    // Remove foodstuffs from shooping list
+    
+    type RemoveFoodstuffsRequets = {
+        Ids: FoodstuffId seq
+    }
+    
+    type RemoveFoodstuffsResponse = {
+        ShoppingList: ShoppingList
+    }
+    
     // API Interface
     
     type UnauthorizedApi = {
@@ -108,4 +118,5 @@ module Api =
         SearchFoodstuffs: SearchFoodstuffsRequest -> Async<SearchFoodstuffsResponse>
         AddFoodstuffsToShoppingList: AddFoodstuffsToShoppingListRequest -> Async<AddFoodstuffsToShoppingListResponse>
         SetFoodstuffAmountInShoppingList: SetFoodstuffAmountRequest -> Async<SetFoodstuffAmountResponse>
+        RemoveFoodstuffs: RemoveFoodstuffsRequets -> Async<RemoveFoodstuffsResponse>
     }
