@@ -86,6 +86,15 @@ module ShoppingListRecipePage =
         return ItemsChanged items
     }
     
+    let removeRecipesFromShoppingList ids = ReaderT(fun env ->
+        env.Api.RemoveRecipesFromShoppingList { Ids = ids })
+    
+    let removeRecipeFromShoppingList (recipe: Recipe) = monad {
+        let! response = removeRecipesFromShoppingList [ recipe.Id ]
+        let! items = shoppingListToItems response.ShoppingList
+        return ItemsChanged items
+    }
+    
     let update model msg env =
         match msg with
         | ItemsChanged items ->
@@ -93,12 +102,12 @@ module ShoppingListRecipePage =
         | RecipeAdded recipe ->
             model, addRecipeToShoppingList recipe |> Cmd.ofReader env
         | RecipeRemoved recipe ->
-            failwith "Not implemented"
+            model, removeRecipeFromShoppingList recipe |> Cmd.ofReader env
         
     // View
     
     let recipeItemCard dispatch item =
-        Elements.recipeCard item.Recipe [ Elements.actionButton "Remove" (fun () -> RecipeAdded item.Recipe |> dispatch) ]
+        Elements.recipeCard item.Recipe [ Elements.actionButton "Remove" (fun () -> RecipeRemoved item.Recipe |> dispatch) ]
         
     let view dispatch model =
         View.NavigationPage(

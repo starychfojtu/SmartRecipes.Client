@@ -141,4 +141,5 @@ module ProductionApi =
         RemoveFoodstuffs = fun _ -> failwith "Not implemented"
         GetRecommendedRecipes = fun _ -> failwith "Not implemented"
         AddRecipesToShoppingList = fun _ -> failwith "Not implemented"
+        RemoveRecipesFromShoppingList = fun _ -> failwith "Not implemented"
     }

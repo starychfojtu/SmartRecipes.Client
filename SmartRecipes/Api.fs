@@ -120,6 +120,16 @@ module Api =
         ShoppingList: ShoppingList
     }
     
+    // Remove recipes from shopping list
+    
+    type RemoveRecipesFromShoppingListRequest = {
+        Ids: RecipeId seq
+    }
+    
+    type RemoveRecipesFromShoppingListResponse = {
+        ShoppingList: ShoppingList
+    }
+    
     // API Interface
     
     type UnauthorizedApi = {
@@ -137,4 +147,5 @@ module Api =
         RemoveFoodstuffs: RemoveFoodstuffsRequets -> Async<RemoveFoodstuffsResponse>
         GetRecommendedRecipes: unit -> Async<GetRecommendedRecipesResponse>
         AddRecipesToShoppingList: AddRecipesToShoppingListRequest -> Async<AddRecipesToShoppingListResponse>
+        RemoveRecipesFromShoppingList: RemoveRecipesFromShoppingListRequest -> Async<RemoveRecipesFromShoppingListResponse>
     }

@@ -102,4 +102,7 @@ module MockedApi =
             let newRecipes = Seq.map (fun id -> { RecipeId = id; PersonCount = 4 }) r.Ids
             sampleShoppingList <- over _recipeItems (Seq.append newRecipes) sampleShoppingList
             { AddRecipesToShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
+        RemoveRecipesFromShoppingList = fun r ->
+            sampleShoppingList <- over _recipeItems (Seq.filter (fun i -> not (Seq.contains i.RecipeId r.Ids))) sampleShoppingList
+            { RemoveRecipesFromShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
     }
