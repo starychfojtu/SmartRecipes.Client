@@ -16,6 +16,7 @@ module RecipeRecommendationPage =
     }
     
     type Message =
+        | Refresh
         | RecipeAdded of Recipe
         | PageRefreshed of Recommendation seq
         
@@ -41,6 +42,8 @@ module RecipeRecommendationPage =
     
     let update model msg env =
         match msg with
+        | Refresh ->
+            ModelUpdated (model, init |> Cmd.ofReader env)
         | RecipeAdded recipe ->
             RecipeSelected recipe
         | PageRefreshed recommendations ->

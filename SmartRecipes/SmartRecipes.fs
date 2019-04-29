@@ -12,7 +12,6 @@ module App =
     open FSharpPlus
     open FSharpPlus.Data
     open Fabulous.Core
-    open Fabulous.Core
     open Library
 
     type UnauthorizedPage =     
@@ -119,8 +118,20 @@ module App =
                  let (newModel, cmd) = ShoppingListPage.update m.ShoppingListPage msg m.Environment
                  Authorized { m with ShoppingListPage = newModel }, Cmd.map (ShoppingListPageMessage) cmd
             | ShoppingListRecipeMessage msg ->
-                 let (newModel, cmd) = ShoppingListRecipePage.update m.ShoppingListRecipePage msg m.Environment
-                 Authorized { m with ShoppingListRecipePage = newModel }, Cmd.map (ShoppingListRecipeMessage) cmd
+                 let refreshRecommendationsMsg =
+                     match msg with
+                     | ShoppingListRecipePage.Message.ItemsChanged _ ->
+                         RecipeRecommendationPage.Message.Refresh |> RecipeRecommendationPageMessage |> Some
+                     | _ ->
+                         None
+                 
+                 let (newShoppingListPageModel, cmd) = ShoppingListRecipePage.update m.ShoppingListRecipePage msg m.Environment
+                 let shoppingListPageCmd = Cmd.map (ShoppingListRecipeMessage) cmd
+                 let refreshRecommendationsCmd = Cmd.ofMsgOption refreshRecommendationsMsg
+                 let cmds = Cmd.batch [ shoppingListPageCmd; refreshRecommendationsCmd ]
+                 let newModel = { m with ShoppingListRecipePage = newShoppingListPageModel }
+                 
+                 Authorized newModel, cmds
             | RecipeRecommendationPageMessage msg ->
                 let result = RecipeRecommendationPage.update m.RecipeRecommendationPage msg m.Environment
                 match result with
