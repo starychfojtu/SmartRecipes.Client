@@ -85,7 +85,7 @@ module App =
             recipeRecommendationPageInit |> Cmd.map RecipeRecommendationPageMessage 
         ]
     
-    let update msg = function
+    let updatePage msg = function
         | Unauthorized m -> 
             match msg with
             | LoginPageMessage msg ->
@@ -118,30 +118,34 @@ module App =
                  let (newModel, cmd) = ShoppingListPage.update m.ShoppingListPage msg m.Environment
                  Authorized { m with ShoppingListPage = newModel }, Cmd.map (ShoppingListPageMessage) cmd
             | ShoppingListRecipeMessage msg ->
-                 let refreshRecommendationsMsg =
-                     match msg with
-                     | ShoppingListRecipePage.Message.ItemsChanged _ ->
-                         RecipeRecommendationPage.Message.Refresh |> RecipeRecommendationPageMessage |> Some
-                     | _ ->
-                         None
-                 
                  let (newShoppingListPageModel, cmd) = ShoppingListRecipePage.update m.ShoppingListRecipePage msg m.Environment
-                 let shoppingListPageCmd = Cmd.map (ShoppingListRecipeMessage) cmd
-                 let refreshRecommendationsCmd = Cmd.ofMsgOption refreshRecommendationsMsg
-                 let cmds = Cmd.batch [ shoppingListPageCmd; refreshRecommendationsCmd ]
-                 let newModel = { m with ShoppingListRecipePage = newShoppingListPageModel }
-                 
-                 Authorized newModel, cmds
+                 Authorized { m with ShoppingListRecipePage = newShoppingListPageModel }, Cmd.map (ShoppingListRecipeMessage) cmd
             | RecipeRecommendationPageMessage msg ->
-                let result = RecipeRecommendationPage.update m.RecipeRecommendationPage msg m.Environment
-                match result with
+                match RecipeRecommendationPage.update m.RecipeRecommendationPage msg m.Environment with
                 | RecipeRecommendationPage.UpdateResult.ModelUpdated (newModel, cmd) ->
                     Authorized { m with RecipeRecommendationPage = newModel }, Cmd.map (RecipeRecommendationPageMessage) cmd
                 | RecipeRecommendationPage.UpdateResult.RecipeSelected r ->
                     Authorized m, ShoppingListRecipePage.Message.RecipeAdded r |> ShoppingListRecipeMessage |> Cmd.ofMsg
             | _ ->
                 failwith "Unhandled message."
-              
+                
+    let update msg model =
+        let (newModel, cmd) = updatePage msg model
+        
+        let refreshRecommendationsMsg =
+            match msg with
+            | ShoppingListRecipeMessage (ShoppingListRecipePage.Message.ItemsChanged _)
+            | ShoppingListPageMessage (ShoppingListPage.Message.ShoppingListChanged _) ->    
+                RecipeRecommendationPage.Message.Refresh |> RecipeRecommendationPageMessage |> Some
+            | _ -> None
+            
+        let newCmd =  Cmd.batch [
+            cmd;
+            Cmd.ofMsgOption refreshRecommendationsMsg
+        ]
+            
+        (newModel, newCmd)
+
     let navigationPages = [| (ShoppingListPage, "ShoppingList") |]
              
     let appContainer dispatch detail =
