@@ -26,14 +26,15 @@ module Elements =
     let passwordValidatableEntry value error callback =
         validatableEntry value error callback |> Seq.map (ViewElementExtensions.isPassword true)
         
-    let actionButton text command = View.Button(
-        text = text,
-        cornerRadius = 24,
-        widthRequest = 48.0,
-        heightRequest = 48.0,
-        verticalOptions = LayoutOptions.Center,
-        command = command
-    )
+    let actionButton text command =
+        View.Button(
+            text = text,
+            cornerRadius = 24,
+            widthRequest = 48.0,
+            heightRequest = 48.0,
+            verticalOptions = LayoutOptions.Center,
+            command = command
+        )
         
     // Recipes
     

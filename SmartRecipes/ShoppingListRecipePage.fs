@@ -4,7 +4,6 @@ namespace SmartRecipes
 module ShoppingListRecipePage =
     open Domain
     open FSharpPlus.Data
-    open FSharpx.Control
     open AppEnvironment
     open FSharpPlus
     open Fabulous.Core

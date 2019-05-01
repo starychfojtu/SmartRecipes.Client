@@ -7,7 +7,6 @@ module ShoppingListPage =
     open Domain
     open FSharpPlus
     open FSharpPlus.Data
-    open FSharpx.Control
     open Fabulous.Core
     open Fabulous.DynamicViews
     open Xamarin.Forms
@@ -190,15 +189,17 @@ module ShoppingListPage =
         |> ViewElement.withBackButton true
         
     let view dispatch model =
-        let addFoodstuffToolbarItem = View.ToolbarItem(    
-            text = "Add",
-            command = fun () -> dispatch GoToAddFoodstuffPage
-        )
+        let addFoodstuffToolbarItem = 
+            View.ToolbarItem(    
+                text = "Add",
+                command = fun () -> dispatch GoToAddFoodstuffPage
+            )
         
-        let clearListToolbarItem = View.ToolbarItem(    
-            text = "Clear",
-            command = fun () -> dispatch RemoveAllItems
-        )
+        let clearListToolbarItem = 
+            View.ToolbarItem(    
+                text = "Clear",
+                command = fun () -> dispatch RemoveAllItems
+            )
         
         View.NavigationPage(
             title = "Shopping list",

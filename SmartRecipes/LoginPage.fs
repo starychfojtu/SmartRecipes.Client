@@ -8,7 +8,6 @@ open Xamarin.Forms
 module LoginPage =
     open AppEnvironment
     open Domain
-    open FSharpx.Control
     
     type Model = {
         Email: string

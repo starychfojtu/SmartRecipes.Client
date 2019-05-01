@@ -12,6 +12,11 @@ module Library =
 module Async =
     let id value = async { return value }
     
+    let map f asyncTask = async {
+        let! v = asyncTask
+        return f v
+    }
+    
 module ReaderT =
     open FSharpPlus.Data
 

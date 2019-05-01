@@ -6,7 +6,6 @@ module ProductionApi =
     open System.Net
     open Domain
     open FSharp.Data
-    open FSharpx.Control
     open Newtonsoft.Json
     open System
     open Library
