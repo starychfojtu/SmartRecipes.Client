@@ -67,23 +67,23 @@ module RecipeRecommendationPage =
             items = items
         )
         
-    let mainContent dispatch model =
+    let mainContent dispatch recommendations =
         View.StackLayout(
             padding = 16.0,
             children = [
-                yield recommendationList dispatch model.Recommendations
+                yield recommendationList dispatch recommendations
             ]
         )
     
-    let mainPage dispatch model =
+    let mainPage dispatch recommendations =
         View.ContentPage(
-            content = mainContent dispatch model
+            content = mainContent dispatch recommendations
         )
     
     let view dispatch model =
         View.NavigationPage(
             title = "Suggestions",
             pages = [
-                yield mainPage dispatch model
+                yield dependsOn model.Recommendations (fun model -> mainPage dispatch)
             ]
         )

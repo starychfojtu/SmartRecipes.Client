@@ -44,7 +44,8 @@ module SearchFoodstuffPage =
             FoodstuffSelected foodstuff
             
     let private searchBar dispatch =
-        View.SearchBar(textChanged = (fun args -> TermChanged args.NewTextValue |> dispatch))
+        let textChanged (args: TextChangedEventArgs) = TermChanged args.NewTextValue |> dispatch
+        View.SearchBar(textChanged = debounce 500 textChanged)
         
     let private amountToString amount =
         amount.Value.ToString () + " " + amount.Unit.ToString ()
@@ -89,8 +90,8 @@ module SearchFoodstuffPage =
         View.ContentPage(
             content = View.StackLayout(
                 children = [
-                    yield searchBar dispatch
-                    yield resultTable dispatch foodstuffs
+                    yield fix (fun () -> searchBar dispatch)
+                    yield dependsOn foodstuffs (fun model -> resultTable dispatch)
                 ]                 
             )
         )

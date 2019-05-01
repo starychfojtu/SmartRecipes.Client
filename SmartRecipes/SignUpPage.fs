@@ -61,21 +61,22 @@ module SignUpPage =
         | Api.SignUpError.AccountAlreadyExists -> None
         | Api.SignUpError.InvalidSignUpParameters e -> f e
         
-    let emailEntry dispatch model =
-        let error = Option.bind (mapInvalidParameters (fun e -> e.EmailError)) model.Error
-        Elements.validatableEntry model.Email error (fun s -> dispatch (EmailChanged s))
+    let emailEntry dispatch email error =
+        let error = Option.bind (mapInvalidParameters (fun e -> e.EmailError)) error
+        Elements.validatableEntry email error (fun s -> dispatch (EmailChanged s))
 
-    let passwordEntry dispatch model =
-        let error = Option.bind (mapInvalidParameters (fun e -> e.PasswordError)) model.Error
-        Elements.passwordValidatableEntry model.Password error (fun s -> dispatch (PasswordInputChanged s))
+    let passwordEntry dispatch password error =
+        let error = Option.bind (mapInvalidParameters (fun e -> e.PasswordError)) error
+        Elements.passwordValidatableEntry password error (fun s -> dispatch (PasswordInputChanged s))
     
     let toErrorMessage = function
         | Api.SignUpError.AccountAlreadyExists -> Some "Account already exists."
         | Api.SignUpError.InvalidSignUpParameters _ -> None
         
-    let errorEntry model =
-        Option.bind (toErrorMessage) model.Error
+    let errorEntry error =
+        Option.bind (toErrorMessage) error
         |> Option.map (fun e -> View.Label(text = e))
+        |> Option.toArray
         
     let view (model: Model) dispatch =
         View.ContentPage(
@@ -85,13 +86,13 @@ module SignUpPage =
                 verticalOptions = LayoutOptions.CenterAndExpand,
                 children = [
                     // This positioning is a hotfix of bug in Fabulous.
-                    yield! emailEntry dispatch model
-                    yield! passwordEntry dispatch model
-                    yield View.Label(text = "Smart Recipes", horizontalTextAlignment = TextAlignment.Center)
-                    yield View.Label(text = "Organize cooking", horizontalTextAlignment = TextAlignment.Center)
-                    yield! errorEntry model |> Option.toArray
-                    yield View.Button(text = "Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignUpRequested))
-                    yield View.Button(text = "Already have an account? Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch GoToSignIn))
+                    yield! dependsOn (model.Email, model.Error) (fun model (email, error) -> emailEntry dispatch email error)
+                    yield! dependsOn (model.Password, model.Error) (fun model (password, error) -> passwordEntry dispatch password error)
+                    yield fix (fun () -> View.Label(text = "Smart Recipes", horizontalTextAlignment = TextAlignment.Center))
+                    yield fix (fun () -> View.Label(text = "Organize cooking", horizontalTextAlignment = TextAlignment.Center))
+                    yield! dependsOn model.Error (fun model -> errorEntry)
+                    yield fix (fun () -> View.Button(text = "Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignUpRequested)))
+                    yield fix (fun () -> View.Button(text = "Already have an account? Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch GoToSignIn)))
                 ]
             )
         )
