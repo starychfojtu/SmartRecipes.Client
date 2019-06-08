@@ -51,6 +51,7 @@ module Lens =
         items update s
         
 module Json =
+    let serialize = Json.serialize
     let deserialize<'a> =
         let firstToLower (s: string) = s.[0].ToString().ToLowerInvariant() + s.Substring(1)
         Json.deserializeEx<'a> (JsonConfig.create(jsonFieldNaming=firstToLower))

@@ -67,13 +67,13 @@ module MockedApi =
             { FoodstuffId = FoodstuffId "1"; Amount = 2.0 }
             { FoodstuffId = FoodstuffId "2"; Amount = 2.0 }
         ]
-        RecipeItems = [
+        Recipes = [
             { RecipeId = RecipeId "1"; PersonCount = 4 }
         ]
     }
     
     let recipesNotInShoppingList () =     
-        List.filter (fun (r: Recipe) -> not (Seq.exists (fun i -> i.RecipeId = r.Id) sampleShoppingList.RecipeItems)) sampleRecipes
+        List.filter (fun (r: Recipe) -> not (Seq.exists (fun i -> i.RecipeId = r.Id) sampleShoppingList.Recipes)) sampleRecipes
     
     let unauthorized = {
         SignIn = fun _ -> { SignInResponse.AccessToken = sampleAccessToken } |> Ok |> Async.id
@@ -88,21 +88,21 @@ module MockedApi =
         AddFoodstuffsToShoppingList = fun r ->
             let foodstuffs = List.map (fun id -> Map.find id sampleFoodstuffsMap) r.Ids
             let newItems = List.map (fun (f: Foodstuff) -> { FoodstuffId = f.Id; Amount = f.BaseAmount.Value }) foodstuffs
-            sampleShoppingList <- over _items (fun items -> Seq.append newItems items) sampleShoppingList
+            sampleShoppingList <- over _items (fun items -> List.append newItems items) sampleShoppingList
             { AddFoodstuffsToShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
         SetFoodstuffAmountInShoppingList = fun r ->
             sampleShoppingList <- setAmount r.Id r.Value sampleShoppingList
             { SetFoodstuffAmountResponse.ShoppingList = sampleShoppingList } |> Async.id
         RemoveFoodstuffs = fun r ->
-            sampleShoppingList <- setl _items Seq.empty sampleShoppingList
+            sampleShoppingList <- setl _items List.empty sampleShoppingList
             { RemoveFoodstuffsResponse.ShoppingList = sampleShoppingList } |> Async.id
         GetRecommendedRecipes = fun () -> 
             { Recommendations = List.map (fun r -> { Recipe = r; Priority = 10; }) (recipesNotInShoppingList ())} |> Async.id
         AddRecipesToShoppingList = fun r -> 
             let newRecipes = List.map (fun id -> { RecipeId = id; PersonCount = 4 }) r.Ids
-            sampleShoppingList <- over _recipeItems (Seq.append newRecipes) sampleShoppingList
+            sampleShoppingList <- over _recipeItems (List.append newRecipes) sampleShoppingList
             { AddRecipesToShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
         RemoveRecipesFromShoppingList = fun r ->
-            sampleShoppingList <- over _recipeItems (Seq.filter (fun i -> not (Seq.contains i.RecipeId r.Ids))) sampleShoppingList
+            sampleShoppingList <- over _recipeItems (List.filter (fun i -> not (List.contains i.RecipeId r.Ids))) sampleShoppingList
             { RemoveRecipesFromShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
     }

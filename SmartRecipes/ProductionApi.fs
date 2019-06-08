@@ -33,6 +33,7 @@ module ProductionApi =
         System.Uri("https://smart-recipes.herokuapp.com/")
     
     let private parseApiError value =
+        printfn "Recieved error response %s" value
         let error = Json.deserialize<ApiErrorJson> value
         let parameterErrors = error.ParameterErrors |> Seq.map (fun e -> (e.Parameter, e.Message)) |> Map.ofSeq
         { ApiError.Message = error.Message; ParameterErrors = parameterErrors }
@@ -42,6 +43,9 @@ module ProductionApi =
             try
                 let authorization = Option.map (fun (t: AccessToken) -> t.Value) accessToken
                 let textRequest = Option.map (TextRequest) body
+                
+                printfn "Sending request %s" (textRequest.ToString())
+                
                 let! response =
                     Http.AsyncRequest(
                         Uri(baseUri, path).ToString(),
@@ -54,6 +58,8 @@ module ProductionApi =
                             yield ("Content-Type", "application/json")
                         }
                     )
+                    
+                printfn "Recieved response %s" (response.Body.ToString())
                 
                 return
                     match response.Body with
@@ -73,6 +79,15 @@ module ProductionApi =
         
     let private post path body accessToken parseSuccess parseError: Async<Result<'a, 'b>> =
         sendRequest HttpMethod.Post path List.empty (Some body) accessToken parseSuccess parseError
+        
+    let private successPost<'req, 'res> path accessToken (request: 'req)  = 
+        post
+            path
+            (Json.serialize request)
+            (Some accessToken)
+            Json.deserialize<'res>
+            (fun _ -> failwith "Unhandled error.")
+        |> Async.map getOk
         
     // Sign in
     
@@ -97,8 +112,7 @@ module ProductionApi =
         | _ -> unhandledError ()
 
     let private sendSignUpRequest (request: SignUpRequest): Async<Result<SignUpResponse, SignUpError>> =
-        let body = JsonConvert.SerializeObject request
-        post "/signUp" body None Json.deserialize<SignUpResponse> parseSignUpError
+        post "/signUp" (Json.serialize request) None Json.deserialize<SignUpResponse> parseSignUpError
             
     // Get shopping list
 
@@ -112,15 +126,46 @@ module ProductionApi =
          let query = Seq.map (fun (FoodstuffId id) -> ("ids[]", id)) request.Ids |> Seq.toList
          getWithQuery "/foodstuffs" query (Some accessToken) Json.deserialize<GetFoodstuffsByIdResponse> (fun _ -> failwith "Unhandled error.") |> Async.map getOk
          
+    // Get Foodstuffs by id
+        
+    let private sendGetRecipesByIdRequest accessToken (request: GetRecipesByIdRequest): Async<GetRecipesByIdResponse> =
+         let query = Seq.map (fun (RecipeId id) -> ("ids[]", id)) request.Ids |> Seq.toList
+         getWithQuery "/recipes" query (Some accessToken) Json.deserialize<GetRecipesByIdResponse> (fun _ -> failwith "Unhandled error.") |> Async.map getOk
+         
     // Search Foodstuffs
     
     let private sendSearchFoodstuffsRequest accessToken request: Async<SearchFoodstuffsResponse> =
         if String.IsNullOrEmpty request.Term
         then
-            async { return { Foodstuffs = [] } }
+            Async.id { Foodstuffs = [] }
         else
             let query = [("query", request.Term)]
             getWithQuery "/foodstuffs/search" query (Some accessToken) Json.deserialize<SearchFoodstuffsResponse> (fun _ -> failwith "Unhandled error.") |> Async.map getOk
+         
+    // Add foostuff to shopping list
+    
+    let private sendAddFoodstuffToShoppingList =
+        successPost<AddFoodstuffsToShoppingListRequest, AddFoodstuffsToShoppingListResponse>  "/shoppingList/addFoodstuffs"
+        
+    // Set foodstuff amount in shopping list
+    
+    let private sendSetFoodstuffAmountInShoppingList =
+        successPost<SetFoodstuffAmountRequest, SetFoodstuffAmountResponse>  "/shoppingList/changeAmount" 
+        
+    // Remove foodstuff amount in shopping list
+    
+    let private sendRemoveFoodstuffFromShoppingList =
+        successPost<RemoveFoodstuffsRequets, RemoveFoodstuffsResponse> "/shoppingList/removeFoodstuff"
+        
+    // Remove foodstuff amount in shopping list
+    
+    let private sendAddRecipesToShoppingList =
+        successPost<AddRecipesToShoppingListRequest, AddRecipesToShoppingListResponse> "/shoppingList/addRecipes"
+        
+    // Remove foodstuff amount in shopping list
+    
+    let private sendRemoveRecipesFromShoppingList =
+        successPost<RemoveRecipesFromShoppingListRequest, RemoveRecipesFromShoppingListResponse> "/shoppingList/removeRecipe"
          
     // API Interface
     
@@ -132,12 +177,12 @@ module ProductionApi =
     let authorized accessToken = {
         GetShoppingList = fun () -> sendGetShoppingListRequest accessToken
         GetFoodstuffsById = sendGetFoodstuffsByIdRequest accessToken
-        GetRecipesById = fun _ -> failwith "Not implemented."
+        GetRecipesById = sendGetRecipesByIdRequest accessToken
         SearchFoodstuffs = sendSearchFoodstuffsRequest accessToken
-        AddFoodstuffsToShoppingList = fun _ -> failwith "Not implemented."
-        SetFoodstuffAmountInShoppingList = fun _ -> failwith "Not implemented."
-        RemoveFoodstuffs = fun _ -> failwith "Not implemented"
-        GetRecommendedRecipes = fun _ -> failwith "Not implemented"
-        AddRecipesToShoppingList = fun _ -> failwith "Not implemented"
-        RemoveRecipesFromShoppingList = fun _ -> failwith "Not implemented"
+        AddFoodstuffsToShoppingList = sendAddFoodstuffToShoppingList accessToken
+        SetFoodstuffAmountInShoppingList = sendSetFoodstuffAmountInShoppingList accessToken
+        RemoveFoodstuffs = sendRemoveFoodstuffFromShoppingList accessToken
+        GetRecommendedRecipes = fun _ -> Async.id { Recommendations = [] }
+        AddRecipesToShoppingList = sendAddRecipesToShoppingList accessToken
+        RemoveRecipesFromShoppingList = sendRemoveRecipesFromShoppingList accessToken
     }

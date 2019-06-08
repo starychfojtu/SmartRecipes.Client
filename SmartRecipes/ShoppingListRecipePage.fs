@@ -43,7 +43,7 @@ module ShoppingListRecipePage =
         env.Api.GetFoodstuffsById { Ids = ids } |> Async.map (fun r -> r.Foodstuffs))
     
     let private getRecipes shoppingList = monad {
-        let recipeIds = Seq.map (fun i -> i.RecipeId) shoppingList.RecipeItems |> Seq.toList
+        let recipeIds = Seq.map (fun i -> i.RecipeId) shoppingList.Recipes |> Seq.toList
         return! getRecipesById recipeIds
     }
     
@@ -60,7 +60,7 @@ module ShoppingListRecipePage =
     let private createItems shoppingList recipes ingredients =
         let recipesById = Seq.map (fun (r: Recipe) -> (r.Id, r)) recipes |> Map.ofSeq
         let ingredientsByFoodstuffId = Seq.map (fun (i: Foodstuff) -> (i.Id, i)) ingredients |> Map.ofSeq
-        Seq.map (createItem recipesById ingredientsByFoodstuffId) shoppingList.RecipeItems
+        Seq.map (createItem recipesById ingredientsByFoodstuffId) shoppingList.Recipes
         
     let private shoppingListToItems shoppingList =  monad {
         let! recipes = getRecipes shoppingList

@@ -52,7 +52,7 @@ module Domain =
         PersonCount: int
         ImageUrl: Uri
         Description: string
-        Ingredients: Ingredient seq
+        Ingredients: Ingredient list
     }
     
     type ShoppingListItem = {
@@ -73,15 +73,15 @@ module Domain =
     type ShoppingList = {
         Id: ShoppingListId
         OwnerId: AccountId
-        Items: ShoppingListItem seq
-        RecipeItems: ShoppingListRecipeItem seq
+        Items: ShoppingListItem list
+        Recipes: ShoppingListRecipeItem list
     }
 
     module ShoppingList =
         open ShoppingListItem
         
         let inline _items f shoppingList = f shoppingList.Items <&> fun v -> { shoppingList with Items = v }
-        let inline _recipeItems f shoppingList = f shoppingList.RecipeItems <&> fun v -> { shoppingList with RecipeItems = v }
+        let inline _recipeItems f shoppingList = f shoppingList.Recipes <&> fun v -> { shoppingList with Recipes = v }
         
         let setAmount foodstuffId value shoppingList: ShoppingList =
             setl (_items << (_where (fun i -> i.FoodstuffId = foodstuffId)) << _amount) value shoppingList
