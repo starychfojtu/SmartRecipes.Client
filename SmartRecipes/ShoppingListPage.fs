@@ -50,7 +50,7 @@ module ShoppingListPage =
         env.Api.GetFoodstuffsById { Ids = foodstuffIds } |> Async.map (fun r -> r.Foodstuffs))
     
     let private getFoodstuffs (shoppingList: ShoppingList) = monad {
-        let foodstuffIds = Seq.map (fun i -> i.FoodstuffId) shoppingList.Items
+        let foodstuffIds = Seq.map (fun i -> i.FoodstuffId) shoppingList.Items |> Seq.toList
         let! foodstuffs = getFoodstuffsByIds foodstuffIds
         return Seq.map (fun (f: Foodstuff) -> (f.Id, f)) foodstuffs |> Map.ofSeq
     }
@@ -84,7 +84,7 @@ module ShoppingListPage =
     // Update
     
     let addFoodstuffToShoppingList id = ReaderT(fun env ->
-        env.Api.AddFoodstuffsToShoppingList { Ids = [| id |] })
+        env.Api.AddFoodstuffsToShoppingList { Ids = [ id ] })
     
     let tryAddFoodstuff (foodstuff: Foodstuff) = monad {
         let! response = addFoodstuffToShoppingList foodstuff.Id
@@ -106,7 +106,7 @@ module ShoppingListPage =
         env.Api.RemoveFoodstuffs { Ids = ids; })
     
     let removeAllItems items = monad {
-        let! response = Seq.map (fun i -> i.Foodstuff.Id) items |> removeFoodstuffs 
+        let! response = Seq.map (fun i -> i.Foodstuff.Id) items |> Seq.toList |> removeFoodstuffs 
         let! items = shoppingListToItems response.ShoppingList
         return ShoppingListChanged items
     }

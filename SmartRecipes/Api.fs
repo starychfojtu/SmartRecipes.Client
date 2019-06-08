@@ -46,11 +46,11 @@ module Api =
     // Get Foodstuffs by id
 
     type GetFoodstuffsByIdRequest = {
-        Ids: FoodstuffId seq
+        Ids: FoodstuffId list
     }
         
     type GetFoodstuffsByIdResponse = {
-        Foodstuffs: Foodstuff seq
+        Foodstuffs: Foodstuff list
     }
     
     // Search Foodstuffs
@@ -60,13 +60,13 @@ module Api =
     }
         
     type SearchFoodstuffsResponse = {
-        Foodstuffs: Foodstuff seq
+        Foodstuffs: Foodstuff list
     }
     
     // Add foodstuffs to shopping list
 
     type AddFoodstuffsToShoppingListRequest = {
-        Ids: FoodstuffId seq
+        Ids: FoodstuffId list
     }
     
     type AddFoodstuffsToShoppingListResponse = {
@@ -76,11 +76,11 @@ module Api =
     // Get Recipes by id
     
     type GetRecipesByIdRequest = {
-        Ids: RecipeId seq
+        Ids: RecipeId list
     }
     
     type GetRecipesByIdResponse = {
-        Recipes: Recipe seq
+        Recipes: Recipe list
     }
     
     // Set foodstuff amount in shopping list
@@ -97,7 +97,7 @@ module Api =
     // Remove foodstuffs from shooping list
     
     type RemoveFoodstuffsRequets = {
-        Ids: FoodstuffId seq
+        Ids: FoodstuffId list
     }
     
     type RemoveFoodstuffsResponse = {
@@ -107,13 +107,13 @@ module Api =
     // Recommend recipes
     
     type GetRecommendedRecipesResponse = {
-        Recommendations: Recommendation seq
+        Recommendations: Recommendation list
     }
     
     // Add recipes to shopping list
     
     type AddRecipesToShoppingListRequest = {
-        Ids: RecipeId seq
+        Ids: RecipeId list
     }
     
     type AddRecipesToShoppingListResponse = {
@@ -123,7 +123,7 @@ module Api =
     // Remove recipes from shopping list
     
     type RemoveRecipesFromShoppingListRequest = {
-        Ids: RecipeId seq
+        Ids: RecipeId list
     }
     
     type RemoveRecipesFromShoppingListResponse = {

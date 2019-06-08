@@ -73,7 +73,7 @@ module MockedApi =
     }
     
     let recipesNotInShoppingList () =     
-        Seq.filter (fun (r: Recipe) -> not (Seq.exists (fun i -> i.RecipeId = r.Id) sampleShoppingList.RecipeItems)) sampleRecipes
+        List.filter (fun (r: Recipe) -> not (Seq.exists (fun i -> i.RecipeId = r.Id) sampleShoppingList.RecipeItems)) sampleRecipes
     
     let unauthorized = {
         SignIn = fun _ -> { SignInResponse.AccessToken = sampleAccessToken } |> Ok |> Async.id
@@ -82,13 +82,13 @@ module MockedApi =
     
     let authorized _ = {
         GetShoppingList = fun _ -> { GetShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
-        GetFoodstuffsById = fun r -> { GetFoodstuffsByIdResponse.Foodstuffs = Seq.map (fun id -> Map.find id sampleFoodstuffsMap) r.Ids } |> Async.id
-        GetRecipesById = fun r -> { Recipes = Seq.map (fun id -> Map.find id sampleRecipesMap) r.Ids } |> Async.id
-        SearchFoodstuffs = fun r -> { Foodstuffs = Seq.filter (fun f -> f.Name = r.Term) sampleFoodstuffs } |> Async.id
+        GetFoodstuffsById = fun r -> { GetFoodstuffsByIdResponse.Foodstuffs = List.map (fun id -> Map.find id sampleFoodstuffsMap) r.Ids } |> Async.id
+        GetRecipesById = fun r -> { Recipes = List.map (fun id -> Map.find id sampleRecipesMap) r.Ids } |> Async.id
+        SearchFoodstuffs = fun r -> { Foodstuffs = List.filter (fun f -> f.Name = r.Term) sampleFoodstuffs } |> Async.id
         AddFoodstuffsToShoppingList = fun r ->
-            let foodstuffs = Seq.map (fun id -> Map.find id sampleFoodstuffsMap) r.Ids
-            let newItems = Seq.map (fun (f: Foodstuff) -> { FoodstuffId = f.Id; Amount = f.BaseAmount.Value }) foodstuffs
-            sampleShoppingList <- over _items (fun items -> Seq.concat [newItems; items]) sampleShoppingList
+            let foodstuffs = List.map (fun id -> Map.find id sampleFoodstuffsMap) r.Ids
+            let newItems = List.map (fun (f: Foodstuff) -> { FoodstuffId = f.Id; Amount = f.BaseAmount.Value }) foodstuffs
+            sampleShoppingList <- over _items (fun items -> Seq.append newItems items) sampleShoppingList
             { AddFoodstuffsToShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
         SetFoodstuffAmountInShoppingList = fun r ->
             sampleShoppingList <- setAmount r.Id r.Value sampleShoppingList
@@ -97,9 +97,9 @@ module MockedApi =
             sampleShoppingList <- setl _items Seq.empty sampleShoppingList
             { RemoveFoodstuffsResponse.ShoppingList = sampleShoppingList } |> Async.id
         GetRecommendedRecipes = fun () -> 
-            { Recommendations = Seq.map (fun r -> { Recipe = r; Priority = 10; }) (recipesNotInShoppingList ())} |> Async.id
+            { Recommendations = List.map (fun r -> { Recipe = r; Priority = 10; }) (recipesNotInShoppingList ())} |> Async.id
         AddRecipesToShoppingList = fun r -> 
-            let newRecipes = Seq.map (fun id -> { RecipeId = id; PersonCount = 4 }) r.Ids
+            let newRecipes = List.map (fun id -> { RecipeId = id; PersonCount = 4 }) r.Ids
             sampleShoppingList <- over _recipeItems (Seq.append newRecipes) sampleShoppingList
             { AddRecipesToShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
         RemoveRecipesFromShoppingList = fun r ->

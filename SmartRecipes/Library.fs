@@ -1,4 +1,5 @@
 namespace SmartRecipes
+open FSharp.Json
     
 module Library =
     let first (a, _) = a
@@ -48,3 +49,8 @@ module Lens =
     let inline _where p f s =
         let update old = if p old then f old else Return.InvokeOnInstance old
         items update s
+        
+module Json =
+    let deserialize<'a> =
+        let firstToLower (s: string) = s.[0].ToString().ToLowerInvariant() + s.Substring(1)
+        Json.deserializeEx<'a> (JsonConfig.create(jsonFieldNaming=firstToLower))

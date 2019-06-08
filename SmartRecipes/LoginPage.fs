@@ -36,7 +36,7 @@ module LoginPage =
         |> Cmd.ofAsyncMsg
          
     let processError (error: Api.SignInError) (model: Model) =
-        ({ model with Error = Some error }, Cmd.none)
+        ({ model with Error = Some error; IsLoading = false }, Cmd.none)
         
     type UpdateResult =
         | SignUp
@@ -69,11 +69,15 @@ module LoginPage =
                 children = [
                     yield fix (fun () -> View.Label(text = "Smart Recipes", horizontalTextAlignment = TextAlignment.Center))
                     yield fix (fun () -> View.Label(text = "Organize cooking", horizontalTextAlignment = TextAlignment.Center))
-                    yield! dependsOn model.Error (fun model -> errorLabel)
-                    yield Elements.entry model.Email (fun s -> dispatch (EmailInputChanged s))
-                    yield Elements.passwordEntry model.Password (fun s -> dispatch (PasswordInputChanged s))
-                    yield View.Button(text = "Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignInRequested))
-                    yield View.Button(text = "Don't have an account yet? Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch GoToSignUp))
+                    if (model.IsLoading)
+                    then
+                        yield View.ActivityIndicator(isRunning = true)
+                    else
+                        yield! dependsOn model.Error (fun _ -> errorLabel)
+                        yield Elements.entry model.Email (fun s -> dispatch (EmailInputChanged s))
+                        yield Elements.passwordEntry model.Password (fun s -> dispatch (PasswordInputChanged s))
+                        yield View.Button(text = "Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignInRequested))
+                        yield View.Button(text = "Don't have an account yet? Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch GoToSignUp))
                 ]
             )
         )

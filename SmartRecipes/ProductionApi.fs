@@ -10,7 +10,6 @@ module ProductionApi =
     open System
     open Library
     open Api
-    open FSharp.Json
 
     type ApiError = {
         Message: string
@@ -24,7 +23,7 @@ module ProductionApi =
     
     type ApiErrorJson = {
         Message: string
-        ParameterErrors: ApiParameterErrorJson seq
+        ParameterErrors: ApiParameterErrorJson list
     }
     
     let private unhandledError () =

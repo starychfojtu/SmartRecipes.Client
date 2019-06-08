@@ -65,7 +65,7 @@ module App =
         GetAuthorized = fun token -> { Api = MockedApi.authorized token }
     }
 
-    let init () = initModel devEnvironment, Cmd.none
+    let init () = initModel prodEnvironment, Cmd.none
     
     let initAuthorizedModel env = Authorized {
         CurrentPage = ShoppingListPage
