@@ -44,7 +44,8 @@ module ProductionApi =
                 let authorization = Option.map (fun (t: AccessToken) -> t.Value) accessToken
                 let textRequest = Option.map (TextRequest) body
                 
-                printfn "Sending request %s" (textRequest.ToString())
+                let queryString = String.Join(", ", List.map (fun (k, v) -> k + ":" + v) query)
+                printfn "Sending request %s %s %s" path queryString (Option.defaultValue "None" body)
                 
                 let! response =
                     Http.AsyncRequest(
@@ -124,13 +125,17 @@ module ProductionApi =
         
     let private sendGetFoodstuffsByIdRequest accessToken (request: GetFoodstuffsByIdRequest): Async<GetFoodstuffsByIdResponse> =
          let query = Seq.map (fun (FoodstuffId id) -> ("ids[]", id)) request.Ids |> Seq.toList
-         getWithQuery "/foodstuffs" query (Some accessToken) Json.deserialize<GetFoodstuffsByIdResponse> (fun _ -> failwith "Unhandled error.") |> Async.map getOk
+         if Seq.isEmpty query
+             then Async.id { Foodstuffs = [] }
+             else getWithQuery "/foodstuffs" query (Some accessToken) Json.deserialize<GetFoodstuffsByIdResponse> (fun _ -> failwith "Unhandled error.") |> Async.map getOk
          
     // Get Foodstuffs by id
         
     let private sendGetRecipesByIdRequest accessToken (request: GetRecipesByIdRequest): Async<GetRecipesByIdResponse> =
          let query = Seq.map (fun (RecipeId id) -> ("ids[]", id)) request.Ids |> Seq.toList
-         getWithQuery "/recipes" query (Some accessToken) Json.deserialize<GetRecipesByIdResponse> (fun _ -> failwith "Unhandled error.") |> Async.map getOk
+         if Seq.isEmpty query
+            then Async.id { Recipes = [] }
+            else getWithQuery "/recipes" query (Some accessToken) Json.deserialize<GetRecipesByIdResponse> (fun _ -> failwith "Unhandled error.") |> Async.map getOk
          
     // Search Foodstuffs
     

@@ -77,7 +77,7 @@ module ShoppingListRecipePage =
     // Update
     
     let addRecipesToShoppingList ids = ReaderT(fun env ->
-        env.Api.AddRecipesToShoppingList { Ids = ids })
+        env.Api.AddRecipesToShoppingList { ItemIds = ids })
     
     let addRecipeToShoppingList (recipe: Recipe) = monad {
         let! response = addRecipesToShoppingList [ recipe.Id ]

@@ -17,15 +17,10 @@ module Domain =
     type AccessToken = {
         Value: string
         ExpirationUtc: DateTime
-    }                   
-    
-    type Unit =
-        | Liter
-        | Gram
-        | Piece
+    }
     
     type Amount = {
-        Unit: Unit
+        Unit: string
         Value: float
     }
     

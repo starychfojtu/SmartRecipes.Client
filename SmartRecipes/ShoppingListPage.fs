@@ -84,7 +84,7 @@ module ShoppingListPage =
     // Update
     
     let addFoodstuffToShoppingList id = ReaderT(fun env ->
-        env.Api.AddFoodstuffsToShoppingList { Ids = [ id ] })
+        env.Api.AddFoodstuffsToShoppingList { ItemIds = [ id ] })
     
     let tryAddFoodstuff (foodstuff: Foodstuff) = monad {
         let! response = addFoodstuffToShoppingList foodstuff.Id
@@ -93,7 +93,7 @@ module ShoppingListPage =
     }
     
     let setFoodstuffAmount id value = ReaderT(fun env ->
-        env.Api.SetFoodstuffAmountInShoppingList { Id = id; Value = value })
+        env.Api.SetFoodstuffAmountInShoppingList { FoodstuffId = id; Amount = value })
     
     let amountStepAction (item: Item) f = monad {
         let newValue = f item.Amount item.Foodstuff.AmountStep

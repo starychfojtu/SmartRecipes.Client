@@ -24,7 +24,7 @@ module LoginPage =
         | GoToSignUp
     
     let initModel = {
-        Email = ""
+        Email = "josef.starychfojtu@gmail.com"
         Password = ""
         Error = None
         IsLoading = false

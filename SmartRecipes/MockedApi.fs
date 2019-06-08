@@ -21,10 +21,10 @@ module MockedApi =
     }
     
     let private sampleFoodstuffs = [
-        { Id = FoodstuffId "1"; Name = "Tomato"; BaseAmount = { Value = 1.0; Unit = Piece }; AmountStep = 1.0 }
-        { Id = FoodstuffId "2"; Name = "Onion"; BaseAmount = { Value = 1.0; Unit = Piece }; AmountStep = 1.0 }
-        { Id = FoodstuffId "3"; Name = "Garlic"; BaseAmount = { Value = 1.0; Unit = Piece }; AmountStep = 1.0 }
-        { Id = FoodstuffId "4"; Name = "Carrot"; BaseAmount = { Value = 1.0; Unit = Piece }; AmountStep = 1.0 }
+        { Id = FoodstuffId "1"; Name = "Tomato"; BaseAmount = { Value = 1.0; Unit = "pieces" }; AmountStep = 1.0 }
+        { Id = FoodstuffId "2"; Name = "Onion"; BaseAmount = { Value = 1.0; Unit = "pieces" }; AmountStep = 1.0 }
+        { Id = FoodstuffId "3"; Name = "Garlic"; BaseAmount = { Value = 1.0; Unit = "pieces" }; AmountStep = 1.0 }
+        { Id = FoodstuffId "4"; Name = "Carrot"; BaseAmount = { Value = 1.0; Unit = "pieces" }; AmountStep = 1.0 }
     ]
     
     let private sampleFoodstuffsMap = 
@@ -39,8 +39,8 @@ module MockedApi =
             PersonCount = 4
             ImageUrl = Uri("https://google.com")
             Ingredients = [
-                { FoodstuffId = FoodstuffId "1"; Amount = { Value = 1.0; Unit = Piece } }
-                { FoodstuffId = FoodstuffId "2"; Amount = { Value = 1.0; Unit = Piece } }
+                { FoodstuffId = FoodstuffId "1"; Amount = { Value = 1.0; Unit = "pieces" } }
+                { FoodstuffId = FoodstuffId "2"; Amount = { Value = 1.0; Unit = "pieces" } }
             ]
         };
         {
@@ -51,8 +51,8 @@ module MockedApi =
             PersonCount = 4
             ImageUrl = Uri("https://google.com")
             Ingredients = [
-                { FoodstuffId = FoodstuffId "1"; Amount = { Value = 1.0; Unit = Piece } }
-                { FoodstuffId = FoodstuffId "2"; Amount = { Value = 1.0; Unit = Piece } }
+                { FoodstuffId = FoodstuffId "1"; Amount = { Value = 1.0; Unit = "pieces" } }
+                { FoodstuffId = FoodstuffId "2"; Amount = { Value = 1.0; Unit = "pieces" } }
             ]
         }
     ]
@@ -86,12 +86,12 @@ module MockedApi =
         GetRecipesById = fun r -> { Recipes = List.map (fun id -> Map.find id sampleRecipesMap) r.Ids } |> Async.id
         SearchFoodstuffs = fun r -> { Foodstuffs = List.filter (fun f -> f.Name = r.Term) sampleFoodstuffs } |> Async.id
         AddFoodstuffsToShoppingList = fun r ->
-            let foodstuffs = List.map (fun id -> Map.find id sampleFoodstuffsMap) r.Ids
+            let foodstuffs = List.map (fun id -> Map.find id sampleFoodstuffsMap) r.ItemIds
             let newItems = List.map (fun (f: Foodstuff) -> { FoodstuffId = f.Id; Amount = f.BaseAmount.Value }) foodstuffs
             sampleShoppingList <- over _items (fun items -> List.append newItems items) sampleShoppingList
             { AddFoodstuffsToShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
         SetFoodstuffAmountInShoppingList = fun r ->
-            sampleShoppingList <- setAmount r.Id r.Value sampleShoppingList
+            sampleShoppingList <- setAmount r.FoodstuffId r.Amount sampleShoppingList
             { SetFoodstuffAmountResponse.ShoppingList = sampleShoppingList } |> Async.id
         RemoveFoodstuffs = fun r ->
             sampleShoppingList <- setl _items List.empty sampleShoppingList
@@ -99,7 +99,7 @@ module MockedApi =
         GetRecommendedRecipes = fun () -> 
             { Recommendations = List.map (fun r -> { Recipe = r; Priority = 10; }) (recipesNotInShoppingList ())} |> Async.id
         AddRecipesToShoppingList = fun r -> 
-            let newRecipes = List.map (fun id -> { RecipeId = id; PersonCount = 4 }) r.Ids
+            let newRecipes = List.map (fun id -> { RecipeId = id; PersonCount = 4 }) r.ItemIds
             sampleShoppingList <- over _recipeItems (List.append newRecipes) sampleShoppingList
             { AddRecipesToShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
         RemoveRecipesFromShoppingList = fun r ->

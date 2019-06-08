@@ -66,7 +66,7 @@ module Api =
     // Add foodstuffs to shopping list
 
     type AddFoodstuffsToShoppingListRequest = {
-        Ids: FoodstuffId list
+        ItemIds: FoodstuffId list
     }
     
     type AddFoodstuffsToShoppingListResponse = {
@@ -86,8 +86,8 @@ module Api =
     // Set foodstuff amount in shopping list
 
     type SetFoodstuffAmountRequest = {
-        Id: FoodstuffId
-        Value: float
+        FoodstuffId: FoodstuffId
+        Amount: float
     }
     
     type SetFoodstuffAmountResponse = {
@@ -113,7 +113,7 @@ module Api =
     // Add recipes to shopping list
     
     type AddRecipesToShoppingListRequest = {
-        Ids: RecipeId list
+        ItemIds: RecipeId list
     }
     
     type AddRecipesToShoppingListResponse = {
