@@ -104,6 +104,16 @@ module Api =
         ShoppingList: ShoppingList
     }
     
+    // Search Recipes
+
+    type SearchRecipesRequest = {
+        Term: string
+    }
+        
+    type SearchRecipesResponse = {
+        Recipes: Recipe list
+    }
+    
     // Recommend recipes
     
     type GetRecommendedRecipesResponse = {
@@ -142,6 +152,7 @@ module Api =
         GetFoodstuffsById: GetFoodstuffsByIdRequest -> Async<GetFoodstuffsByIdResponse>
         GetRecipesById: GetRecipesByIdRequest -> Async<GetRecipesByIdResponse>
         SearchFoodstuffs: SearchFoodstuffsRequest -> Async<SearchFoodstuffsResponse>
+        SearchRecipes: SearchRecipesRequest -> Async<SearchRecipesResponse>
         AddFoodstuffsToShoppingList: AddFoodstuffsToShoppingListRequest -> Async<AddFoodstuffsToShoppingListResponse>
         SetFoodstuffAmountInShoppingList: SetFoodstuffAmountRequest -> Async<SetFoodstuffAmountResponse>
         RemoveFoodstuffs: RemoveFoodstuffsRequets -> Async<RemoveFoodstuffsResponse>

@@ -139,7 +139,7 @@ module ProductionApi =
          
     // Search Foodstuffs
     
-    let private sendSearchFoodstuffsRequest accessToken request: Async<SearchFoodstuffsResponse> =
+    let private sendSearchFoodstuffsRequest accessToken (request: SearchFoodstuffsRequest) : Async<SearchFoodstuffsResponse> =
         if String.IsNullOrEmpty request.Term
         then
             Async.id { Foodstuffs = [] }
@@ -147,6 +147,17 @@ module ProductionApi =
             let query = [("query", request.Term)]
             getWithQuery "/foodstuffs/search" query (Some accessToken) Json.deserialize<SearchFoodstuffsResponse> (fun _ -> failwith "Unhandled error.") |> Async.map getOk
          
+    // Search Foodstuffs
+    
+    let private sendSearchRecipesRequest accessToken request: Async<SearchRecipesResponse> =
+        if String.IsNullOrEmpty request.Term
+        then
+            Async.id { Recipes = [] }
+        else
+            let query = [("query", request.Term)]
+            getWithQuery "/recipes/search" query (Some accessToken) Json.deserialize<SearchRecipesResponse> (fun _ -> failwith "Unhandled error.") |> Async.map getOk
+
+    
     // Add foostuff to shopping list
     
     let private sendAddFoodstuffToShoppingList =
@@ -184,6 +195,7 @@ module ProductionApi =
         GetFoodstuffsById = sendGetFoodstuffsByIdRequest accessToken
         GetRecipesById = sendGetRecipesByIdRequest accessToken
         SearchFoodstuffs = sendSearchFoodstuffsRequest accessToken
+        SearchRecipes = sendSearchRecipesRequest accessToken
         AddFoodstuffsToShoppingList = sendAddFoodstuffToShoppingList accessToken
         SetFoodstuffAmountInShoppingList = sendSetFoodstuffAmountInShoppingList accessToken
         RemoveFoodstuffs = sendRemoveFoodstuffFromShoppingList accessToken

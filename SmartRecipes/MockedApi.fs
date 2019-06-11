@@ -83,8 +83,9 @@ module MockedApi =
     let authorized _ = {
         GetShoppingList = fun _ -> { GetShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
         GetFoodstuffsById = fun r -> { GetFoodstuffsByIdResponse.Foodstuffs = List.map (fun id -> Map.find id sampleFoodstuffsMap) r.Ids } |> Async.id
-        GetRecipesById = fun r -> { Recipes = List.map (fun id -> Map.find id sampleRecipesMap) r.Ids } |> Async.id
+        GetRecipesById = fun r -> { GetRecipesByIdResponse.Recipes = List.map (fun id -> Map.find id sampleRecipesMap) r.Ids } |> Async.id
         SearchFoodstuffs = fun r -> { Foodstuffs = List.filter (fun f -> f.Name = r.Term) sampleFoodstuffs } |> Async.id
+        SearchRecipes = fun r -> { Recipes = List.filter (fun f -> f.Name = r.Term) sampleRecipes } |> Async.id
         AddFoodstuffsToShoppingList = fun r ->
             let foodstuffs = List.map (fun id -> Map.find id sampleFoodstuffsMap) r.ItemIds
             let newItems = List.map (fun (f: Foodstuff) -> { FoodstuffId = f.Id; Amount = f.BaseAmount.Value }) foodstuffs
