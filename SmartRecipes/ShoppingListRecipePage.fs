@@ -16,21 +16,33 @@ module ShoppingListRecipePage =
         Ingredients: Foodstuff seq
     }
     
+    type SearchPageState =
+        | Default
+        | RecipeDetailPage of Recipe // * RecipeDetailPage.Model
+    
+    type PageState =
+        | Default
+        | SearchPage of SearchRecipePage.Model * SearchPageState
+    
     type Model = {
         Items: Item seq
         IsLoading: bool
+        PageState: PageState
     }
         
     type Message =
         | ItemsChanged of Item seq
         | RecipeAdded of Recipe
         | RecipeRemoved of Recipe
+        | SearchMessage of SearchRecipePage.Message
+        | GoToSearch
         
     // Initialization
     
     let initModel = {
         Items = Seq.empty
         IsLoading = true
+        PageState = Default
     }
     
     let private getShoppingList = ReaderT(fun env ->
@@ -99,14 +111,32 @@ module ShoppingListRecipePage =
         | ItemsChanged items ->
             { model with Model.Items = items }, Cmd.none
         | RecipeAdded recipe ->
-            model, addRecipeToShoppingList recipe |> Cmd.ofReader env
+            model, addRecipeToShoppingList recipe |> Cmd.ofReader env    
         | RecipeRemoved recipe ->
             model, removeRecipeFromShoppingList recipe |> Cmd.ofReader env
+        | GoToSearch ->
+            { model with PageState = SearchPage (SearchRecipePage.initModel, SearchPageState.Default) }, Cmd.none
         
     // View
     
     let recipeItemCard dispatch item =
         Elements.recipeCard item.Recipe [ Elements.actionButton "Remove" (fun () -> RecipeRemoved item.Recipe |> dispatch) ]
+        
+    let pages dispatch model =
+        let ignoredRecipes = Seq.map (fun i -> i.Recipe) model.Items
+        match model.PageState with
+        | Default -> []
+        | SearchPage (searchModel, searchState) ->
+            let searchView = SearchRecipePage.view (SearchMessage >> dispatch) searchModel ignoredRecipes
+            match searchState with
+            | SearchPageState.Default -> [searchView]
+            | SearchPageState.RecipeDetailPage recipe -> [searchView] // TODO: add recipe detail page
+            
+    let searchRecipeToolbarItem dispatch = 
+        View.ToolbarItem(    
+            text = "Search",
+            command = fun () -> dispatch Search
+        )
         
     let view dispatch model =
         View.NavigationPage(
@@ -124,6 +154,7 @@ module ShoppingListRecipePage =
                         ]
                     )
                 )
+                yield! pages dispatch model
             ]
         )
         
