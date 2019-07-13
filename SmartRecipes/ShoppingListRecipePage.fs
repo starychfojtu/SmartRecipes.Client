@@ -116,6 +116,8 @@ module ShoppingListRecipePage =
             model, removeRecipeFromShoppingList recipe |> Cmd.ofReader env
         | GoToSearch ->
             { model with PageState = SearchPage (SearchRecipePage.initModel, SearchPageState.Default) }, Cmd.none
+        | SearchMessage m ->
+            failwith "not implemented"
         
     // View
     
@@ -135,7 +137,7 @@ module ShoppingListRecipePage =
     let searchRecipeToolbarItem dispatch = 
         View.ToolbarItem(    
             text = "Search",
-            command = fun () -> dispatch Search
+            command = fun () -> dispatch GoToSearch
         )
         
     let view dispatch model =
