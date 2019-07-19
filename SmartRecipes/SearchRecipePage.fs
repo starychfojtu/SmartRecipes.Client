@@ -52,7 +52,7 @@ module SearchRecipePage =
         
     let private resultTable dispatch results =
         View.ListView(
-            rowHeight = 64,
+            rowHeight = 128,
             items = Seq.map (resultTableItem dispatch) results
         )
             

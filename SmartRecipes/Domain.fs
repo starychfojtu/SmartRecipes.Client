@@ -2,6 +2,7 @@ namespace SmartRecipes
 
 open FSharpPlus.Lens
 open Lens
+open FSharp.Json
 
 module Domain =
     open System.Net.Mail
@@ -35,7 +36,7 @@ module Domain =
     
     type Ingredient = {
         FoodstuffId: FoodstuffId
-        Amount: Amount
+        Amount: Amount option
     }
     
     type RecipeId = RecipeId of string
@@ -45,6 +46,7 @@ module Domain =
         Name: string
         CreatorId: AccountId
         PersonCount: int
+        [<JsonField(Transform=typeof<Transforms.UriTransform>)>]
         ImageUrl: Uri
         Description: string
         Ingredients: Ingredient list

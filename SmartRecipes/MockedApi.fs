@@ -39,8 +39,8 @@ module MockedApi =
             PersonCount = 4
             ImageUrl = Uri("https://google.com")
             Ingredients = [
-                { FoodstuffId = FoodstuffId "1"; Amount = { Value = 1.0; Unit = "pieces" } }
-                { FoodstuffId = FoodstuffId "2"; Amount = { Value = 1.0; Unit = "pieces" } }
+                { FoodstuffId = FoodstuffId "1"; Amount = Some { Value = 1.0; Unit = "pieces" } }
+                { FoodstuffId = FoodstuffId "2"; Amount = Some { Value = 1.0; Unit = "pieces" } }
             ]
         };
         {
@@ -51,8 +51,8 @@ module MockedApi =
             PersonCount = 4
             ImageUrl = Uri("https://google.com")
             Ingredients = [
-                { FoodstuffId = FoodstuffId "1"; Amount = { Value = 1.0; Unit = "pieces" } }
-                { FoodstuffId = FoodstuffId "2"; Amount = { Value = 1.0; Unit = "pieces" } }
+                { FoodstuffId = FoodstuffId "1"; Amount = Some { Value = 1.0; Unit = "pieces" } }
+                { FoodstuffId = FoodstuffId "2"; Amount = Some { Value = 1.0; Unit = "pieces" } }
             ]
         }
     ]

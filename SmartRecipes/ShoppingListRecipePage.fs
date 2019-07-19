@@ -116,8 +116,16 @@ module ShoppingListRecipePage =
             model, removeRecipeFromShoppingList recipe |> Cmd.ofReader env
         | GoToSearch ->
             { model with PageState = SearchPage (SearchRecipePage.initModel, SearchPageState.Default) }, Cmd.none
-        | SearchMessage m ->
-            failwith "not implemented"
+        | SearchMessage searchMsg ->
+            match model.PageState with
+            | Default -> model, Cmd.none
+            | SearchPage (searchModel, searchState) ->  
+                let newSearchState = SearchRecipePage.update searchModel searchMsg env
+                match newSearchState with
+                | SearchRecipePage.UpdateResult.ModelUpdated (newSearchModel, searchCmd) -> 
+                    { model with PageState = SearchPage (newSearchModel, searchState) }, Cmd.map SearchMessage searchCmd
+                | SearchRecipePage.UpdateResult.RecipeSelected recipe ->
+                    { model with PageState = Default }, Cmd.ofMsg <| RecipeAdded recipe
         
     // View
     
@@ -143,6 +151,9 @@ module ShoppingListRecipePage =
     let view dispatch model =
         View.NavigationPage(
             title = "Recipes",
+            toolbarItems = [
+                searchRecipeToolbarItem dispatch
+            ],
             pages = [
                 yield View.ContentPage(
                     content = View.StackLayout(

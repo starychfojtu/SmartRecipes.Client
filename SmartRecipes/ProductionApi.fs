@@ -171,7 +171,7 @@ module ProductionApi =
     // Remove foodstuff amount in shopping list
     
     let private sendRemoveFoodstuffFromShoppingList =
-        successPost<RemoveFoodstuffsRequets, RemoveFoodstuffsResponse> "/shoppingList/removeFoodstuff"
+        successPost<RemoveFoodstuffsRequets, RemoveFoodstuffsResponse> "/shoppingList/removeFoodstuffs"
         
     // Remove foodstuff amount in shopping list
     
@@ -181,7 +181,7 @@ module ProductionApi =
     // Remove foodstuff amount in shopping list
     
     let private sendRemoveRecipesFromShoppingList =
-        successPost<RemoveRecipesFromShoppingListRequest, RemoveRecipesFromShoppingListResponse> "/shoppingList/removeRecipe"
+        successPost<RemoveRecipesFromShoppingListRequest, RemoveRecipesFromShoppingListResponse> "/shoppingList/removeRecipes"
          
     // API Interface
     
