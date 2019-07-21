@@ -16,18 +16,19 @@ module ShoppingListRecipePage =
         Ingredients: Foodstuff seq
     }
     
-    type SearchPageState =
-        | Default
-        | RecipeDetailPage of Recipe // * RecipeDetailPage.Model
+    type RecipeDetailPageState =
+        | Hidden
+        | Visible of RecipeDetailPage.Model
     
-    type PageState =
-        | Default
-        | SearchPage of SearchRecipePage.Model * SearchPageState
+    type SearchPageState =
+        | Hidden
+        | Visible of SearchRecipePage.Model
     
     type Model = {
         Items: Item seq
         IsLoading: bool
-        PageState: PageState
+        SearchPageState: SearchPageState
+        RecipeDetailPageState: RecipeDetailPageState
     }
         
     type Message =
@@ -35,14 +36,17 @@ module ShoppingListRecipePage =
         | RecipeAdded of Recipe
         | RecipeRemoved of Recipe
         | SearchMessage of SearchRecipePage.Message
+        | RecipeDetailMessage of RecipeDetailPage.Message
         | GoToSearch
+        | GoToRecipeDetail of Recipe
         
     // Initialization
     
     let initModel = {
         Items = Seq.empty
         IsLoading = true
-        PageState = Default
+        SearchPageState = SearchPageState.Hidden
+        RecipeDetailPageState = RecipeDetailPageState.Hidden
     }
     
     let private getShoppingList = ReaderT(fun env ->
@@ -115,40 +119,64 @@ module ShoppingListRecipePage =
         | RecipeRemoved recipe ->
             model, removeRecipeFromShoppingList recipe |> Cmd.ofReader env
         | GoToSearch ->
-            { model with PageState = SearchPage (SearchRecipePage.initModel, SearchPageState.Default) }, Cmd.none
+            { model with SearchPageState = SearchPageState.Visible SearchRecipePage.initModel }, Cmd.none
+        | GoToRecipeDetail recipe ->
+            let isRecipeAdded = Seq.exists (fun i -> i.Recipe = recipe) model.Items
+            let initModel = RecipeDetailPage.initModel recipe (not isRecipeAdded)
+            { model with RecipeDetailPageState = RecipeDetailPageState.Visible <| initModel }, Cmd.none
         | SearchMessage searchMsg ->
-            match model.PageState with
-            | Default -> model, Cmd.none
-            | SearchPage (searchModel, searchState) ->  
-                let newSearchState = SearchRecipePage.update searchModel searchMsg env
-                match newSearchState with
+            match model.SearchPageState with
+            | SearchPageState.Hidden ->
+                model, Cmd.none
+            | SearchPageState.Visible searchModel ->  
+                let updateResult = SearchRecipePage.update searchModel searchMsg env
+                match updateResult with
                 | SearchRecipePage.UpdateResult.ModelUpdated (newSearchModel, searchCmd) -> 
-                    { model with PageState = SearchPage (newSearchModel, searchState) }, Cmd.map SearchMessage searchCmd
+                    { model with SearchPageState = SearchPageState.Visible newSearchModel }, Cmd.map SearchMessage searchCmd
                 | SearchRecipePage.UpdateResult.RecipeSelected recipe ->
-                    { model with PageState = Default }, Cmd.ofMsg <| RecipeAdded recipe
+                    model, Cmd.ofMsg <| GoToRecipeDetail recipe
+        | RecipeDetailMessage recipeDetailMessage ->
+            match model.RecipeDetailPageState with
+            | RecipeDetailPageState.Hidden ->
+                model, Cmd.none
+            | RecipeDetailPageState.Visible recipeDetailModel ->
+                let updateResult = RecipeDetailPage.update recipeDetailModel recipeDetailMessage
+                match updateResult with
+                | RecipeDetailPage.UpdateResult.RecipeAdded ->
+                    let newState = RecipeDetailPageState.Visible <| { recipeDetailModel with CanBeAdded = false }
+                    { model with RecipeDetailPageState = newState }, Cmd.ofMsg <| RecipeAdded recipeDetailModel.Recipe
         
     // View
     
     let recipeItemCard dispatch item =
         Elements.recipeCard item.Recipe [ Elements.actionButton "Remove" (fun () -> RecipeRemoved item.Recipe |> dispatch) ]
         
-    let pages dispatch model =
+    let searchPage dispatch model =
         let ignoredRecipes = Seq.map (fun i -> i.Recipe) model.Items
-        match model.PageState with
-        | Default -> []
-        | SearchPage (searchModel, searchState) ->
-            let searchView = SearchRecipePage.view (SearchMessage >> dispatch) searchModel ignoredRecipes
-            match searchState with
-            | SearchPageState.Default -> [searchView]
-            | SearchPageState.RecipeDetailPage recipe -> [searchView] // TODO: add recipe detail page
+        match model.SearchPageState with
+        | SearchPageState.Hidden ->
+            None
+        | SearchPageState.Visible searchModel ->
+            Some <| SearchRecipePage.view (SearchMessage >> dispatch) searchModel ignoredRecipes
+            
+    let recipeDetailPage dispatch model =
+        match model.RecipeDetailPageState with
+        | RecipeDetailPageState.Hidden ->
+            None
+        | RecipeDetailPageState.Visible recipeDetailModel ->
+            Some <| RecipeDetailPage.view (RecipeDetailMessage >> dispatch) recipeDetailModel
+    
+    let pages dispatch model =
+        List.choose id [ searchPage dispatch model; recipeDetailPage dispatch model ]
             
     let searchRecipeToolbarItem dispatch = 
         View.ToolbarItem(    
             text = "Search",
             command = fun () -> dispatch GoToSearch
         )
-        
+
     let view dispatch model =
+        let recipesArray = Seq.map (fun i -> i.Recipe) model.Items |> Seq.toArray
         View.NavigationPage(
             title = "Recipes",
             toolbarItems = [
@@ -162,7 +190,9 @@ module ShoppingListRecipePage =
                             yield View.ListView(
                                 items = Seq.map (recipeItemCard dispatch) model.Items,
                                 rowHeight = 128,
-                                separatorVisibility = SeparatorVisibility.None
+                                separatorVisibility = SeparatorVisibility.None,
+                                selectionMode = ListViewSelectionMode.None,
+                                itemTapped = (fun i -> recipesArray.[i] |> GoToRecipeDetail |> dispatch)
                             )
                         ]
                     )

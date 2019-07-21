@@ -17,7 +17,7 @@ module SearchRecipePage =
     type Message =
         | TermChanged of string
         | NewResults of Recipe seq
-        | TryAddRecipe of Recipe
+        | SelectRecipe of Recipe
         
     let initModel = {
         Term = ""
@@ -40,20 +40,23 @@ module SearchRecipePage =
             ModelUpdated ({ model with Term = term }, search term |> Cmd.ofReader env)
         | NewResults results ->
             ModelUpdated ({ model with Results = results }, Cmd.none)
-        | TryAddRecipe recipe ->
+        | SelectRecipe recipe ->
             RecipeSelected recipe
             
     let private searchBar dispatch =
         let textChanged (args: TextChangedEventArgs) = TermChanged args.NewTextValue |> dispatch
         View.SearchBar(textChanged = debounce 500 textChanged)
         
-    let private resultTableItem dispatch (recipe: Recipe) =
-        Elements.recipeCard recipe [ Elements.actionButton "Add" (fun () -> TryAddRecipe recipe |> dispatch) ]
+    let private resultTableItem (recipe: Recipe) =
+        Elements.recipeCard recipe []
         
-    let private resultTable dispatch results =
+    let private resultTable dispatch recipes =
+        let recipesArray = Seq.toArray recipes
         View.ListView(
             rowHeight = 128,
-            items = Seq.map (resultTableItem dispatch) results
+            items = Seq.map resultTableItem recipesArray,
+            selectionMode = ListViewSelectionMode.None,
+            itemTapped = (fun i -> recipesArray.[i] |> SelectRecipe |> dispatch)
         )
             
     let view dispatch model ignoredRecipes =
