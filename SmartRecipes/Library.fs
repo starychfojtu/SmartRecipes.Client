@@ -9,7 +9,11 @@ module Library =
         | Ok a -> a
         | Error e -> e.ToString () |> failwith
     
-    let swap f a b = f b a 
+    let swap f a b = f b a
+    
+    type PageState<'a> =
+        | Hidden
+        | Visible of 'a
         
 module Async =
     let id value = async { return value }

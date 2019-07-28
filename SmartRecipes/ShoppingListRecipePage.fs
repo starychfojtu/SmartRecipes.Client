@@ -1,4 +1,5 @@
 namespace SmartRecipes
+open Library
 
 [<RequireQualifiedAccess>]
 module ShoppingListRecipePage =
@@ -16,19 +17,11 @@ module ShoppingListRecipePage =
         Ingredients: Foodstuff seq
     }
     
-    type RecipeDetailPageState =
-        | Hidden
-        | Visible of RecipeDetailPage.Model
-    
-    type SearchPageState =
-        | Hidden
-        | Visible of SearchRecipePage.Model
-    
     type Model = {
         Items: Item seq
         IsLoading: bool
-        SearchPageState: SearchPageState
-        RecipeDetailPageState: RecipeDetailPageState
+        SearchPageState: PageState<SearchRecipePage.Model>
+        RecipeDetailPageState: PageState<RecipeDetailPage.Model>
     }
         
     type Message =
@@ -47,8 +40,8 @@ module ShoppingListRecipePage =
     let initModel = {
         Items = Seq.empty
         IsLoading = true
-        SearchPageState = SearchPageState.Hidden
-        RecipeDetailPageState = RecipeDetailPageState.Hidden
+        SearchPageState = Hidden
+        RecipeDetailPageState = Hidden
     }
     
     let private getShoppingList = ReaderT(fun env ->
@@ -121,35 +114,35 @@ module ShoppingListRecipePage =
         | RecipeRemoved recipe ->
             model, removeRecipeFromShoppingList recipe |> Cmd.ofReader env
         | GoToSearch ->
-            { model with SearchPageState = SearchPageState.Visible SearchRecipePage.initModel }, Cmd.none
+            { model with SearchPageState = Visible SearchRecipePage.initModel }, Cmd.none
         | HideSearch ->
-            { model with SearchPageState = SearchPageState.Hidden }, Cmd.none
+            { model with SearchPageState = Hidden }, Cmd.none
         | GoToRecipeDetail recipe ->
             let isRecipeAdded = Seq.exists (fun i -> i.Recipe = recipe) model.Items
             let initModel = RecipeDetailPage.initModel recipe (not isRecipeAdded)
-            { model with RecipeDetailPageState = RecipeDetailPageState.Visible <| initModel }, Cmd.none
+            { model with RecipeDetailPageState = Visible <| initModel }, Cmd.none
         | HideRecipeDetail ->
-            { model with RecipeDetailPageState = RecipeDetailPageState.Hidden }, Cmd.none
+            { model with RecipeDetailPageState = Hidden }, Cmd.none
         | SearchMessage searchMsg ->
             match model.SearchPageState with
-            | SearchPageState.Hidden ->
+            | Hidden ->
                 model, Cmd.none
-            | SearchPageState.Visible searchModel ->  
+            | Visible searchModel ->  
                 let updateResult = SearchRecipePage.update searchModel searchMsg env
                 match updateResult with
                 | SearchRecipePage.UpdateResult.ModelUpdated (newSearchModel, searchCmd) -> 
-                    { model with SearchPageState = SearchPageState.Visible newSearchModel }, Cmd.map SearchMessage searchCmd
+                    { model with SearchPageState = Visible newSearchModel }, Cmd.map SearchMessage searchCmd
                 | SearchRecipePage.UpdateResult.RecipeSelected recipe ->
                     model, Cmd.ofMsg <| GoToRecipeDetail recipe
         | RecipeDetailMessage recipeDetailMessage ->
             match model.RecipeDetailPageState with
-            | RecipeDetailPageState.Hidden ->
+            | Hidden ->
                 model, Cmd.none
-            | RecipeDetailPageState.Visible recipeDetailModel ->
+            | Visible recipeDetailModel ->
                 let updateResult = RecipeDetailPage.update recipeDetailModel recipeDetailMessage
                 match updateResult with
                 | RecipeDetailPage.UpdateResult.RecipeAdded ->
-                    let newState = RecipeDetailPageState.Visible <| { recipeDetailModel with CanBeAdded = false }
+                    let newState = Visible <| { recipeDetailModel with CanBeAdded = false }
                     { model with RecipeDetailPageState = newState }, Cmd.ofMsg <| RecipeAdded recipeDetailModel.Recipe
         
     // View
@@ -160,16 +153,16 @@ module ShoppingListRecipePage =
     let searchPage dispatch model =
         let ignoredRecipes = Seq.map (fun i -> i.Recipe) model.Items
         match model.SearchPageState with
-        | SearchPageState.Hidden ->
+        | Hidden ->
             None
-        | SearchPageState.Visible searchModel ->
+        | Visible searchModel ->
             Some <| SearchRecipePage.view (SearchMessage >> dispatch) searchModel ignoredRecipes
             
     let recipeDetailPage dispatch model =
         match model.RecipeDetailPageState with
-        | RecipeDetailPageState.Hidden ->
+        | Hidden ->
             None
-        | RecipeDetailPageState.Visible recipeDetailModel ->
+        | Visible recipeDetailModel ->
             Some <| RecipeDetailPage.view (RecipeDetailMessage >> dispatch) recipeDetailModel
     
     let pages dispatch model =
@@ -190,11 +183,11 @@ module ShoppingListRecipePage =
             ],
             popped = (fun _ ->
                 match model.RecipeDetailPageState with
-                | RecipeDetailPageState.Visible _ -> dispatch HideRecipeDetail
-                | RecipeDetailPageState.Hidden ->
+                | Visible _ -> dispatch HideRecipeDetail
+                | Hidden ->
                     match model.SearchPageState with
-                    | SearchPageState.Visible _ -> dispatch HideSearch
-                    | SearchPageState.Hidden -> ()
+                    | Visible _ -> dispatch HideSearch
+                    | Hidden -> ()
             ),
             pages = [
                 yield View.ContentPage(
