@@ -11,14 +11,14 @@ module RecipeRecommendationPage =
     open Xamarin.Forms
     
     type Model = {
-        Recommendations: Recommendation seq
+        Recommendations: Recipe seq
         IsLoading: bool
     }
     
     type Message =
         | Refresh
         | RecipeAdded of Recipe
-        | PageRefreshed of Recommendation seq
+        | PageRefreshed of Recipe seq
         
     // Initialization
     
@@ -32,7 +32,7 @@ module RecipeRecommendationPage =
     
     let init =
         getRecommendedRecipes
-        |> ReaderT.map (fun r -> PageRefreshed r.Recommendations)
+        |> ReaderT.map (fun r -> PageRefreshed r.Recipes)
     
     // Update
     
@@ -51,20 +51,14 @@ module RecipeRecommendationPage =
         
     // View
     
-    let recommendationCard dispatch recommendation =
-        let recipe = recommendation.Recipe
+    let recommendationCard dispatch recipe =
         Elements.recipeCard recipe [ Elements.actionButton "Add" (fun () -> RecipeAdded recipe |> dispatch) ]
     
-    let recommendationList dispatch recommendations =
-        let items =
-            recommendations
-            |> Seq.sortBy (fun r -> r.Priority)
-            |> Seq.map (recommendationCard dispatch)
-            
+    let recommendationList dispatch recipes =
         View.ListView(
             rowHeight = 128,
             separatorVisibility = SeparatorVisibility.None,
-            items = items
+            items = Seq.map (recommendationCard dispatch) recipes
         )
         
     let mainContent dispatch recommendations =
@@ -75,9 +69,9 @@ module RecipeRecommendationPage =
             ]
         )
     
-    let mainPage dispatch recommendations =
+    let mainPage dispatch recipes =
         View.ContentPage(
-            content = mainContent dispatch recommendations
+            content = mainContent dispatch recipes
         )
     
     let view dispatch model =

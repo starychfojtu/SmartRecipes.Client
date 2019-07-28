@@ -117,7 +117,7 @@ module Api =
     // Recommend recipes
     
     type GetRecommendedRecipesResponse = {
-        Recommendations: Recommendation list
+        Recipes: Recipe list
     }
     
     // Add recipes to shopping list

@@ -85,7 +85,7 @@ module MockedApi =
         GetFoodstuffsById = fun r -> { GetFoodstuffsByIdResponse.Foodstuffs = List.map (fun id -> Map.find id sampleFoodstuffsMap) r.Ids } |> Async.id
         GetRecipesById = fun r -> { GetRecipesByIdResponse.Recipes = List.map (fun id -> Map.find id sampleRecipesMap) r.Ids } |> Async.id
         SearchFoodstuffs = fun r -> { Foodstuffs = List.filter (fun f -> f.Name = r.Term) sampleFoodstuffs } |> Async.id
-        SearchRecipes = fun r -> { Recipes = List.filter (fun f -> f.Name = r.Term) sampleRecipes } |> Async.id
+        SearchRecipes = fun r -> { SearchRecipesResponse.Recipes = List.filter (fun f -> f.Name = r.Term) sampleRecipes } |> Async.id
         AddFoodstuffsToShoppingList = fun r ->
             let foodstuffs = List.map (fun id -> Map.find id sampleFoodstuffsMap) r.ItemIds
             let newItems = List.map (fun (f: Foodstuff) -> { FoodstuffId = f.Id; Amount = f.BaseAmount.Value }) foodstuffs
@@ -98,7 +98,7 @@ module MockedApi =
             sampleShoppingList <- setl _items List.empty sampleShoppingList
             { RemoveFoodstuffsResponse.ShoppingList = sampleShoppingList } |> Async.id
         GetRecommendedRecipes = fun () -> 
-            { Recommendations = List.map (fun r -> { Recipe = r; Priority = 10; }) (recipesNotInShoppingList ())} |> Async.id
+            { GetRecommendedRecipesResponse.Recipes = recipesNotInShoppingList ()} |> Async.id
         AddRecipesToShoppingList = fun r -> 
             let newRecipes = List.map (fun id -> { RecipeId = id; PersonCount = 4 }) r.ItemIds
             sampleShoppingList <- over _recipeItems (List.append newRecipes) sampleShoppingList

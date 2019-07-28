@@ -82,8 +82,3 @@ module Domain =
         
         let setAmount foodstuffId value shoppingList: ShoppingList =
             setl (_items << (_where (fun i -> i.FoodstuffId = foodstuffId)) << _amount) value shoppingList
-            
-    type Recommendation = {
-        Recipe: Recipe
-        Priority: int
-    }

@@ -90,6 +90,14 @@ module ProductionApi =
             (fun _ -> failwith "Unhandled error.")
         |> Async.map getOk
         
+    let private successGet<'res> path accessToken  = 
+        get
+            path
+            (Some accessToken)
+            Json.deserialize<'res>
+            (fun _ -> failwith "Unhandled error.")
+        |> Async.map getOk
+        
     // Sign in
     
     let private parseSignInError (apiError: ApiError) =
@@ -182,6 +190,11 @@ module ProductionApi =
     
     let private sendRemoveRecipesFromShoppingList =
         successPost<RemoveRecipesFromShoppingListRequest, RemoveRecipesFromShoppingListResponse> "/shoppingList/removeRecipes"
+        
+    // Recommend
+    
+    let private sendRecommend =
+        successGet<GetRecommendedRecipesResponse> "/shoppingList/recommend"
          
     // API Interface
     
@@ -199,7 +212,7 @@ module ProductionApi =
         AddFoodstuffsToShoppingList = sendAddFoodstuffToShoppingList accessToken
         SetFoodstuffAmountInShoppingList = sendSetFoodstuffAmountInShoppingList accessToken
         RemoveFoodstuffs = sendRemoveFoodstuffFromShoppingList accessToken
-        GetRecommendedRecipes = fun _ -> Async.id { Recommendations = [] }
+        GetRecommendedRecipes = fun () -> sendRecommend accessToken
         AddRecipesToShoppingList = sendAddRecipesToShoppingList accessToken
         RemoveRecipesFromShoppingList = sendRemoveRecipesFromShoppingList accessToken
     }

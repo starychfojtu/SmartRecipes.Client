@@ -170,7 +170,7 @@ module ShoppingListRecipePage =
         List.choose id [ searchPage dispatch model; recipeDetailPage dispatch model ]
             
     let searchRecipeToolbarItem dispatch = 
-        View.ToolbarItem(    
+        View.ToolbarItem(
             text = "Search",
             command = fun () -> dispatch GoToSearch
         )
