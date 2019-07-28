@@ -1,5 +1,4 @@
 namespace SmartRecipes
-open Xamarin.Forms
 
 module RecipeDetailPage =
     open Domain

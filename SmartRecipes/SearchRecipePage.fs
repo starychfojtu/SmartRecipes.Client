@@ -1,4 +1,5 @@
 namespace SmartRecipes
+open Elements
 
 module SearchRecipePage =
     open AppEnvironment
@@ -47,17 +48,11 @@ module SearchRecipePage =
         let textChanged (args: TextChangedEventArgs) = TermChanged args.NewTextValue |> dispatch
         View.SearchBar(textChanged = debounce 500 textChanged)
         
-    let private resultTableItem (recipe: Recipe) =
+    let private resultTableItem recipe =
         Elements.recipeCard recipe []
         
     let private resultTable dispatch recipes =
-        let recipesArray = Seq.toArray recipes
-        View.ListView(
-            rowHeight = 128,
-            items = Seq.map resultTableItem recipesArray,
-            selectionMode = ListViewSelectionMode.None,
-            itemTapped = (fun i -> recipesArray.[i] |> SelectRecipe |> dispatch)
-        )
+        Elements.cardList recipes resultTableItem (SelectRecipe >> dispatch) ListRefresh.None
             
     let view dispatch model ignoredRecipes =
         let recipes = Seq.except ignoredRecipes model.Results
@@ -65,7 +60,7 @@ module SearchRecipePage =
             content = View.StackLayout(
                 children = [
                     yield fix (fun () -> searchBar dispatch)
-                    yield dependsOn recipes (fun model -> resultTable dispatch)
+                    yield dependsOn recipes (fun model rs -> resultTable dispatch (Seq.toArray rs))
                 ]                 
             )
         )

@@ -1,4 +1,6 @@
 namespace SmartRecipes
+open Elements
+open Library
 
 [<RequireQualifiedAccess>]
 module RecipeRecommendationPage =
@@ -13,18 +15,22 @@ module RecipeRecommendationPage =
     type Model = {
         Recommendations: Recipe seq
         IsLoading: bool
+        RecipeDetailPageState: PageState<RecipeDetailPage.Model>
     }
     
     type Message =
         | Refresh
         | RecipeAdded of Recipe
         | PageRefreshed of Recipe seq
+        | GoToRecipeDetail of Recipe
+        | HideRecipeDetail
         
     // Initialization
     
     let initModel = {
         Recommendations = Seq.empty
         IsLoading = true
+        RecipeDetailPageState = Hidden
     }
     
     let getRecommendedRecipes = ReaderT(fun env ->
@@ -36,48 +42,46 @@ module RecipeRecommendationPage =
     
     // Update
     
-    type UpdateResult =
-        | ModelUpdated of Model * Message Cmd
-        | RecipeSelected of Recipe
-    
     let update model msg env =
         match msg with
         | Refresh ->
-            ModelUpdated (model, init |> Cmd.ofReader env)
+            { model with IsLoading = true }, init |> Cmd.ofReader env
         | RecipeAdded recipe ->
-            RecipeSelected recipe
+            failwith "not implemented"
         | PageRefreshed recommendations ->
-            ModelUpdated ({ model with Recommendations = recommendations }, Cmd.none)
+            { model with Recommendations = recommendations; IsLoading = false }, Cmd.none
+        | GoToRecipeDetail recipe ->
+            { model with RecipeDetailPageState = Visible <| RecipeDetailPage.initModel recipe true }, Cmd.none
+        | HideRecipeDetail ->
+            { model with RecipeDetailPageState = Hidden }, Cmd.none
         
     // View
     
-    let recommendationCard dispatch recipe =
-        Elements.recipeCard recipe [ Elements.actionButton "Add" (fun () -> RecipeAdded recipe |> dispatch) ]
+    let recommendationCard recipe =
+        Elements.recipeCard recipe []
     
-    let recommendationList dispatch recipes =
-        View.ListView(
-            rowHeight = 128,
-            separatorVisibility = SeparatorVisibility.None,
-            items = Seq.map (recommendationCard dispatch) recipes
-        )
+    let recommendationList dispatch isLoading recipes =
+        let refresh = if isLoading then ListRefresh.Refreshing else ListRefresh.Some (fun () -> dispatch Refresh)
+        Elements.cardList recipes recommendationCard (GoToRecipeDetail >> dispatch) refresh
         
-    let mainContent dispatch recommendations =
+    let mainContent dispatch isLoading recipes =
         View.StackLayout(
             padding = 16.0,
             children = [
-                yield recommendationList dispatch recommendations
+                yield recommendationList dispatch isLoading recipes
             ]
         )
     
-    let mainPage dispatch recipes =
+    let mainPage dispatch isLoading recipes =
         View.ContentPage(
-            content = mainContent dispatch recipes
+            content = mainContent dispatch isLoading recipes
         )
     
     let view dispatch model =
         View.NavigationPage(
             title = "Suggestions",
+            popped = (fun _ -> dispatch HideRecipeDetail),
             pages = [
-                yield dependsOn model.Recommendations (fun model -> mainPage dispatch)
+                yield dependsOn (model.Recommendations, model.IsLoading) (fun model (rs, isLoading) -> mainPage dispatch isLoading (Seq.toArray rs))
             ]
         )

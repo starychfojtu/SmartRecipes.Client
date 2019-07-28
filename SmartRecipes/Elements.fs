@@ -1,4 +1,5 @@
 namespace SmartRecipes
+open System.Data
 
 module Elements =
     open Domain
@@ -35,6 +36,34 @@ module Elements =
             heightRequest = 48.0,
             verticalOptions = LayoutOptions.Center,
             command = command
+        )
+        
+    type ListRefresh =
+        | None
+        | Some of (unit -> unit)
+        | Refreshing
+        
+    let cardList (items: 'a[]) itemView onTapped refresh =
+        let (isRefreshEnabled, isRefreshing) =
+            match refresh with
+            | None -> false, false
+            | Some _ -> true, false
+            | Refreshing _ -> true, true
+            
+        View.ListView(
+            rowHeight = 128,
+            items = Seq.map itemView items,
+            selectionMode = ListViewSelectionMode.None,
+            itemTapped = (fun i -> onTapped items.[i]),
+            separatorVisibility = SeparatorVisibility.None,
+            isPullToRefreshEnabled = isRefreshEnabled,
+            refreshCommand = (fun () ->
+                match refresh with
+                | None -> ()
+                | Some f -> f ()
+                | Refreshing -> ()
+            ),
+            isRefreshing = isRefreshing
         )
         
     // Recipes

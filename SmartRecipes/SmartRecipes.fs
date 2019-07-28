@@ -121,11 +121,8 @@ module App =
                  let (newShoppingListPageModel, cmd) = ShoppingListRecipePage.update m.ShoppingListRecipePage msg m.Environment
                  Authorized { m with ShoppingListRecipePage = newShoppingListPageModel }, Cmd.map (ShoppingListRecipeMessage) cmd
             | RecipeRecommendationPageMessage msg ->
-                match RecipeRecommendationPage.update m.RecipeRecommendationPage msg m.Environment with
-                | RecipeRecommendationPage.UpdateResult.ModelUpdated (newModel, cmd) ->
-                    Authorized { m with RecipeRecommendationPage = newModel }, Cmd.map (RecipeRecommendationPageMessage) cmd
-                | RecipeRecommendationPage.UpdateResult.RecipeSelected r ->
-                    Authorized m, ShoppingListRecipePage.Message.RecipeAdded r |> ShoppingListRecipeMessage |> Cmd.ofMsg
+                let (newModel, cmd) = RecipeRecommendationPage.update m.RecipeRecommendationPage msg m.Environment
+                Authorized { m with RecipeRecommendationPage = newModel }, Cmd.map (RecipeRecommendationPageMessage) cmd
             | _ ->
                 failwith "Unhandled message."
                 
