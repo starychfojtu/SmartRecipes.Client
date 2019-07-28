@@ -106,7 +106,7 @@ module ProductionApi =
         | _ -> unhandledError ()
 
     let private sendSignInRequest request: Async<Result<SignInResponse, SignInError>> =
-        let body = JsonConvert.SerializeObject request
+        let body = Json.serialize request
         post "/signIn" body None Json.deserialize<SignInResponse> parseSignInError
             
     // Sign up

@@ -5,26 +5,27 @@ module Elements =
     open Fabulous.DynamicViews
     open Xamarin.Forms
     
-    let entry value callback =
+    let entry placeholder value callback =
         View.Entry(
             text = value,
             completed = (fun v -> if v <> value then callback v),
             textChanged = (fun args -> callback args.NewTextValue),
             created = (fun e -> e.Unfocused.Add(fun args -> if value <> e.Text then callback e.Text)),
-            verticalOptions = LayoutOptions.FillAndExpand
+            verticalOptions = LayoutOptions.FillAndExpand,
+            placeholder = placeholder
         )
     
-    let validatableEntry value error callback = seq {
-        yield entry value callback
+    let validatableEntry placeholder value error callback = seq {
+        yield entry placeholder value callback
         if Option.isSome error then
             yield View.Label(text = Option.get error)
     }
        
     let passwordEntry value callback =
-        entry value callback |> ViewElementExtensions.isPassword true
+        entry "Password" value callback |> ViewElementExtensions.isPassword true
         
     let passwordValidatableEntry value error callback =
-        validatableEntry value error callback |> Seq.map (ViewElementExtensions.isPassword true)
+        validatableEntry "Password" value error callback |> Seq.map (ViewElementExtensions.isPassword true)
         
     let actionButton text command =
         View.Button(

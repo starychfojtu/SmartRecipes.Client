@@ -63,7 +63,7 @@ module SignUpPage =
         
     let emailEntry dispatch email error =
         let error = Option.bind (mapInvalidParameters (fun e -> e.EmailError)) error
-        Elements.validatableEntry email error (fun s -> dispatch (EmailChanged s))
+        Elements.validatableEntry "Email" email error (fun s -> dispatch (EmailChanged s))
 
     let passwordEntry dispatch password error =
         let error = Option.bind (mapInvalidParameters (fun e -> e.PasswordError)) error

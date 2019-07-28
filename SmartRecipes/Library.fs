@@ -1,4 +1,5 @@
 namespace SmartRecipes
+open System.Net.Mail
 open FSharp.Json
     
 module Library =
@@ -56,3 +57,9 @@ module Json =
         Json.serializeEx (JsonConfig.create(jsonFieldNaming=firstToLower))
     let deserialize<'a> =
         Json.deserializeEx<'a> (JsonConfig.create(jsonFieldNaming=firstToLower))
+        
+    type MailAddressTransform() =
+        interface ITypeTransform with
+            member x.targetType () = (fun _ -> typeof<string>) ()
+            member x.toTargetType value = (fun (v: obj) -> (v:?> MailAddress).ToString() :> obj) value
+            member x.fromTargetType value = (fun (v: obj) -> MailAddress(v :?> string) :> obj) value

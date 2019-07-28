@@ -12,6 +12,7 @@ module Domain =
     
     type Account = {
         Id: AccountId
+        [<JsonField(Transform=typeof<Json.MailAddressTransform>)>]
         Email: MailAddress
     }
     
