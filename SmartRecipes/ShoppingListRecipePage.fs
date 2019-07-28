@@ -38,7 +38,9 @@ module ShoppingListRecipePage =
         | SearchMessage of SearchRecipePage.Message
         | RecipeDetailMessage of RecipeDetailPage.Message
         | GoToSearch
+        | HideSearch
         | GoToRecipeDetail of Recipe
+        | HideRecipeDetail
         
     // Initialization
     
@@ -120,10 +122,14 @@ module ShoppingListRecipePage =
             model, removeRecipeFromShoppingList recipe |> Cmd.ofReader env
         | GoToSearch ->
             { model with SearchPageState = SearchPageState.Visible SearchRecipePage.initModel }, Cmd.none
+        | HideSearch ->
+            { model with SearchPageState = SearchPageState.Hidden }, Cmd.none
         | GoToRecipeDetail recipe ->
             let isRecipeAdded = Seq.exists (fun i -> i.Recipe = recipe) model.Items
             let initModel = RecipeDetailPage.initModel recipe (not isRecipeAdded)
             { model with RecipeDetailPageState = RecipeDetailPageState.Visible <| initModel }, Cmd.none
+        | HideRecipeDetail ->
+            { model with RecipeDetailPageState = RecipeDetailPageState.Hidden }, Cmd.none
         | SearchMessage searchMsg ->
             match model.SearchPageState with
             | SearchPageState.Hidden ->
@@ -182,6 +188,14 @@ module ShoppingListRecipePage =
             toolbarItems = [
                 searchRecipeToolbarItem dispatch
             ],
+            popped = (fun _ ->
+                match model.RecipeDetailPageState with
+                | RecipeDetailPageState.Visible _ -> dispatch HideRecipeDetail
+                | RecipeDetailPageState.Hidden ->
+                    match model.SearchPageState with
+                    | SearchPageState.Visible _ -> dispatch HideSearch
+                    | SearchPageState.Hidden -> ()
+            ),
             pages = [
                 yield View.ContentPage(
                     content = View.StackLayout(
