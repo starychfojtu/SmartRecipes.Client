@@ -20,10 +20,10 @@ module RecipeRecommendationPage =
     
     type Message =
         | Refresh
-        | RecipeAdded of Recipe
         | PageRefreshed of Recipe seq
         | GoToRecipeDetail of Recipe
         | HideRecipeDetail
+        | RecipeDetailMessage of RecipeDetailPage.Message
         
     // Initialization
     
@@ -46,8 +46,6 @@ module RecipeRecommendationPage =
         match msg with
         | Refresh ->
             { model with IsLoading = true }, init |> Cmd.ofReader env
-        | RecipeAdded recipe ->
-            failwith "not implemented"
         | PageRefreshed recommendations ->
             { model with Recommendations = recommendations; IsLoading = false }, Cmd.none
         | GoToRecipeDetail recipe ->
@@ -56,6 +54,10 @@ module RecipeRecommendationPage =
             { model with RecipeDetailPageState = Hidden }, Cmd.none
         
     // View
+    
+    let recipeDetailPage dispatch = function
+        | Hidden -> []
+        | Visible recipeDetailModel -> [ RecipeDetailPage.view (RecipeDetailMessage >> dispatch) recipeDetailModel ]
     
     let recommendationCard recipe =
         Elements.recipeCard recipe []
@@ -83,5 +85,6 @@ module RecipeRecommendationPage =
             popped = (fun _ -> dispatch HideRecipeDetail),
             pages = [
                 yield dependsOn (model.Recommendations, model.IsLoading) (fun model (rs, isLoading) -> mainPage dispatch isLoading (Seq.toArray rs))
+                yield! recipeDetailPage dispatch model.RecipeDetailPageState
             ]
         )
