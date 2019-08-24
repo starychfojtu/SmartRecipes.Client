@@ -18,7 +18,7 @@ module ShoppingListRecipePage =
     }
     
     type Model = {
-        Items: Item seq
+        Items: Item list
         IsLoading: bool
         SearchPageState: PageState<SearchRecipePage.Model>
         RecipeDetailPageState: PageState<RecipeDetailPage.Model>
@@ -38,7 +38,7 @@ module ShoppingListRecipePage =
     // Initialization
     
     let initModel = {
-        Items = Seq.empty
+        Items = []
         IsLoading = true
         SearchPageState = Hidden
         RecipeDetailPageState = Hidden
@@ -108,7 +108,7 @@ module ShoppingListRecipePage =
     let update model msg env =
         match msg with
         | ItemsChanged items ->
-            { model with Model.Items = items }, Cmd.none
+            { model with Model.Items = Seq.toList items; IsLoading = false }, Cmd.none
         | RecipeAdded recipe ->
             model, addRecipeToShoppingList recipe |> Cmd.ofReader env    
         | RecipeRemoved recipe ->
@@ -173,9 +173,49 @@ module ShoppingListRecipePage =
             text = "Search",
             command = fun () -> dispatch GoToSearch
         )
+        
+    let mainPage dispatch model  =
+        let content =
+            match (model.Items, model.IsLoading) with
+            | (_, true) ->
+                View.StackLayout(
+                    padding = 16.0,
+                    verticalOptions = LayoutOptions.CenterAndExpand,
+                    children = [
+                        yield View.ActivityIndicator(isRunning = true)
+                    ]
+                )
+            | ([], false) ->
+                View.StackLayout(
+                    padding = 16.0,
+                    verticalOptions = LayoutOptions.CenterAndExpand,
+                    children = [
+                        yield View.Label(
+                            text = "No recipes, checkout your suggestions :)",
+                            horizontalTextAlignment = TextAlignment.Center,
+                            fontSize = Elements.headingFontSize
+                        )
+                    ]
+                )
+            | (nonEmptyItems, false) ->
+                let recipesArray = Seq.map (fun i -> i.Recipe) nonEmptyItems |> Seq.toArray
+                View.StackLayout(
+                    padding = 16.0,
+                    children = [
+                        yield View.ListView(
+                            items = Seq.map (recipeItemCard dispatch) nonEmptyItems,
+                            rowHeight = 128,
+                            separatorVisibility = SeparatorVisibility.None,
+                            selectionMode = ListViewSelectionMode.None,
+                            itemTapped = (fun i -> recipesArray.[i] |> GoToRecipeDetail |> dispatch)
+                        )
+                    ]
+                )
+        View.ContentPage(
+            content = content
+        )
 
     let view dispatch model =
-        let recipesArray = Seq.map (fun i -> i.Recipe) model.Items |> Seq.toArray
         View.NavigationPage(
             title = "Recipes",
             toolbarItems = [
@@ -190,20 +230,7 @@ module ShoppingListRecipePage =
                     | Hidden -> ()
             ),
             pages = [
-                yield View.ContentPage(
-                    content = View.StackLayout(
-                        padding = 16.0,
-                        children = [
-                            yield View.ListView(
-                                items = Seq.map (recipeItemCard dispatch) model.Items,
-                                rowHeight = 128,
-                                separatorVisibility = SeparatorVisibility.None,
-                                selectionMode = ListViewSelectionMode.None,
-                                itemTapped = (fun i -> recipesArray.[i] |> GoToRecipeDetail |> dispatch)
-                            )
-                        ]
-                    )
-                )
+                yield mainPage dispatch model
                 yield! pages dispatch model
             ]
         )
