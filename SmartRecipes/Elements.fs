@@ -170,7 +170,7 @@ module Elements =
                             heightRequest = 64.0,
                             padding = Thickness(8.0, 0.0),
                             children = [
-                                yield Elements.LargeLabel(
+                                yield Elements.Label(
                                     text = recipe.Name,
                                     horizontalOptions = LayoutOptions.Start,
                                     verticalOptions = LayoutOptions.Center
@@ -187,8 +187,10 @@ module Elements =
                             heightRequest = 40.0,
                             padding = Thickness(8.0, 4.0),
                             children = [
-                                yield Elements.LargeLabel(
-                                    text = recipe.PersonCount.ToString (),
+                                yield Elements.Label(
+                                    text = recipe.Ingredients.Length.ToString() +
+                                           " ingredients, serves " +
+                                           recipe.PersonCount.ToString(),
                                     horizontalOptions = LayoutOptions.Start,
                                     verticalOptions = LayoutOptions.Center
                                 )
