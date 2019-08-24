@@ -1,4 +1,5 @@
 namespace SmartRecipes
+open Elements
 open Library
 
 [<RequireQualifiedAccess>]
@@ -25,6 +26,7 @@ module ShoppingListRecipePage =
     }
         
     type Message =
+        | Refresh
         | ItemsChanged of Item seq
         | RecipeAdded of Recipe
         | RecipeRemoved of Recipe
@@ -107,6 +109,8 @@ module ShoppingListRecipePage =
     
     let update model msg env =
         match msg with
+        | Refresh ->
+            { model with IsLoading = true }, Cmd.ofReader env init
         | ItemsChanged items ->
             { model with Model.Items = Seq.toList items; IsLoading = false }, Cmd.none
         | RecipeAdded recipe ->
@@ -147,23 +151,20 @@ module ShoppingListRecipePage =
         
     // View
     
-    let recipeItemCard dispatch item =
-        Elements.recipeCard [ Elements.actionButton "Remove" (fun () -> RecipeRemoved item.Recipe |> dispatch) ] item.Recipe
-        
     let searchPage dispatch model =
         let ignoredRecipes = Seq.map (fun i -> i.Recipe) model.Items
         match model.SearchPageState with
         | Hidden ->
-            None
+            Option.None
         | Visible searchModel ->
-            Some <| SearchRecipePage.view (SearchMessage >> dispatch) searchModel ignoredRecipes
+            Option.Some <| SearchRecipePage.view (SearchMessage >> dispatch) searchModel ignoredRecipes
             
     let recipeDetailPage dispatch model =
         match model.RecipeDetailPageState with
         | Hidden ->
-            None
+            Option.None
         | Visible recipeDetailModel ->
-            Some <| RecipeDetailPage.view (RecipeDetailMessage >> dispatch) recipeDetailModel
+            Option.Some <| RecipeDetailPage.view (RecipeDetailMessage >> dispatch) recipeDetailModel
     
     let pages dispatch model =
         List.choose id [ searchPage dispatch model; recipeDetailPage dispatch model ]
@@ -174,45 +175,19 @@ module ShoppingListRecipePage =
             command = fun () -> dispatch GoToSearch
         )
         
+    let recipeItemCard dispatch item =
+        Elements.recipeCard [ Elements.actionButton "-" (fun () -> RecipeRemoved item.Recipe |> dispatch) ] item.Recipe
+        
     let mainPage dispatch model  =
-        let content =
-            match (model.Items, model.IsLoading) with
-            | (_, true) ->
-                View.StackLayout(
-                    padding = 16.0,
-                    verticalOptions = LayoutOptions.CenterAndExpand,
-                    children = [
-                        yield View.ActivityIndicator(isRunning = true)
-                    ]
-                )
-            | ([], false) ->
-                View.StackLayout(
-                    padding = 16.0,
-                    verticalOptions = LayoutOptions.CenterAndExpand,
-                    children = [
-                        yield View.Label(
-                            text = "No recipes, checkout your suggestions :)",
-                            horizontalTextAlignment = TextAlignment.Center,
-                            fontSize = Elements.headingFontSize
-                        )
-                    ]
-                )
-            | (nonEmptyItems, false) ->
-                let recipesArray = Seq.map (fun i -> i.Recipe) nonEmptyItems |> Seq.toArray
-                View.StackLayout(
-                    padding = 16.0,
-                    children = [
-                        yield View.ListView(
-                            items = Seq.map (recipeItemCard dispatch) nonEmptyItems,
-                            rowHeight = 128,
-                            separatorVisibility = SeparatorVisibility.None,
-                            selectionMode = ListViewSelectionMode.None,
-                            itemTapped = (fun i -> recipesArray.[i] |> GoToRecipeDetail |> dispatch)
-                        )
-                    ]
-                )
         View.ContentPage(
-            content = content
+            content = View.RefreshListPageContent(
+                isLoading = model.IsLoading,
+                items = List.toArray model.Items,
+                itemView = recipeItemCard dispatch,
+                onTapped = (fun i -> GoToRecipeDetail i.Recipe |> dispatch),
+                refresh = (fun () -> dispatch Refresh),
+                emptyText = "No recipes, checkout your suggestions :)"
+            )
         )
 
     let view dispatch model =

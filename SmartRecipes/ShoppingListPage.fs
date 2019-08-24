@@ -10,6 +10,7 @@ module ShoppingListPage =
     open Fabulous.Core
     open Fabulous.DynamicViews
     open Xamarin.Forms
+    open Elements
     
     type Item = {
         Foodstuff: Foodstuff
@@ -24,6 +25,7 @@ module ShoppingListPage =
     }
         
     type Message =
+        | Refresh
         | PageLoaded of Model
         | ItemAmountIncreaseRequested of Item
         | ItemAmountDecreaseRequested of Item
@@ -113,6 +115,8 @@ module ShoppingListPage =
 
     let update model msg env =
         match msg with
+        | Refresh ->
+            { model with IsLoading = true; }, Cmd.ofReader env init
         | PageLoaded loadedModel ->
             loadedModel, Cmd.none
         | ItemAmountIncreaseRequested item ->
@@ -170,42 +174,15 @@ module ShoppingListPage =
         )
         
     let page model dispatch =
-        let createItemView = itemView (ItemAmountIncreaseRequested >> dispatch) (ItemAmountDecreaseRequested >> dispatch)
-        let content =
-            match (model.Items, model.IsLoading) with
-            | (_, true) ->
-                View.StackLayout(
-                    padding = 16.0,
-                    verticalOptions = LayoutOptions.CenterAndExpand,
-                    children = [
-                        yield View.ActivityIndicator(isRunning = true)
-                    ]
-                )
-            | ([], false) ->
-                View.StackLayout(
-                    padding = 16.0,
-                    verticalOptions = LayoutOptions.CenterAndExpand,
-                    children = [
-                        yield View.Label(
-                            text = "No items :( Let's add some !",
-                            horizontalTextAlignment = TextAlignment.Center,
-                            fontSize = Elements.headingFontSize
-                        )
-                    ]
-                )
-            | (nonEmptyItems, false) ->
-                View.StackLayout(
-                    padding = 16.0,
-                    children = [
-                        yield View.ListView(
-                            items = Seq.map createItemView nonEmptyItems,
-                            rowHeight = 64
-                        )
-                    ]
-                )
-                
         View.ContentPage(
-            content = content
+            content = View.RefreshListPageContent(
+                isLoading = model.IsLoading,
+                items = List.toArray model.Items,
+                itemView = (itemView (ItemAmountIncreaseRequested >> dispatch) (ItemAmountDecreaseRequested >> dispatch)),
+                onTapped = (fun _ -> ()),
+                refresh = (fun () -> dispatch Refresh),
+                emptyText = "No items :( Let's add some !"
+            )
         )
         
     let addFoodstuffPage model dispatch =
