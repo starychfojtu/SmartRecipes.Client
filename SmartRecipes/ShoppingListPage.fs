@@ -17,7 +17,7 @@ module ShoppingListPage =
     }
     
     type Model = {
-        Items: Item seq
+        Items: Item list
         AddFoodstuffPage: SearchFoodstuffPage.Model
         ShowAddFoodstuffPage: bool
         IsLoading: bool
@@ -31,13 +31,13 @@ module ShoppingListPage =
         | GoToAddFoodstuffPage
         | GoToRootPage
         | AddFoodstuffPage of SearchFoodstuffPage.Message
-        | ShoppingListChanged of Item seq
+        | ShoppingListChanged of Item list
         | RemoveAllItems
         
     // Initialization
     
     let initModel = {
-        Items = Seq.empty
+        Items = []
         AddFoodstuffPage = SearchFoodstuffPage.initModel
         ShowAddFoodstuffPage = false
         IsLoading = true
@@ -56,7 +56,7 @@ module ShoppingListPage =
     }
     
     let private toItems foodstuffs =
-         Seq.map (fun i -> { Foodstuff = Map.find i.FoodstuffId foodstuffs; Amount = i.Amount })
+         Seq.map (fun i -> { Foodstuff = Map.find i.FoodstuffId foodstuffs; Amount = i.Amount }) >> Seq.toList
          
     let private shoppingListToItems shoppingList = monad {
         let! foodstuffs = getFoodstuffs shoppingList 
@@ -171,16 +171,41 @@ module ShoppingListPage =
         
     let page model dispatch =
         let createItemView = itemView (ItemAmountIncreaseRequested >> dispatch) (ItemAmountDecreaseRequested >> dispatch)
+        let content =
+            match (model.Items, model.IsLoading) with
+            | (_, true) ->
+                View.StackLayout(
+                    padding = 16.0,
+                    verticalOptions = LayoutOptions.CenterAndExpand,
+                    children = [
+                        yield View.ActivityIndicator(isRunning = true)
+                    ]
+                )
+            | ([], false) ->
+                View.StackLayout(
+                    padding = 16.0,
+                    verticalOptions = LayoutOptions.CenterAndExpand,
+                    children = [
+                        yield View.Label(
+                            text = "No items :( Let's add some !",
+                            horizontalTextAlignment = TextAlignment.Center,
+                            fontSize = Elements.headingFontSize
+                        )
+                    ]
+                )
+            | (nonEmptyItems, false) ->
+                View.StackLayout(
+                    padding = 16.0,
+                    children = [
+                        yield View.ListView(
+                            items = Seq.map createItemView nonEmptyItems,
+                            rowHeight = 64
+                        )
+                    ]
+                )
+                
         View.ContentPage(
-            content = View.StackLayout(
-                padding = 16.0,
-                children = [
-                    yield View.ListView(
-                        items = Seq.map createItemView model.Items,
-                        rowHeight = 64
-                    )
-                ]
-            )
+            content = content
         )
         
     let addFoodstuffPage model dispatch =

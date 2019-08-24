@@ -38,6 +38,8 @@ module Elements =
             command = command
         )
         
+    let headingFontSize = 24
+        
     type ListRefresh =
         | None
         | Some of (unit -> unit)
