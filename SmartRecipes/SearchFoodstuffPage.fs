@@ -1,4 +1,5 @@
 namespace SmartRecipes
+open Elements
 
 module SearchFoodstuffPage =
     open AppEnvironment
@@ -57,15 +58,15 @@ module SearchFoodstuffPage =
                 yield View.StackLayout(
                     verticalOptions = LayoutOptions.CenterAndExpand,
                     children = [
-                        yield View.Label(
+                        yield Elements.Label(
+                            text = foodstuff.Name,
                             horizontalOptions = LayoutOptions.Start,
-                            verticalOptions = LayoutOptions.Center,
-                            text = foodstuff.Name
+                            verticalOptions = LayoutOptions.Center
                         )
-                        yield View.Label(
+                        yield Elements.Label(
+                            text = amountToString foodstuff.BaseAmount,
                             horizontalOptions = LayoutOptions.Start,
-                            verticalOptions = LayoutOptions.Center,
-                            text = amountToString foodstuff.BaseAmount
+                            verticalOptions = LayoutOptions.Center
                         )
                     ]
                 )
@@ -73,16 +74,22 @@ module SearchFoodstuffPage =
                     horizontalOptions = LayoutOptions.EndAndExpand,
                     orientation = StackOrientation.Horizontal,
                     children = [ 
-                        yield Elements.actionButton "+" (fun () -> TryAddFoodstuff foodstuff |> dispatch)
+                        yield Elements.RoundedButton(
+                            text = "+",
+                            command = (fun () -> TryAddFoodstuff foodstuff |> dispatch)
+                        )
                     ]
                 )
             ]
         )
         
     let private resultTable dispatch results =
-        View.ListView(
-            rowHeight = 64,
-            items = Seq.map (resultTableItem dispatch) results
+        Elements.List(
+            items = Seq.toArray results,
+            itemView = (resultTableItem dispatch),
+            onTapped = (fun _ -> ()),
+            refresh = ListRefresh.No,
+            rowHeight = 64
         )
             
     let view dispatch model ignoredFoodstuffs =

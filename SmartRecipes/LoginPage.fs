@@ -59,7 +59,7 @@ module LoginPage =
         | Api.SignInError.InvalidCredentials -> "Invalid credentials."
         
     let errorLabel =
-        Option.map (fun e -> (View.Label(text = toErrorMessage e))) >> Option.toArray
+        Option.map (fun e -> (Elements.Label(text = toErrorMessage e))) >> Option.toArray
         
     let view (model: Model) dispatch =
         View.ContentPage(
@@ -68,8 +68,9 @@ module LoginPage =
                 margin = 8.0,
                 verticalOptions = LayoutOptions.CenterAndExpand,
                 children = [
-                    yield fix (fun () -> View.Label(text = "Smart Recipes", horizontalTextAlignment = TextAlignment.Center))
-                    yield fix (fun () -> View.Label(text = "Organize cooking", horizontalTextAlignment = TextAlignment.Center))
+                    yield fix (fun () -> Elements.Label(text = "Smart Recipes"))
+                    yield fix (fun () -> Elements.Label(text = "Organize cooking"))
+                    
                     if (model.IsLoading)
                     then
                         yield View.ActivityIndicator(isRunning = true)
@@ -80,9 +81,18 @@ module LoginPage =
                             value = model.Email,
                             callback = (fun s -> dispatch (EmailInputChanged s))
                         )
-                        yield Elements.passwordEntry model.Password (fun s -> dispatch (PasswordInputChanged s))
-                        yield View.Button(text = "Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignInRequested))
-                        yield View.Button(text = "Don't have an account yet? Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch GoToSignUp))
+                        yield Elements.PasswordEntry(
+                            value = model.Password,
+                            callback = (fun s -> dispatch (PasswordInputChanged s))
+                        ) 
+                        yield Elements.Button(
+                            text = "Sign in",
+                            command = (fun () -> dispatch SignInRequested)
+                        )
+                        yield Elements.Button(
+                            text = "Don't have an account yet? Sign up",
+                            command = (fun () -> dispatch GoToSignUp)
+                        )
                 ]
             )
         )

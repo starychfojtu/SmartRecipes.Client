@@ -63,7 +63,7 @@ module RecipeRecommendationPage =
         Elements.RefreshListPageContent(
             isLoading = isLoading,
             items = recipes,
-            itemView = (Elements.recipeCard []),
+            itemView = (fun r -> Elements.RecipeCard(actionItems = [], recipe = r)),
             onTapped = (GoToRecipeDetail >> dispatch),
             refresh = (fun () -> dispatch Refresh),
             emptyText = "Go add some ingredients first !",

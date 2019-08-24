@@ -2,6 +2,7 @@ namespace SmartRecipes
 
 open System
 open Domain
+open Elements
 open Xamarin.Forms
 
 module RecipeDetailPage =
@@ -38,11 +39,8 @@ module RecipeDetailPage =
                         yield View.StackLayout(
                             padding = Thickness(horizontalSize = 16.0, verticalSize = 0.0),
                             children = [
-                                yield View.Label(
-                                    text = recipe.Name,
-                                    horizontalTextAlignment = TextAlignment.Center,
-                                    fontSize = Elements.headingFontSize,
-                                    margin = Thickness(horizontalSize = 16.0, verticalSize = 0.0)
+                                yield Elements.Label(
+                                    text = recipe.Name
                                 )
                                 
                                 if recipe.Tags.Length > 0 then
@@ -52,7 +50,7 @@ module RecipeDetailPage =
                                         alignItems = FlexAlignItems.Center,
                                         horizontalOptions = LayoutOptions.Center,
                                         justifyContent = FlexJustify.Center,
-                                        children = List.map Elements.tag recipe.Tags
+                                        children = List.map Elements.Tag recipe.Tags
                                     )
                             ]
                         )
@@ -67,34 +65,30 @@ module RecipeDetailPage =
                             padding = Thickness(horizontalSize = 16.0, verticalSize = 0.0),
                             children = [
                                 if model.CanBeAdded then
-                                    yield View.Button(
+                                    yield Elements.Button(
                                         text = "Add to shopping list",
-                                        horizontalOptions = LayoutOptions.CenterAndExpand,
                                         command = (fun () -> dispatch Add)
                                     )
                                     
-                                yield View.Label(
-                                    text = "Serves " + recipe.PersonCount.ToString(),
-                                    fontSize = Elements.headingFontSize
+                                yield Elements.Label(
+                                    text = "Serves " + recipe.PersonCount.ToString()
                                 )
                                 
                                 yield!
                                     match recipe.CookingTime with
                                     | Some time ->
-                                        let label =  View.Label(
-                                            text = "Cooking time: " + time.Text,
-                                            fontSize = Elements.headingFontSize
+                                        let label = Elements.Label(
+                                            text = "Cooking time: " + time.Text
                                         )
-                                        List.singleton label
+                                        List.singleton label    
                                     | None -> []
                                     
-                                yield View.Label(
-                                    text = "Difficulty: " + Difficulty.toString recipe.Difficulty,
-                                    fontSize = Elements.headingFontSize
+                                yield Elements.Label(
+                                    text = "Difficulty: " + Difficulty.toString recipe.Difficulty
                                 )
                                 
                                 for ingredient in recipe.Ingredients do
-                                    yield View.Label(
+                                    yield Elements.Label(
                                         text = ingredient.DisplayLine
                                     )
                             ]

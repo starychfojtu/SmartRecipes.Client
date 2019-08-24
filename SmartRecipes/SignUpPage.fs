@@ -64,11 +64,20 @@ module SignUpPage =
         
     let emailEntry dispatch email error =
         let error = Option.bind (mapInvalidParameters (fun e -> e.EmailError)) error
-        Elements.validatableEntry "Email" email error (fun s -> dispatch (EmailChanged s))
+        Elements.ValidatableEntry(
+            placeholder = "Email",
+            value = email,
+            error = error,
+            callback = (fun s -> dispatch (EmailChanged s))
+        )
 
     let passwordEntry dispatch password error =
         let error = Option.bind (mapInvalidParameters (fun e -> e.PasswordError)) error
-        Elements.passwordValidatableEntry password error (fun s -> dispatch (PasswordInputChanged s))
+        Elements.PasswordValidatableEntry(
+            value = password,
+            error = error,
+            callback = (fun s -> dispatch (PasswordInputChanged s))
+        )
     
     let toErrorMessage = function
         | Api.SignUpError.AccountAlreadyExists -> Some "Account already exists."
@@ -76,7 +85,7 @@ module SignUpPage =
         
     let errorEntry error =
         Option.bind (toErrorMessage) error
-        |> Option.map (fun e -> View.Label(text = e))
+        |> Option.map (fun e -> Elements.Label(text = e))
         |> Option.toArray
         
     let view (model: Model) dispatch =
@@ -86,8 +95,8 @@ module SignUpPage =
                 margin = 8.0,
                 verticalOptions = LayoutOptions.CenterAndExpand,
                 children = [
-                    yield fix (fun () -> View.Label(text = "Smart Recipes", horizontalTextAlignment = TextAlignment.Center))
-                    yield fix (fun () -> View.Label(text = "Join organized cooks !", horizontalTextAlignment = TextAlignment.Center))
+                    yield fix (fun () -> Elements.Label(text = "Smart Recipes"))
+                    yield fix (fun () -> Elements.Label(text = "Join organized cooks !"))
                     yield! dependsOn model.Error (fun model -> errorEntry)
                     yield Elements.Entry(
                         placeholder = "First name",
@@ -101,8 +110,8 @@ module SignUpPage =
                     )
                     yield! dependsOn (model.Email, model.Error) (fun model (email, error) -> emailEntry dispatch email error)
                     yield! dependsOn (model.Password, model.Error) (fun model (password, error) -> passwordEntry dispatch password error)
-                    yield fix (fun () -> View.Button(text = "Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignUpRequested)))
-                    yield fix (fun () -> View.Button(text = "Already have an account? Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch GoToSignIn)))
+                    yield fix (fun () -> Elements.Button(text = "Sign up", command = (fun () -> dispatch SignUpRequested)))
+                    yield fix (fun () -> Elements.Button(text = "Already have an account? Sign in", command = (fun () -> dispatch GoToSignIn)))
                 ]
             )
         )

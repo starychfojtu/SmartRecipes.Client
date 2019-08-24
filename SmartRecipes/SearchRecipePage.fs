@@ -51,7 +51,7 @@ module SearchRecipePage =
     let private resultTable dispatch recipes =
         Elements.List(
             items = recipes,
-            itemView = (Elements.recipeCard []),
+            itemView = (fun r -> Elements.RecipeCard(actionItems = [], recipe = r)),
             onTapped = (SelectRecipe >> dispatch),
             refresh = ListRefresh.No,
             rowHeight = 124

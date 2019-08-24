@@ -166,8 +166,14 @@ module ShoppingListPage =
                     orientation = StackOrientation.Horizontal,
                     children = [
                         if item.Amount >= item.Foodstuff.AmountStep then
-                            yield Elements.actionButton "-" (fun () -> decrease item)
-                        yield Elements.actionButton "+" (fun () -> increase item)
+                            yield Elements.RoundedButton(
+                                text = "-",
+                                command = (fun () -> decrease item)
+                            )
+                        yield Elements.RoundedButton(
+                            text = "+",
+                            command = (fun () -> increase item)
+                        )
                     ]                 
                 )
             ]         

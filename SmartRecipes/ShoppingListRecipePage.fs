@@ -176,7 +176,13 @@ module ShoppingListRecipePage =
         )
         
     let recipeItemCard dispatch item =
-        Elements.recipeCard [ Elements.actionButton "-" (fun () -> RecipeRemoved item.Recipe |> dispatch) ] item.Recipe
+        Elements.RecipeCard(
+            actionItems = [ Elements.RoundedButton(
+                text = "-",
+                command = (fun () -> RecipeRemoved item.Recipe |> dispatch)
+            ) ],
+            recipe = item.Recipe
+        )
         
     let mainPage dispatch model  =
         View.ContentPage(
