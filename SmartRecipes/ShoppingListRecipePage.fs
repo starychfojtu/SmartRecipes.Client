@@ -148,7 +148,7 @@ module ShoppingListRecipePage =
     // View
     
     let recipeItemCard dispatch item =
-        Elements.recipeCard item.Recipe [ Elements.actionButton "Remove" (fun () -> RecipeRemoved item.Recipe |> dispatch) ]
+        Elements.recipeCard [ Elements.actionButton "Remove" (fun () -> RecipeRemoved item.Recipe |> dispatch) ] item.Recipe
         
     let searchPage dispatch model =
         let ignoredRecipes = Seq.map (fun i -> i.Recipe) model.Items

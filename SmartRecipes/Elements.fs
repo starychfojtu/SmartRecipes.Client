@@ -1,5 +1,4 @@
 namespace SmartRecipes
-open System.Data
 
 module Elements =
     open Domain
@@ -45,7 +44,7 @@ module Elements =
         | Some of (unit -> unit)
         | Refreshing
         
-    let cardList (items: 'a[]) itemView onTapped refresh =
+    let private smartRecipesList (items: 'a[]) itemView onTapped refresh =
         let (isRefreshEnabled, isRefreshing) =
             match refresh with
             | None -> false, false
@@ -67,10 +66,28 @@ module Elements =
             ),
             isRefreshing = isRefreshing
         )
-        
+
+    let private refreshListPage isLoading items itemView onTapped refresh emptyText =
+         let refresh = if isLoading then ListRefresh.Refreshing else ListRefresh.Some refresh
+         View.Grid(
+            padding = 16.0,
+            rowdefs = [box "*"],
+            rowSpacing = 0.0,
+            children = [
+                yield (smartRecipesList items itemView onTapped refresh).GridRow(0)
+                yield View.Label(
+                    text = emptyText,
+                    horizontalTextAlignment = TextAlignment.Center,
+                    verticalOptions = LayoutOptions.Center,
+                    fontSize = headingFontSize,
+                    isVisible = (items.Length = 0)
+                ).GridRow(0)
+            ]
+        )
+         
     // Recipes
     
-    let recipeCard (recipe: Recipe) acionItems =
+    let recipeCard acionItems (recipe: Recipe) =
         View.Frame(
             margin = Thickness(16.0, 8.0),
             content = View.StackLayout(
@@ -110,3 +127,12 @@ module Elements =
                 ]
             )
         )
+        
+    // View extension
+    
+    type View() =
+        static member RefreshListPageContent(isLoading, items, itemView, onTapped, refresh, emptyText) =
+            refreshListPage isLoading items itemView onTapped refresh emptyText
+        
+        static member SmartRecipesList(items, itemView, onTapped, refresh) =
+            smartRecipesList items itemView onTapped refresh

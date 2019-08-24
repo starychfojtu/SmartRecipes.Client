@@ -48,11 +48,13 @@ module SearchRecipePage =
         let textChanged (args: TextChangedEventArgs) = TermChanged args.NewTextValue |> dispatch
         View.SearchBar(textChanged = debounce 500 textChanged)
         
-    let private resultTableItem recipe =
-        Elements.recipeCard recipe []
-        
     let private resultTable dispatch recipes =
-        Elements.cardList recipes resultTableItem (SelectRecipe >> dispatch) ListRefresh.None
+        View.SmartRecipesList(
+            items = recipes,
+            itemView = (Elements.recipeCard []),
+            onTapped = (SelectRecipe >> dispatch),
+            refresh = ListRefresh.None
+        )
             
     let view dispatch model ignoredRecipes =
         let recipes = Seq.except ignoredRecipes model.Results
