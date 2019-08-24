@@ -5,6 +5,8 @@ module Elements =
     open Fabulous.DynamicViews
     open Xamarin.Forms
     
+    let headingFontSize = 24
+    
     let entry placeholder value callback =
         View.Entry(
             text = value,
@@ -34,17 +36,16 @@ module Elements =
             widthRequest = 48.0,
             heightRequest = 48.0,
             verticalOptions = LayoutOptions.Center,
-            command = command
+            command = command,
+            fontSize = headingFontSize
         )
-        
-    let headingFontSize = 24
         
     type ListRefresh =
         | None
         | Some of (unit -> unit)
         | Refreshing
         
-    let private smartRecipesList (items: 'a[]) itemView onTapped refresh =
+    let private smartRecipesList (items: 'a[]) itemView onTapped refresh rowHeight =
         let (isRefreshEnabled, isRefreshing) =
             match refresh with
             | None -> false, false
@@ -52,7 +53,7 @@ module Elements =
             | Refreshing _ -> true, true
             
         View.ListView(
-            rowHeight = 128,
+            rowHeight = rowHeight,
             items = Seq.map itemView items,
             selectionMode = ListViewSelectionMode.None,
             itemTapped = (fun i -> onTapped items.[i]),
@@ -67,14 +68,14 @@ module Elements =
             isRefreshing = isRefreshing
         )
 
-    let private refreshListPage isLoading items itemView onTapped refresh emptyText =
+    let private refreshListPage isLoading items itemView onTapped refresh emptyText rowHeight =
          let refresh = if isLoading then ListRefresh.Refreshing else ListRefresh.Some refresh
          View.Grid(
             padding = 16.0,
             rowdefs = [box "*"],
             rowSpacing = 0.0,
             children = [
-                yield (smartRecipesList items itemView onTapped refresh).GridRow(0)
+                yield (smartRecipesList items itemView onTapped refresh rowHeight).GridRow(0)
                 yield View.Label(
                     text = emptyText,
                     horizontalTextAlignment = TextAlignment.Center,
@@ -131,8 +132,8 @@ module Elements =
     // View extension
     
     type View() =
-        static member RefreshListPageContent(isLoading, items, itemView, onTapped, refresh, emptyText) =
-            refreshListPage isLoading items itemView onTapped refresh emptyText
+        static member RefreshListPageContent(isLoading, items, itemView, onTapped, refresh, emptyText, rowHeight) =
+            refreshListPage isLoading items itemView onTapped refresh emptyText rowHeight
         
-        static member SmartRecipesList(items, itemView, onTapped, refresh) =
-            smartRecipesList items itemView onTapped refresh
+        static member SmartRecipesList(items, itemView, onTapped, refresh, rowHeight) =
+            smartRecipesList items itemView onTapped refresh rowHeight

@@ -166,8 +166,8 @@ module ShoppingListPage =
                     orientation = StackOrientation.Horizontal,
                     children = [
                         if item.Amount >= item.Foodstuff.AmountStep then
-                            yield Elements.actionButton "remove" (fun () -> decrease item)
-                        yield Elements.actionButton "add" (fun () -> increase item)
+                            yield Elements.actionButton "-" (fun () -> decrease item)
+                        yield Elements.actionButton "+" (fun () -> increase item)
                     ]                 
                 )
             ]         
@@ -181,7 +181,8 @@ module ShoppingListPage =
                 itemView = (itemView (ItemAmountIncreaseRequested >> dispatch) (ItemAmountDecreaseRequested >> dispatch)),
                 onTapped = (fun _ -> ()),
                 refresh = (fun () -> dispatch Refresh),
-                emptyText = "No items :( Let's add some !"
+                emptyText = "No items :( Let's add some !",
+                rowHeight = 64
             )
         )
         

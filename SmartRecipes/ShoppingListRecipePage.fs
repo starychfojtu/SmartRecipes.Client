@@ -186,7 +186,8 @@ module ShoppingListRecipePage =
                 itemView = recipeItemCard dispatch,
                 onTapped = (fun i -> GoToRecipeDetail i.Recipe |> dispatch),
                 refresh = (fun () -> dispatch Refresh),
-                emptyText = "No recipes, checkout your suggestions :)"
+                emptyText = "No recipes, checkout your suggestions :)",
+                rowHeight = 128
             )
         )
 

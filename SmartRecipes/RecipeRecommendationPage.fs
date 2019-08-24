@@ -66,7 +66,8 @@ module RecipeRecommendationPage =
             itemView = (Elements.recipeCard []),
             onTapped = (GoToRecipeDetail >> dispatch),
             refresh = (fun () -> dispatch Refresh),
-            emptyText = "Go add some ingredients first !"
+            emptyText = "Go add some ingredients first !",
+            rowHeight = 128
         )
     
     let mainPage dispatch isLoading recipes =

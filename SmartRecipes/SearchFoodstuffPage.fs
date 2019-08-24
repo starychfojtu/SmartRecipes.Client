@@ -73,7 +73,7 @@ module SearchFoodstuffPage =
                     horizontalOptions = LayoutOptions.EndAndExpand,
                     orientation = StackOrientation.Horizontal,
                     children = [ 
-                        yield Elements.actionButton "add" (fun () -> TryAddFoodstuff foodstuff |> dispatch)
+                        yield Elements.actionButton "+" (fun () -> TryAddFoodstuff foodstuff |> dispatch)
                     ]
                 )
             ]

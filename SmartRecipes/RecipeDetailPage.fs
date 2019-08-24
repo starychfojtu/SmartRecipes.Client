@@ -31,7 +31,7 @@ module RecipeDetailPage =
             content = View.StackLayout(
                 children = [
                     if model.CanBeAdded then
-                        yield Elements.actionButton "Add" (fun () -> dispatch Add)
+                        yield Elements.actionButton "+" (fun () -> dispatch Add)
                         
                     yield View.Label "Name:"
                     yield View.Label recipe.Name

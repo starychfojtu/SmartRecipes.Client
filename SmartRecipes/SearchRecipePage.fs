@@ -53,7 +53,8 @@ module SearchRecipePage =
             items = recipes,
             itemView = (Elements.recipeCard []),
             onTapped = (SelectRecipe >> dispatch),
-            refresh = ListRefresh.None
+            refresh = ListRefresh.None,
+            rowHeight = 124
         )
             
     let view dispatch model ignoredRecipes =
