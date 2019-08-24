@@ -39,7 +39,7 @@ module RecipeDetailPage =
                         yield View.StackLayout(
                             padding = Thickness(horizontalSize = 16.0, verticalSize = 0.0),
                             children = [
-                                yield Elements.Label(
+                                yield Elements.LargeLabel(
                                     text = recipe.Name
                                 )
                                 
@@ -70,26 +70,34 @@ module RecipeDetailPage =
                                         command = (fun () -> dispatch Add)
                                     )
                                     
-                                yield Elements.Label(
-                                    text = "Serves " + recipe.PersonCount.ToString()
+                                yield Elements.LargeLabel(
+                                    text = "Serves: " + recipe.PersonCount.ToString(),
+                                    horizontalOptions = LayoutOptions.Start,
+                                    horizontalTextAlignment = TextAlignment.Start
                                 )
                                 
                                 yield!
                                     match recipe.CookingTime with
                                     | Some time ->
-                                        let label = Elements.Label(
-                                            text = "Cooking time: " + time.Text
+                                        let label = Elements.LargeLabel(
+                                            text = "Cooking time: " + time.Text,
+                                            horizontalOptions = LayoutOptions.Start,
+                                            horizontalTextAlignment = TextAlignment.Start
                                         )
-                                        List.singleton label    
+                                        List.singleton label
                                     | None -> []
                                     
-                                yield Elements.Label(
-                                    text = "Difficulty: " + Difficulty.toString recipe.Difficulty
+                                yield Elements.LargeLabel(
+                                    text = "Difficulty: " + Difficulty.toString recipe.Difficulty,
+                                    horizontalOptions = LayoutOptions.Start,
+                                    horizontalTextAlignment = TextAlignment.Start
                                 )
                                 
                                 for ingredient in recipe.Ingredients do
                                     yield Elements.Label(
-                                        text = ingredient.DisplayLine
+                                        text = ingredient.DisplayLine,
+                                        horizontalOptions = LayoutOptions.Start,
+                                        horizontalTextAlignment = TextAlignment.Start
                                     )
                             ]
                         )

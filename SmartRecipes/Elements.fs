@@ -13,6 +13,7 @@ module Elements =
     open Domain
     open Fabulous.DynamicViews
     
+    let fontSize = 16
     let headingFontSize = 24
     
     type ListRefresh =
@@ -21,11 +22,23 @@ module Elements =
         | Refreshing
         
     type Elements() =
-            
-        static member Label(text, ?isVisible, ?horizontalOptions, ?verticalOptions) =
+           
+        static member Label(text, ?isVisible, ?horizontalOptions, ?verticalOptions, ?horizontalTextAlignment) =
             View.Label(
                 text = text,
-                horizontalTextAlignment = TextAlignment.Center,
+                horizontalTextAlignment = defaultArg horizontalTextAlignment TextAlignment.Center,
+                verticalTextAlignment = TextAlignment.Center,
+                ?horizontalOptions = horizontalOptions,
+                ?verticalOptions = verticalOptions,
+                fontSize = fontSize,
+                ?isVisible = isVisible,
+                textColor = Colors.textDark
+            )
+            
+        static member LargeLabel(text, ?isVisible, ?horizontalOptions, ?verticalOptions, ?horizontalTextAlignment) =
+            View.Label(
+                text = text,
+                horizontalTextAlignment = defaultArg horizontalTextAlignment TextAlignment.Center,
                 verticalTextAlignment = TextAlignment.Center,
                 ?horizontalOptions = horizontalOptions,
                 ?verticalOptions = verticalOptions,
@@ -50,7 +63,7 @@ module Elements =
                 yield Elements.Entry(placeholder, value, callback)
                 yield!
                     match error with
-                    | Some e -> [Elements.Label(text = e)]
+                    | Some e -> [Elements.LargeLabel(text = e)]
                     | None -> []
             }
 
@@ -131,7 +144,7 @@ module Elements =
                             heightRequest = 64.0,
                             padding = Thickness(8.0, 0.0),
                             children = [
-                                yield Elements.Label(
+                                yield Elements.LargeLabel(
                                     text = recipe.Name,
                                     horizontalOptions = LayoutOptions.Start,
                                     verticalOptions = LayoutOptions.Center
@@ -148,7 +161,7 @@ module Elements =
                             heightRequest = 40.0,
                             padding = Thickness(8.0, 4.0),
                             children = [
-                                yield Elements.Label(
+                                yield Elements.LargeLabel(
                                     text = recipe.PersonCount.ToString (),
                                     horizontalOptions = LayoutOptions.Start,
                                     verticalOptions = LayoutOptions.Center
@@ -167,7 +180,7 @@ module Elements =
                 rowSpacing = 0.0,
                 children = [
                     yield Elements.List(items, itemView, onTapped, refresh, rowHeight).GridRow(0)
-                    yield Elements.Label(
+                    yield Elements.LargeLabel(
                         text = emptyText,
                         isVisible = (items.Length = 0 && not isLoading)
                     ).GridRow(0)

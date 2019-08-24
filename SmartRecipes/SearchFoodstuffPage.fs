@@ -58,12 +58,12 @@ module SearchFoodstuffPage =
                 yield View.StackLayout(
                     verticalOptions = LayoutOptions.CenterAndExpand,
                     children = [
-                        yield Elements.Label(
+                        yield Elements.LargeLabel(
                             text = foodstuff.Name,
                             horizontalOptions = LayoutOptions.Start,
                             verticalOptions = LayoutOptions.Center
                         )
-                        yield Elements.Label(
+                        yield Elements.LargeLabel(
                             text = amountToString foodstuff.BaseAmount,
                             horizontalOptions = LayoutOptions.Start,
                             verticalOptions = LayoutOptions.Center

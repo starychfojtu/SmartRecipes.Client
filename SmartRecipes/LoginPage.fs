@@ -59,7 +59,7 @@ module LoginPage =
         | Api.SignInError.InvalidCredentials -> "Invalid credentials."
         
     let errorLabel =
-        Option.map (fun e -> (Elements.Label(text = toErrorMessage e))) >> Option.toArray
+        Option.map (fun e -> (Elements.LargeLabel(text = toErrorMessage e))) >> Option.toArray
         
     let view (model: Model) dispatch =
         View.ContentPage(
@@ -68,8 +68,8 @@ module LoginPage =
                 margin = 8.0,
                 verticalOptions = LayoutOptions.CenterAndExpand,
                 children = [
-                    yield fix (fun () -> Elements.Label(text = "Smart Recipes"))
-                    yield fix (fun () -> Elements.Label(text = "Organize cooking"))
+                    yield fix (fun () -> Elements.LargeLabel(text = "Smart Recipes"))
+                    yield fix (fun () -> Elements.LargeLabel(text = "Organize cooking"))
                     
                     if (model.IsLoading)
                     then

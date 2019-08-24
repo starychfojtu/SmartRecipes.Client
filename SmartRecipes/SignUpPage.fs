@@ -85,7 +85,7 @@ module SignUpPage =
         
     let errorEntry error =
         Option.bind (toErrorMessage) error
-        |> Option.map (fun e -> Elements.Label(text = e))
+        |> Option.map (fun e -> Elements.LargeLabel(text = e))
         |> Option.toArray
         
     let view (model: Model) dispatch =
@@ -95,8 +95,8 @@ module SignUpPage =
                 margin = 8.0,
                 verticalOptions = LayoutOptions.CenterAndExpand,
                 children = [
-                    yield fix (fun () -> Elements.Label(text = "Smart Recipes"))
-                    yield fix (fun () -> Elements.Label(text = "Join organized cooks !"))
+                    yield fix (fun () -> Elements.LargeLabel(text = "Smart Recipes"))
+                    yield fix (fun () -> Elements.LargeLabel(text = "Join organized cooks !"))
                     yield! dependsOn model.Error (fun model -> errorEntry)
                     yield Elements.Entry(
                         placeholder = "First name",
