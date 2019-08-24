@@ -52,35 +52,15 @@ module SearchFoodstuffPage =
         amount.Value.ToString () + " " + amount.Unit.ToString ()
         
     let private resultTableItem dispatch (foodstuff: Foodstuff) =
-        View.StackLayout(
-            orientation = StackOrientation.Horizontal,
-            children = [
-                yield View.StackLayout(
-                    verticalOptions = LayoutOptions.CenterAndExpand,
-                    children = [
-                        yield Elements.LargeLabel(
-                            text = foodstuff.Name,
-                            horizontalOptions = LayoutOptions.Start,
-                            verticalOptions = LayoutOptions.Center
-                        )
-                        yield Elements.LargeLabel(
-                            text = amountToString foodstuff.BaseAmount,
-                            horizontalOptions = LayoutOptions.Start,
-                            verticalOptions = LayoutOptions.Center
-                        )
-                    ]
+        Elements.FoodstuffCard(
+            actions = [
+                yield Elements.RoundedButton(
+                    text = "+",
+                    command = (fun () -> TryAddFoodstuff foodstuff |> dispatch)
                 )
-                yield View.StackLayout(
-                    horizontalOptions = LayoutOptions.EndAndExpand,
-                    orientation = StackOrientation.Horizontal,
-                    children = [ 
-                        yield Elements.RoundedButton(
-                            text = "+",
-                            command = (fun () -> TryAddFoodstuff foodstuff |> dispatch)
-                        )
-                    ]
-                )
-            ]
+            ],
+            foodstuff = foodstuff,
+            amount = foodstuff.BaseAmount.Value
         )
         
     let private resultTable dispatch results =

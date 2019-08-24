@@ -9,7 +9,6 @@ module ShoppingListPage =
     open FSharpPlus.Data
     open Fabulous.Core
     open Fabulous.DynamicViews
-    open Xamarin.Forms
     open Elements
     
     type Item = {
@@ -144,39 +143,20 @@ module ShoppingListPage =
     // View
 
     let itemView increase decrease item =
-        View.StackLayout(
-            orientation = StackOrientation.Horizontal, 
-            children = [
-                yield View.StackLayout(
-                    verticalOptions = LayoutOptions.CenterAndExpand,
-                    children = [
-                        yield View.Label(
-                            text = item.Foodstuff.Name,
-                            horizontalOptions = LayoutOptions.Start,
-                            verticalOptions = LayoutOptions.Center
-                        )
-                        yield View.Label(
-                            text = item.Amount.ToString() + " " + item.Foodstuff.BaseAmount.Unit.ToString(),
-                            verticalOptions = LayoutOptions.Center
-                        )
-                    ]                 
+        Elements.FoodstuffCard(
+            actions = [
+                if item.Amount >= item.Foodstuff.AmountStep then
+                    yield Elements.RoundedButton(
+                        text = "-",
+                        command = (fun () -> decrease item)
+                    )
+                yield Elements.RoundedButton(
+                    text = "+",
+                    command = (fun () -> increase item)
                 )
-                yield View.StackLayout(
-                    horizontalOptions = LayoutOptions.EndAndExpand,
-                    orientation = StackOrientation.Horizontal,
-                    children = [
-                        if item.Amount >= item.Foodstuff.AmountStep then
-                            yield Elements.RoundedButton(
-                                text = "-",
-                                command = (fun () -> decrease item)
-                            )
-                        yield Elements.RoundedButton(
-                            text = "+",
-                            command = (fun () -> increase item)
-                        )
-                    ]                 
-                )
-            ]         
+            ],
+            foodstuff = item.Foodstuff,
+            amount = item.Amount
         )
         
     let page model dispatch =

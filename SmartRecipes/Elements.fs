@@ -133,6 +133,32 @@ module Elements =
                     verticalTextAlignment = TextAlignment.Center
                 )
             )
+            
+        static member FoodstuffCard(actions, foodstuff: Foodstuff, amount: float) =
+            View.StackLayout(
+                orientation = StackOrientation.Horizontal, 
+                children = [
+                    yield View.StackLayout(
+                        verticalOptions = LayoutOptions.CenterAndExpand,
+                        children = [
+                            yield View.Label(
+                                text = foodstuff.Name,
+                                horizontalOptions = LayoutOptions.Start,
+                                verticalOptions = LayoutOptions.Center
+                            )
+                            yield View.Label(
+                                text = amount.ToString() + " " + foodstuff.BaseAmount.Unit.ToString(),
+                                verticalOptions = LayoutOptions.Center
+                            )
+                        ]                 
+                    )
+                    yield View.StackLayout(
+                        horizontalOptions = LayoutOptions.EndAndExpand,
+                        orientation = StackOrientation.Horizontal,
+                        children = actions              
+                    )
+                ]         
+            )
 
         static member RecipeCard(actionItems, recipe) =
             View.Frame(
