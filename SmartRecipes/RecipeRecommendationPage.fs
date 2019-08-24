@@ -65,12 +65,21 @@ module RecipeRecommendationPage =
     let recommendationList dispatch isLoading recipes =
         let refresh = if isLoading then ListRefresh.Refreshing else ListRefresh.Some (fun () -> dispatch Refresh)
         Elements.cardList recipes recommendationCard (GoToRecipeDetail >> dispatch) refresh
-        
+
     let mainContent dispatch isLoading recipes =
-        View.StackLayout(
+         View.Grid(
             padding = 16.0,
+            rowdefs = [box "*"],
+            rowSpacing = 0.0,
             children = [
-                yield recommendationList dispatch isLoading recipes
+                yield (recommendationList dispatch isLoading recipes).GridRow(0)
+                yield View.Label(
+                    text = "Go add some ingredients first !",
+                    horizontalTextAlignment = TextAlignment.Center,
+                    verticalOptions = LayoutOptions.Center,
+                    fontSize = Elements.headingFontSize,
+                    isVisible = (recipes.Length = 0)
+                ).GridRow(0)
             ]
         )
     
