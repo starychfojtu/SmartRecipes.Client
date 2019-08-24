@@ -38,10 +38,23 @@ module MockedApi =
             Description = "Test"
             PersonCount = 4
             ImageUrl = Uri("https://google.com")
+            Url = Uri("https://google.com")
             Ingredients = [
-                { FoodstuffId = FoodstuffId "1"; Amount = Some { Value = 1.0; Unit = "pieces" } }
-                { FoodstuffId = FoodstuffId "2"; Amount = Some { Value = 1.0; Unit = "pieces" } }
+                { FoodstuffId = FoodstuffId "1"; Amount = Some { Value = 1.0; Unit = "pieces" }; DisplayLine = "1 carrot" }
+                { FoodstuffId = FoodstuffId "2"; Amount = Some { Value = 1.0; Unit = "pieces" }; DisplayLine = "1 carrot" }
             ]
+            Difficulty = Normal
+            Rating = Some 5
+            Tags = ["bbq"]
+            CookingTime = Some { Text = "1 hour" }
+            NutritionPerServing = {
+                Calories = None
+                Fat = None
+                SaturatedFat = None
+                Sugars = None
+                Protein = None
+                Carbs = None
+            }
         };
         {
             Id = RecipeId "2"
@@ -50,10 +63,23 @@ module MockedApi =
             Description = "Test"
             PersonCount = 4
             ImageUrl = Uri("https://google.com")
+            Url = Uri("https://google.com")
             Ingredients = [
-                { FoodstuffId = FoodstuffId "1"; Amount = Some { Value = 1.0; Unit = "pieces" } }
-                { FoodstuffId = FoodstuffId "2"; Amount = Some { Value = 1.0; Unit = "pieces" } }
+                { FoodstuffId = FoodstuffId "1"; Amount = Some { Value = 1.0; Unit = "pieces" }; DisplayLine = "1 carrot" }
+                { FoodstuffId = FoodstuffId "2"; Amount = Some { Value = 1.0; Unit = "pieces" }; DisplayLine = "1 carrot" }
             ]
+            Difficulty = Normal
+            Rating = Some 5
+            Tags = ["bbq"]
+            CookingTime = Some { Text = "1 hour" }
+            NutritionPerServing = {
+                Calories = None
+                Fat = None
+                SaturatedFat = None
+                Sugars = None
+                Protein = None
+                Carbs = None
+            }
         }
     ]
     

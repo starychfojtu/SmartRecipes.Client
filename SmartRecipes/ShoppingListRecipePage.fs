@@ -180,7 +180,7 @@ module ShoppingListRecipePage =
         
     let mainPage dispatch model  =
         View.ContentPage(
-            content = View.RefreshListPageContent(
+            content = Elements.RefreshListPageContent(
                 isLoading = model.IsLoading,
                 items = List.toArray model.Items,
                 itemView = recipeItemCard dispatch,

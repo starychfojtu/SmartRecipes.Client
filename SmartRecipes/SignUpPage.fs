@@ -1,5 +1,6 @@
 namespace SmartRecipes
 
+open Elements
 open Fabulous.Core
 open Fabulous.DynamicViews
 open Xamarin.Forms
@@ -88,8 +89,16 @@ module SignUpPage =
                     yield fix (fun () -> View.Label(text = "Smart Recipes", horizontalTextAlignment = TextAlignment.Center))
                     yield fix (fun () -> View.Label(text = "Join organized cooks !", horizontalTextAlignment = TextAlignment.Center))
                     yield! dependsOn model.Error (fun model -> errorEntry)
-                    yield Elements.entry "First name" "" (fun _ -> ())
-                    yield Elements.entry "Last name" "" (fun _ -> ())
+                    yield Elements.Entry(
+                        placeholder = "First name",
+                        value = "",
+                        callback = (fun _ -> ())
+                    )
+                    yield Elements.Entry(
+                        placeholder = "Last name",
+                        value = "",
+                        callback = (fun _ -> ())
+                    )
                     yield! dependsOn (model.Email, model.Error) (fun model (email, error) -> emailEntry dispatch email error)
                     yield! dependsOn (model.Password, model.Error) (fun model (password, error) -> passwordEntry dispatch password error)
                     yield fix (fun () -> View.Button(text = "Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignUpRequested)))

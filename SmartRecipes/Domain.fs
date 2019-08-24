@@ -1,5 +1,6 @@
 namespace SmartRecipes
 
+open System
 open FSharpPlus.Lens
 open Lens
 open FSharp.Json
@@ -38,9 +39,52 @@ module Domain =
     type Ingredient = {
         FoodstuffId: FoodstuffId
         Amount: Amount option
+        DisplayLine: string
     }
     
     type RecipeId = RecipeId of string
+    
+    type Difficulty =
+        | Easy
+        | Normal
+        | Hard
+        
+    module Difficulty =
+        let toString = function
+            | Easy -> "Easy"
+            | Normal -> "Normal"
+            | Hard -> "Hard"
+
+        let fromString(s: string) =
+            match s.ToLowerInvariant() with
+            | "easy" -> Some Easy
+            | "normal" -> Some Normal
+            | "hard" -> Some Hard
+            | _ -> None
+            
+        type JsonTransform() =
+            interface ITypeTransform with
+                member x.targetType () = (fun _ -> typeof<string>) ()
+                member x.toTargetType value = (fun (v: obj) -> (toString (v:?> Difficulty)).ToLowerInvariant() :> obj) value
+                member x.fromTargetType value = (fun (v: obj) -> (fromString (v :?> string) |> Option.get) :> obj) value
+        
+    type NutritionInfo = {
+        Grams: int
+        Percents: int option
+    }
+    
+    type NutritionPerServing = {
+        Calories: int option
+        Fat: NutritionInfo option
+        SaturatedFat: NutritionInfo option
+        Sugars: NutritionInfo option
+        Protein: NutritionInfo option
+        Carbs: NutritionInfo option
+    }
+    
+    type CookingTime = {
+        Text: string
+    }
         
     type Recipe = {
         Id: RecipeId
@@ -49,8 +93,16 @@ module Domain =
         PersonCount: int
         [<JsonField(Transform=typeof<Transforms.UriTransform>)>]
         ImageUrl: Uri
+        [<JsonField(Transform=typeof<Transforms.UriTransform>)>]
+        Url: Uri
         Description: string
         Ingredients: Ingredient list
+        [<JsonField(Transform=typeof<Difficulty.JsonTransform>)>]
+        Difficulty: Difficulty
+        Rating: int option
+        Tags: string list
+        CookingTime: CookingTime option
+        NutritionPerServing: NutritionPerServing
     }
     
     type ShoppingListItem = {

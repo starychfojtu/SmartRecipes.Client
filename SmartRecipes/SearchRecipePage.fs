@@ -49,11 +49,11 @@ module SearchRecipePage =
         View.SearchBar(textChanged = debounce 500 textChanged)
         
     let private resultTable dispatch recipes =
-        View.SmartRecipesList(
+        Elements.List(
             items = recipes,
             itemView = (Elements.recipeCard []),
             onTapped = (SelectRecipe >> dispatch),
-            refresh = ListRefresh.None,
+            refresh = ListRefresh.No,
             rowHeight = 124
         )
             

@@ -60,7 +60,7 @@ module RecipeRecommendationPage =
         | Visible recipeDetailModel -> [ RecipeDetailPage.view (RecipeDetailMessage >> dispatch) recipeDetailModel ]
 
     let mainContent dispatch isLoading recipes =
-        View.RefreshListPageContent(
+        Elements.RefreshListPageContent(
             isLoading = isLoading,
             items = recipes,
             itemView = (Elements.recipeCard []),

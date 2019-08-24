@@ -1,5 +1,6 @@
 namespace SmartRecipes
 
+open Elements
 open Fabulous.Core
 open Fabulous.DynamicViews
 open Xamarin.Forms
@@ -74,7 +75,11 @@ module LoginPage =
                         yield View.ActivityIndicator(isRunning = true)
                     else
                         yield! dependsOn model.Error (fun _ -> errorLabel)
-                        yield Elements.entry "Email" model.Email (fun s -> dispatch (EmailInputChanged s))
+                        yield Elements.Entry(
+                            placeholder = "Email",
+                            value = model.Email,
+                            callback = (fun s -> dispatch (EmailInputChanged s))
+                        )
                         yield Elements.passwordEntry model.Password (fun s -> dispatch (PasswordInputChanged s))
                         yield View.Button(text = "Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignInRequested))
                         yield View.Button(text = "Don't have an account yet? Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch GoToSignUp))

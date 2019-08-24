@@ -175,7 +175,7 @@ module ShoppingListPage =
         
     let page model dispatch =
         View.ContentPage(
-            content = View.RefreshListPageContent(
+            content = Elements.RefreshListPageContent(
                 isLoading = model.IsLoading,
                 items = List.toArray model.Items,
                 itemView = (itemView (ItemAmountIncreaseRequested >> dispatch) (ItemAmountDecreaseRequested >> dispatch)),
