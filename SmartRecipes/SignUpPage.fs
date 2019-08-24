@@ -85,12 +85,13 @@ module SignUpPage =
                 margin = 8.0,
                 verticalOptions = LayoutOptions.CenterAndExpand,
                 children = [
-                    // This positioning is a hotfix of bug in Fabulous.
+                    yield fix (fun () -> View.Label(text = "Smart Recipes", horizontalTextAlignment = TextAlignment.Center))
+                    yield fix (fun () -> View.Label(text = "Join organized cooks !", horizontalTextAlignment = TextAlignment.Center))
+                    yield! dependsOn model.Error (fun model -> errorEntry)
+                    yield Elements.entry "First name" "" (fun _ -> ())
+                    yield Elements.entry "Last name" "" (fun _ -> ())
                     yield! dependsOn (model.Email, model.Error) (fun model (email, error) -> emailEntry dispatch email error)
                     yield! dependsOn (model.Password, model.Error) (fun model (password, error) -> passwordEntry dispatch password error)
-                    yield fix (fun () -> View.Label(text = "Smart Recipes", horizontalTextAlignment = TextAlignment.Center))
-                    yield fix (fun () -> View.Label(text = "Organize cooking", horizontalTextAlignment = TextAlignment.Center))
-                    yield! dependsOn model.Error (fun model -> errorEntry)
                     yield fix (fun () -> View.Button(text = "Sign up", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch SignUpRequested)))
                     yield fix (fun () -> View.Button(text = "Already have an account? Sign in", verticalOptions = LayoutOptions.FillAndExpand, command = (fun () -> dispatch GoToSignIn)))
                 ]
