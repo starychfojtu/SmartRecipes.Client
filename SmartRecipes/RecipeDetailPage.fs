@@ -1,6 +1,5 @@
 namespace SmartRecipes
 
-open System
 open Domain
 open Elements
 open Xamarin.Forms
@@ -53,9 +52,8 @@ module RecipeDetailPage =
                             ]
                         )
                         
-                        // TODO: recipe url.
                         yield View.Image(
-                            source = ImageSource.FromUri(Uri("https://www.thewholesomedish.com/wp-content/uploads/2018/07/Best-Lasagna-550.jpg")),
+                            source = ImageSource.FromUri(recipe.ImageUrl),
                             aspect = Aspect.AspectFill
                         )
                         
