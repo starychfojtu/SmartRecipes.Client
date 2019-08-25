@@ -122,9 +122,7 @@ module ShoppingListRecipePage =
         | HideSearch ->
             { model with SearchPageState = Hidden }, Cmd.none
         | GoToRecipeDetail recipe ->
-            let isRecipeAdded = Seq.exists (fun i -> i.Recipe = recipe) model.Items
-            let initModel = RecipeDetailPage.initModel recipe (not isRecipeAdded)
-            { model with RecipeDetailPageState = Visible <| initModel }, Cmd.none
+            { model with RecipeDetailPageState = Visible <| RecipeDetailPage.initModel recipe }, Cmd.none
         | HideRecipeDetail ->
             { model with RecipeDetailPageState = Hidden }, Cmd.none
         | SearchMessage searchMsg ->
@@ -146,8 +144,7 @@ module ShoppingListRecipePage =
                 let updateResult = RecipeDetailPage.update recipeDetailModel recipeDetailMessage
                 match updateResult with
                 | RecipeDetailPage.UpdateResult.RecipeAdded ->
-                    let newState = Visible <| { recipeDetailModel with CanBeAdded = false }
-                    { model with RecipeDetailPageState = newState }, Cmd.ofMsg <| RecipeAdded recipeDetailModel.Recipe
+                    model, Cmd.ofMsg <| RecipeAdded recipeDetailModel.Recipe
         
     // View
     
@@ -155,21 +152,22 @@ module ShoppingListRecipePage =
         let ignoredRecipes = Seq.map (fun i -> i.Recipe) model.Items
         match model.SearchPageState with
         | Hidden ->
-            Option.None
+            None
         | Visible searchModel ->
-            Option.Some <| SearchRecipePage.view (SearchMessage >> dispatch) searchModel ignoredRecipes
+            Some <| SearchRecipePage.view (SearchMessage >> dispatch) searchModel ignoredRecipes
             
     let recipeDetailPage dispatch model =
         match model.RecipeDetailPageState with
         | Hidden ->
-            Option.None
+            None
         | Visible recipeDetailModel ->
-            Option.Some <| RecipeDetailPage.view (RecipeDetailMessage >> dispatch) recipeDetailModel
+            let showAdd = not <| Seq.exists (fun i -> i.Recipe = recipeDetailModel.Recipe) model.Items
+            Some <| RecipeDetailPage.view (RecipeDetailMessage >> dispatch) recipeDetailModel showAdd
     
     let pages dispatch model =
         List.choose id [ searchPage dispatch model; recipeDetailPage dispatch model ]
             
-    let searchRecipeToolbarItem dispatch = 
+    let searchRecipeToolbarItem dispatch =
         View.ToolbarItem(
             text = "Search",
             command = fun () -> dispatch GoToSearch

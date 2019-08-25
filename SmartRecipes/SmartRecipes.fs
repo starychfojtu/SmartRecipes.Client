@@ -121,8 +121,13 @@ module App =
                  let (newShoppingListPageModel, cmd) = ShoppingListRecipePage.update m.ShoppingListRecipePage msg m.Environment
                  Authorized { m with ShoppingListRecipePage = newShoppingListPageModel }, Cmd.map (ShoppingListRecipeMessage) cmd
             | RecipeRecommendationPageMessage msg ->
-                let (newModel, cmd) = RecipeRecommendationPage.update m.RecipeRecommendationPage msg m.Environment
-                Authorized { m with RecipeRecommendationPage = newModel }, Cmd.map (RecipeRecommendationPageMessage) cmd
+                let addRecipeMsg = ShoppingListRecipePage.Message.RecipeAdded >> ShoppingListRecipeMessage
+                let result = RecipeRecommendationPage.update m.RecipeRecommendationPage msg m.Environment
+                let (newModel, cmd) =
+                    match result with
+                    | RecipeRecommendationPage.UpdateResult.ModelUpdated (m, c) -> (m, Cmd.map (RecipeRecommendationPageMessage) c)
+                    | RecipeRecommendationPage.UpdateResult.RecipeSelected r -> (m.RecipeRecommendationPage, addRecipeMsg r |> Cmd.ofMsg)
+                Authorized { m with RecipeRecommendationPage = newModel }, cmd
             | _ ->
                 failwith "Unhandled message."
                 
@@ -175,7 +180,8 @@ module App =
             | ShoppingListPage ->
                 let mainPage = ShoppingListPage.view (ShoppingListPageMessage >> dispatch) m.ShoppingListPage
                 let recipePage = ShoppingListRecipePage.view (ShoppingListRecipeMessage >> dispatch) m.ShoppingListRecipePage
-                let recommendationPage = RecipeRecommendationPage.view (RecipeRecommendationPageMessage >> dispatch) m.RecipeRecommendationPage
+                let addedRecipes = Seq.map (fun (i: ShoppingListRecipePage.Item) -> i.Recipe) m.ShoppingListRecipePage.Items
+                let recommendationPage = RecipeRecommendationPage.view (RecipeRecommendationPageMessage >> dispatch) m.RecipeRecommendationPage addedRecipes
                 shoppingListTabPage [ mainPage; recipePage; recommendationPage ] |> (appContainer dispatch)
                 
     let programView model dispatch = view dispatch model    

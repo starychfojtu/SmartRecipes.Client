@@ -10,15 +10,13 @@ module RecipeDetailPage =
     
     type Model = {
         Recipe: Recipe
-        CanBeAdded: bool
     }
     
     type Message =
         | Add
         
-    let initModel recipe canBeAdded = {
+    let initModel recipe = {
         Recipe = recipe
-        CanBeAdded = canBeAdded
     }
     
     type UpdateResult = 
@@ -29,7 +27,7 @@ module RecipeDetailPage =
         | Add ->
             RecipeAdded
     
-    let view dispatch model =
+    let view dispatch model showAdd =
         let recipe = model.Recipe
         View.ContentPage(
             content = View.ScrollView(
@@ -64,7 +62,7 @@ module RecipeDetailPage =
                         yield View.StackLayout(
                             padding = Thickness(horizontalSize = 16.0, verticalSize = 0.0),
                             children = [
-                                if model.CanBeAdded then
+                                if showAdd then
                                     yield Elements.Button(
                                         text = "Add to shopping list",
                                         command = (fun () -> dispatch Add)

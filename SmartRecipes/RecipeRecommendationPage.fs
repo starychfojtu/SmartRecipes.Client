@@ -10,7 +10,6 @@ module RecipeRecommendationPage =
     open FSharpPlus.Data
     open Fabulous.Core
     open Fabulous.DynamicViews
-    open Xamarin.Forms
     
     type Model = {
         Recommendations: Recipe seq
@@ -42,22 +41,35 @@ module RecipeRecommendationPage =
     
     // Update
     
+    type UpdateResult =
+        | ModelUpdated of Model * Cmd<Message>
+        | RecipeSelected of Recipe
+    
     let update model msg env =
         match msg with
         | Refresh ->
-            { model with IsLoading = true }, init |> Cmd.ofReader env
+            ModelUpdated <| ({ model with IsLoading = true }, init |> Cmd.ofReader env)
         | PageRefreshed recommendations ->
-            { model with Recommendations = recommendations; IsLoading = false }, Cmd.none
+            ModelUpdated <| ({ model with Recommendations = recommendations; IsLoading = false }, Cmd.none)
         | GoToRecipeDetail recipe ->
-            { model with RecipeDetailPageState = Visible <| RecipeDetailPage.initModel recipe true }, Cmd.none
+            ModelUpdated <| ({ model with RecipeDetailPageState = Visible <| RecipeDetailPage.initModel recipe }, Cmd.none)
         | HideRecipeDetail ->
-            { model with RecipeDetailPageState = Hidden }, Cmd.none
-        
+            ModelUpdated <| ({ model with RecipeDetailPageState = Hidden }, Cmd.none)
+        | RecipeDetailMessage detailMsg ->
+            match model.RecipeDetailPageState with
+            | Hidden ->
+                ModelUpdated <| (model, Cmd.none)
+            | Visible detailModel ->
+                match detailMsg with
+                | RecipeDetailPage.Message.Add -> RecipeSelected detailModel.Recipe
+                
     // View
     
-    let recipeDetailPage dispatch = function
+    let recipeDetailPage dispatch recipesThatCannotBeAdded = function
         | Hidden -> []
-        | Visible recipeDetailModel -> [ RecipeDetailPage.view (RecipeDetailMessage >> dispatch) recipeDetailModel ]
+        | Visible (recipeDetailModel: RecipeDetailPage.Model) ->
+            let showAdd = not <| Seq.exists (fun r -> r = recipeDetailModel.Recipe) recipesThatCannotBeAdded
+            [ RecipeDetailPage.view (RecipeDetailMessage >> dispatch) recipeDetailModel showAdd ]
 
     let mainContent dispatch isLoading recipes =
         Elements.RefreshListPageContent(
@@ -75,12 +87,12 @@ module RecipeRecommendationPage =
             content = mainContent dispatch isLoading recipes
         )
     
-    let view dispatch model =
+    let view dispatch model recipeIdsThatCannotBeAdded =
         View.NavigationPage(
             title = "Suggestions",
             popped = (fun _ -> dispatch HideRecipeDetail),
             pages = [
                 yield dependsOn (model.Recommendations, model.IsLoading) (fun model (rs, isLoading) -> mainPage dispatch isLoading (Seq.toArray rs))
-                yield! recipeDetailPage dispatch model.RecipeDetailPageState
+                yield! recipeDetailPage dispatch recipeIdsThatCannotBeAdded model.RecipeDetailPageState
             ]
         )
