@@ -7,7 +7,6 @@ open FSharp.Json
 
 module Domain =
     open System.Net.Mail
-    open System
     
     type AccountId = AccountId of string
     
@@ -15,6 +14,11 @@ module Domain =
         Id: AccountId
         [<JsonField(Transform=typeof<Json.MailAddressTransform>)>]
         Email: MailAddress
+    }
+    
+    type Credentials = {
+        Email: MailAddress
+        Password: string
     }
     
     type AccessToken = {

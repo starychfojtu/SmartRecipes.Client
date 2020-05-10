@@ -3,15 +3,13 @@
 open Fabulous.Core
 open Xamarin.Forms
 open Fabulous.DynamicViews
-open Library
 open Domain
+open State
 
 module App =
     open AppEnvironment
     open FSharpPlus
-    open FSharpPlus
     open FSharpPlus.Data
-    open Fabulous.Core
     open Library
 
     type UnauthorizedPage =     
@@ -26,6 +24,7 @@ module App =
         LoginPage: LoginPage.Model
         SignUpPage: SignUpPage.Model
         Environment: Environment
+        State: UnauthorizedState
     }
     
     type AuthorizedModel = {
@@ -47,12 +46,14 @@ module App =
         | ShoppingListRecipeMessage of ShoppingListRecipePage.Message
         | RecipeRecommendationPageMessage of RecipeRecommendationPage.Message
         | ChangePage of Page
+        | UnauthorizedStateMessage of State.UnauthorizedMessage
 
     let initModel (env: Environment) = Unauthorized {
         CurrentPage = LoginPage
         LoginPage = LoginPage.initModel
         SignUpPage = SignUpPage.initModel
         Environment = env
+        State = State.init
     }
     
     let prodEnvironment = {
@@ -89,13 +90,12 @@ module App =
         | Unauthorized m -> 
             match msg with
             | LoginPageMessage msg ->
-                let result = LoginPage.update msg m.LoginPage m.Environment.Unauthorized
+                let result = LoginPage.update msg m.LoginPage
                 match result with
                 | LoginPage.UpdateResult.ModelUpdated (newModel, cmd) -> 
                     Unauthorized { m with LoginPage = newModel }, Cmd.map (LoginPageMessage) cmd
-                | LoginPage.UpdateResult.SignedIn token ->
-                    let authorizedEnv = m.Environment.GetAuthorized token
-                    initAuthorizedModel authorizedEnv, initAuthorizedCommand authorizedEnv
+                | LoginPage.UpdateResult.SignIn credentials ->
+                    Unauthorized m, State.UnauthorizedMessage.SignIn credentials |> UnauthorizedStateMessage |> Cmd.ofMsg
                 | LoginPage.UpdateResult.SignUp -> 
                     Unauthorized { m with CurrentPage = SignUpPage }, Cmd.none
             | SignUpPageMessage msg ->
@@ -108,6 +108,9 @@ module App =
                     Unauthorized { m with CurrentPage = LoginPage; LoginPage = loginPageModel }, Cmd.none
                 | SignUpPage.UpdateResult.SignIn -> 
                     Unauthorized { m with CurrentPage = LoginPage }, Cmd.none
+            | UnauthorizedStateMessage msg ->
+                let (state, cmd) = State.update msg m.State m.Environment.Unauthorized
+                Unauthorized { m with State = state }, Cmd.map UnauthorizedStateMessage cmd
             | _ ->
                 failwith "Unhandled message."
         | Authorized m ->     
@@ -172,7 +175,7 @@ module App =
         | Unauthorized m ->   
             match m.CurrentPage with
             | LoginPage -> 
-                LoginPage.view m.LoginPage (LoginPageMessage >> dispatch)
+                LoginPage.view m.State.SignInState m.LoginPage (LoginPageMessage >> dispatch)
             | SignUpPage -> 
                 SignUpPage.view m.SignUpPage (SignUpPageMessage >> dispatch)
         | Authorized m -> 

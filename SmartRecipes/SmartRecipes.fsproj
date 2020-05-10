@@ -12,6 +12,7 @@
     <Compile Include="AppEnvironment.fs" />
     <Compile Include="ProductionApi.fs" />
     <Compile Include="MockedApi.fs" />
+    <Compile Include="State.fs" />
     <Compile Include="Elements.fs" />
     <Compile Include="SignUpPage.fs" />
     <Compile Include="LoginPage.fs" />

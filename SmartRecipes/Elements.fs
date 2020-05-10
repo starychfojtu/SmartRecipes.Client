@@ -8,6 +8,7 @@ module Colors =
     let primaryLight = Color.FromHex("#63a4ff")
     let textDark = Color.FromRgba(0, 0, 0, 222)
     let textLight = Color.FromRgb(255, 255, 255)
+    let lightRed = Color.FromRgba(255, 0, 0, 222)
 
 module Elements =
     open Domain
@@ -47,7 +48,7 @@ module Elements =
                 textColor = Colors.textDark
             )
             
-        static member Entry(placeholder, value, callback) =
+        static member Entry(placeholder, value, callback, ?backgroundColor) =
             View.Entry(
                 text = value,
                 completed = (fun v -> if v <> value then callback v),
@@ -55,7 +56,8 @@ module Elements =
                 created = (fun e -> e.Unfocused.Add(fun args -> if value <> e.Text then callback e.Text)),
                 verticalOptions = LayoutOptions.FillAndExpand,
                 placeholder = placeholder,
-                textColor = Colors.textDark
+                textColor = Colors.textDark,
+                ?backgroundColor = backgroundColor
             )
             
         static member ValidatableEntry(placeholder, value, error, callback) =

@@ -3,7 +3,6 @@ namespace SmartRecipes
 module AppEnvironment =
     open Api
     open Domain
-    open FSharpPlus.Data
     
     type UnauthorizedEnvironment = {
         Api: UnauthorizedApi
@@ -17,4 +16,3 @@ module AppEnvironment =
         Unauthorized: UnauthorizedEnvironment
         GetAuthorized: AccessToken -> AuthorizedEnvironment
     }
-
