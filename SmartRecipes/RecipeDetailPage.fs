@@ -83,11 +83,15 @@ module RecipeDetailPage =
                                         List.singleton label
                                     | None -> []
                                     
-                                yield Elements.LargeLabel(
-                                    text = "Difficulty: " + Difficulty.toString recipe.Difficulty,
-                                    horizontalOptions = LayoutOptions.Start,
-                                    horizontalTextAlignment = TextAlignment.Start
-                                )
+                                //yield!
+                                //    match recipe.Difficulty with
+                                //    | Some d ->
+                                //        List.singleton <| Elements.LargeLabel(
+                                //            text = "Difficulty: " + Difficulty.toString d,
+                                //            horizontalOptions = LayoutOptions.Start,
+                                //            horizontalTextAlignment = TextAlignment.Start
+                                //        )
+                                //    | None -> []
                                 
                                 for ingredient in recipe.Ingredients do
                                     yield Elements.Label(

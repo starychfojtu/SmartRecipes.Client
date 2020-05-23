@@ -43,7 +43,7 @@ module MockedApi =
                 { FoodstuffId = FoodstuffId "1"; Amount = Some { Value = 1.0; Unit = "pieces" }; DisplayLine = "1 carrot" }
                 { FoodstuffId = FoodstuffId "2"; Amount = Some { Value = 1.0; Unit = "pieces" }; DisplayLine = "1 carrot" }
             ]
-            Difficulty = Normal
+            Difficulty = "normal"
             Rating = Some 5
             Tags = ["bbq"]
             CookingTime = Some { Text = "1 hour" }
@@ -68,7 +68,7 @@ module MockedApi =
                 { FoodstuffId = FoodstuffId "1"; Amount = Some { Value = 1.0; Unit = "pieces" }; DisplayLine = "1 carrot" }
                 { FoodstuffId = FoodstuffId "2"; Amount = Some { Value = 1.0; Unit = "pieces" }; DisplayLine = "1 carrot" }
             ]
-            Difficulty = Normal
+            Difficulty = "normal"
             Rating = Some 5
             Tags = ["bbq"]
             CookingTime = Some { Text = "1 hour" }

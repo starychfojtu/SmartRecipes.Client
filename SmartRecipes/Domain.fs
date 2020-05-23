@@ -66,7 +66,7 @@ module Domain =
             interface ITypeTransform with
                 member x.targetType () = (fun _ -> typeof<string>) ()
                 member x.toTargetType value = (fun (v: obj) -> (toString (v:?> Difficulty)).ToLowerInvariant() :> obj) value
-                member x.fromTargetType value = (fun (v: obj) -> (fromString (v :?> string) |> Option.get) :> obj) value
+                member x.fromTargetType value = (fun (v: obj) -> (fromString (v :?> string)) :> obj) value
         
     type NutritionInfo = {
         Grams: int
@@ -97,8 +97,7 @@ module Domain =
         Url: Uri
         Description: string
         Ingredients: Ingredient list
-        [<JsonField(Transform=typeof<Difficulty.JsonTransform>)>]
-        Difficulty: Difficulty
+        Difficulty: string // TODO: when data is available, make it Difficulty option.
         Rating: int option
         Tags: string list
         CookingTime: CookingTime option
