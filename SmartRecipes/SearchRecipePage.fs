@@ -48,22 +48,22 @@ module SearchRecipePage =
         let textChanged (args: TextChangedEventArgs) = TermChanged args.NewTextValue |> dispatch
         View.SearchBar(textChanged = debounce 500 textChanged)
         
-    let private resultTable dispatch recipes =
+    let private resultTable dispatch recipes foodstuffsInShoppingList =
         Elements.List(
             items = recipes,
-            itemView = (fun r -> Elements.RecipeCard(actionItems = [], recipe = r)),
+            itemView = (fun r -> Elements.RecipeCard(actionItems = [], recipe = r, foodstuffInShoppingList = foodstuffsInShoppingList)),
             onTapped = (SelectRecipe >> dispatch),
             refresh = ListRefresh.No,
             rowHeight = 124
         )
             
-    let view dispatch model ignoredRecipes =
+    let view dispatch model ignoredRecipes foodstuffsInShoppingList =
         let recipes = Seq.except ignoredRecipes model.Results
         View.ContentPage(
             content = View.StackLayout(
                 children = [
                     yield fix (fun () -> searchBar dispatch)
-                    yield dependsOn recipes (fun model rs -> resultTable dispatch (Seq.toArray rs))
+                    yield dependsOn recipes (fun model rs -> resultTable dispatch (Seq.toArray rs) foodstuffsInShoppingList)
                 ]                 
             )
         )

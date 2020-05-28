@@ -71,28 +71,28 @@ module RecipeRecommendationPage =
             let showAdd = not <| Seq.exists (fun r -> r = recipeDetailModel.Recipe) recipesThatCannotBeAdded
             [ RecipeDetailPage.view (RecipeDetailMessage >> dispatch) recipeDetailModel showAdd ]
 
-    let mainContent dispatch isLoading recipes =
+    let mainContent dispatch isLoading recipes foodstuffInShoppingList =
         Elements.RefreshListPageContent(
             isLoading = isLoading,
             items = recipes,
-            itemView = (fun r -> Elements.RecipeCard(actionItems = [], recipe = r)),
+            itemView = (fun r -> Elements.RecipeCard(actionItems = [], recipe = r, foodstuffInShoppingList = foodstuffInShoppingList)),
             onTapped = (GoToRecipeDetail >> dispatch),
             refresh = (fun () -> dispatch Refresh),
             emptyText = "Go add some ingredients first !",
             rowHeight = 128
         )
     
-    let mainPage dispatch isLoading recipes =
+    let mainPage dispatch isLoading recipes foodstuffsInShoppingList =
         View.ContentPage(
-            content = mainContent dispatch isLoading recipes
+            content = mainContent dispatch isLoading recipes foodstuffsInShoppingList
         )
     
-    let view dispatch model recipeIdsThatCannotBeAdded =
+    let view dispatch model recipeIdsThatCannotBeAdded foodstuffsInShoppingList =
         View.NavigationPage(
             title = "Suggestions",
             popped = (fun _ -> dispatch HideRecipeDetail),
             pages = [
-                yield dependsOn (model.Recommendations, model.IsLoading) (fun model (rs, isLoading) -> mainPage dispatch isLoading (Seq.toArray rs))
+                yield dependsOn (model.Recommendations, model.IsLoading) (fun model (rs, isLoading) -> mainPage dispatch isLoading (Seq.toArray rs) foodstuffsInShoppingList)
                 yield! recipeDetailPage dispatch recipeIdsThatCannotBeAdded model.RecipeDetailPageState
             ]
         )

@@ -154,13 +154,13 @@ module ShoppingListRecipePage =
         
     // View
     
-    let searchPage dispatch model =
+    let searchPage dispatch model foodstuffsInShoppingList =
         let ignoredRecipes = Seq.map (fun i -> i.Recipe) model.Items
         match model.SearchPageState with
         | Hidden ->
             None
         | Visible searchModel ->
-            Some <| SearchRecipePage.view (SearchMessage >> dispatch) searchModel ignoredRecipes
+            Some <| SearchRecipePage.view (SearchMessage >> dispatch) searchModel ignoredRecipes foodstuffsInShoppingList
             
     let recipeDetailPage dispatch model =
         match model.RecipeDetailPageState with
@@ -170,8 +170,8 @@ module ShoppingListRecipePage =
             let showAdd = not <| Seq.exists (fun i -> i.Recipe = recipeDetailModel.Recipe) model.Items
             Some <| RecipeDetailPage.view (RecipeDetailMessage >> dispatch) recipeDetailModel showAdd
     
-    let pages dispatch model =
-        List.choose id [ searchPage dispatch model; recipeDetailPage dispatch model ]
+    let pages dispatch model foodstuffsInShoppingList =
+        List.choose id [ searchPage dispatch model foodstuffsInShoppingList; recipeDetailPage dispatch model ]
             
     let searchRecipeToolbarItem dispatch =
         View.ToolbarItem(
@@ -179,21 +179,22 @@ module ShoppingListRecipePage =
             command = fun () -> dispatch GoToSearch
         )
         
-    let recipeItemCard dispatch item =
+    let recipeItemCard dispatch foodstuffsInShoppingList item =
         Elements.RecipeCard(
             actionItems = [ Elements.RoundedButton(
                 text = "-",
                 command = (fun () -> RecipeRemoved item.Recipe |> dispatch)
             ) ],
-            recipe = item.Recipe
+            recipe = item.Recipe,
+            foodstuffInShoppingList = foodstuffsInShoppingList
         )
         
-    let mainPage dispatch model  =
+    let mainPage dispatch model foodstuffsInShoppingList =
         View.ContentPage(
             content = Elements.RefreshListPageContent(
                 isLoading = model.IsLoading,
                 items = List.toArray model.Items,
-                itemView = recipeItemCard dispatch,
+                itemView = recipeItemCard dispatch foodstuffsInShoppingList,
                 onTapped = (fun i -> GoToRecipeDetail i.Recipe |> dispatch),
                 refresh = (fun () -> dispatch Refresh),
                 emptyText = "No recipes, checkout your suggestions :)",
@@ -201,7 +202,7 @@ module ShoppingListRecipePage =
             )
         )
 
-    let view dispatch model =
+    let view dispatch model foodstuffsInShoppingList =
         View.NavigationPage(
             title = "Recipes",
             toolbarItems = [
@@ -216,8 +217,8 @@ module ShoppingListRecipePage =
                     | Hidden -> ()
             ),
             pages = [
-                yield mainPage dispatch model
-                yield! pages dispatch model
+                yield mainPage dispatch model foodstuffsInShoppingList
+                yield! pages dispatch model foodstuffsInShoppingList
             ]
         )
         

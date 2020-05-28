@@ -178,10 +178,11 @@ module App =
         | Authorized m -> 
             match m.CurrentPage with
             | ShoppingListPage ->
+                let foodstuffsInShoppingList = m.ShoppingListPage.Items |> List.map (fun i -> i.Foodstuff.Id) |> Set.ofList
                 let mainPage = ShoppingListPage.view (ShoppingListPageMessage >> dispatch) m.ShoppingListPage
-                let recipePage = ShoppingListRecipePage.view (ShoppingListRecipeMessage >> dispatch) m.ShoppingListRecipePage
+                let recipePage = ShoppingListRecipePage.view (ShoppingListRecipeMessage >> dispatch) m.ShoppingListRecipePage foodstuffsInShoppingList
                 let addedRecipes = Seq.map (fun (i: ShoppingListRecipePage.Item) -> i.Recipe) m.ShoppingListRecipePage.Items
-                let recommendationPage = RecipeRecommendationPage.view (RecipeRecommendationPageMessage >> dispatch) m.RecipeRecommendationPage addedRecipes
+                let recommendationPage = RecipeRecommendationPage.view (RecipeRecommendationPageMessage >> dispatch) m.RecipeRecommendationPage addedRecipes foodstuffsInShoppingList
                 shoppingListTabPage [ mainPage; recipePage; recommendationPage ] |> (appContainer dispatch)
                 
     let programView model dispatch = view dispatch model    

@@ -160,7 +160,11 @@ module Elements =
                 ]         
             )
 
-        static member RecipeCard(actionItems, recipe) =
+        static member RecipeCard(actionItems, recipe, foodstuffInShoppingList) =
+            let ingredientsInShoppingList = 
+                recipe.Ingredients
+                |> List.filter (fun i -> Set.contains i.FoodstuffId foodstuffInShoppingList)
+
             View.Frame(
                 margin = Thickness(16.0, 8.0),
                 content = View.StackLayout(
@@ -188,9 +192,7 @@ module Elements =
                             padding = Thickness(8.0, 4.0),
                             children = [
                                 yield Elements.Label(
-                                    text = recipe.Ingredients.Length.ToString() +
-                                           " ingredients, serves " +
-                                           recipe.PersonCount.ToString(),
+                                    text = ingredientsInShoppingList.Length.ToString() + " " + (if ingredientsInShoppingList.Length = 1 then "ingredient" else "ingredients") + " in your list",
                                     horizontalOptions = LayoutOptions.Start,
                                     verticalOptions = LayoutOptions.Center
                                 )
