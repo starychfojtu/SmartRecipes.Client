@@ -52,10 +52,10 @@ module RecipeDetailPage =
                             ]
                         )
                         
-                        yield View.Image(
-                            source = ImageSource.FromUri(recipe.ImageUrl),
-                            aspect = Aspect.AspectFill
-                        )
+                        //yield View.Image(
+                        //    source = ImageSource.FromUri(recipe.ImageUrl),
+                        //    aspect = Aspect.AspectFill
+                        //)
                         
                         yield View.StackLayout(
                             padding = Thickness(horizontalSize = 16.0, verticalSize = 0.0),
