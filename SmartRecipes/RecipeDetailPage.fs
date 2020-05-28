@@ -76,7 +76,7 @@ module RecipeDetailPage =
                                     match recipe.CookingTime with
                                     | Some time ->
                                         let label = Elements.LargeLabel(
-                                            text = "Cooking time: " + time.Text,
+                                            text = "Cooking time: " + time.Text.Trim(),
                                             horizontalOptions = LayoutOptions.Start,
                                             horizontalTextAlignment = TextAlignment.Start
                                         )
