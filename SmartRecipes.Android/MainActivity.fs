@@ -11,6 +11,9 @@ open Android.Views
 open Android.Widget
 open Android.OS
 open Xamarin.Forms.Platform.Android
+open Microsoft.AppCenter;
+open Microsoft.AppCenter.Analytics;
+open Microsoft.AppCenter.Crashes;
 
 [<Activity (Label = "SmartRecipes.Android", Icon = "@mipmap/icon", Theme = "@style/MainTheme", MainLauncher = true, ConfigurationChanges = (ConfigChanges.ScreenSize ||| ConfigChanges.Orientation))>]
 type MainActivity() =
@@ -19,6 +22,8 @@ type MainActivity() =
         FormsAppCompatActivity.TabLayoutResource <- Resources.Layout.Tabbar
         FormsAppCompatActivity.ToolbarResource <- Resources.Layout.Toolbar
         base.OnCreate (bundle)
+
+        AppCenter.Start("f098c004-1283-4a97-a57c-eb14cb8a4a1e", typedefof<Analytics>, typedefof<Crashes>);
 
         Xamarin.Essentials.Platform.Init(this, bundle)
 
