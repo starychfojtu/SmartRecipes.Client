@@ -46,6 +46,9 @@ module Cmd =
     
     let ofReader env  =
         ReaderT.execute env >> Cmd.ofAsyncMsg
+
+    let ofReaderOption env =
+        ReaderT.execute env >> Cmd.ofAsyncMsgOption
         
 module Lens =
     open FSharpPlus.Control

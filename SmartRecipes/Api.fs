@@ -65,6 +65,9 @@ module Api =
     
     // Add foodstuffs to shopping list
 
+    type AddFoodstuffsToShoppingListError =
+        | FoodstuffAlreadyAdded
+
     type AddFoodstuffsToShoppingListRequest = {
         ItemIds: FoodstuffId list
     }
@@ -85,6 +88,9 @@ module Api =
     
     // Set foodstuff amount in shopping list
 
+    type SetFoodstuffAmountError = 
+        | FoodstuffNotInList
+
     type SetFoodstuffAmountRequest = {
         FoodstuffId: FoodstuffId
         Amount: float
@@ -94,7 +100,10 @@ module Api =
         ShoppingList: ShoppingList
     }
     
-    // Remove foodstuffs from shooping list
+    // Remove foodstuffs from shoping list
+
+    type RemoveFoodstuffsError = 
+        | FoodstuffNotInList
     
     type RemoveFoodstuffsRequets = {
         Ids: FoodstuffId list
@@ -121,6 +130,9 @@ module Api =
     }
     
     // Add recipes to shopping list
+
+    type AddRecipesToShoppingListError =
+        | RecipeAlreadyInShoppingList
     
     type AddRecipesToShoppingListRequest = {
         ItemIds: RecipeId list
@@ -131,6 +143,9 @@ module Api =
     }
     
     // Remove recipes from shopping list
+
+    type RemoveRecipesFromShoppingListError =
+        | RecipeNotInShoppingList
     
     type RemoveRecipesFromShoppingListRequest = {
         Ids: RecipeId list
@@ -153,10 +168,10 @@ module Api =
         GetRecipesById: GetRecipesByIdRequest -> Async<GetRecipesByIdResponse>
         SearchFoodstuffs: SearchFoodstuffsRequest -> Async<SearchFoodstuffsResponse>
         SearchRecipes: SearchRecipesRequest -> Async<SearchRecipesResponse>
-        AddFoodstuffsToShoppingList: AddFoodstuffsToShoppingListRequest -> Async<AddFoodstuffsToShoppingListResponse>
-        SetFoodstuffAmountInShoppingList: SetFoodstuffAmountRequest -> Async<SetFoodstuffAmountResponse>
-        RemoveFoodstuffs: RemoveFoodstuffsRequets -> Async<RemoveFoodstuffsResponse>
+        AddFoodstuffsToShoppingList: AddFoodstuffsToShoppingListRequest -> Async<Result<AddFoodstuffsToShoppingListResponse, AddFoodstuffsToShoppingListError>>
+        SetFoodstuffAmountInShoppingList: SetFoodstuffAmountRequest -> Async<Result<SetFoodstuffAmountResponse, SetFoodstuffAmountError>>
+        RemoveFoodstuffs: RemoveFoodstuffsRequets -> Async<Result<RemoveFoodstuffsResponse, RemoveFoodstuffsError>>
         GetRecommendedRecipes: unit -> Async<GetRecommendedRecipesResponse>
-        AddRecipesToShoppingList: AddRecipesToShoppingListRequest -> Async<AddRecipesToShoppingListResponse>
-        RemoveRecipesFromShoppingList: RemoveRecipesFromShoppingListRequest -> Async<RemoveRecipesFromShoppingListResponse>
+        AddRecipesToShoppingList: AddRecipesToShoppingListRequest -> Async<Result<AddRecipesToShoppingListResponse, AddRecipesToShoppingListError>>
+        RemoveRecipesFromShoppingList: RemoveRecipesFromShoppingListRequest -> Async<Result<RemoveRecipesFromShoppingListResponse, RemoveRecipesFromShoppingListError>>
     }

@@ -167,29 +167,54 @@ module ProductionApi =
 
     
     // Add foostuff to shopping list
+
+    let private parseAddFoodstuffToShoppingListError (apiError: ApiError) =
+        match apiError.Message with
+        | "Item already added." -> FoodstuffAlreadyAdded
+        | _ -> unhandledError ()
     
-    let private sendAddFoodstuffToShoppingList =
-        successPost<AddFoodstuffsToShoppingListRequest, AddFoodstuffsToShoppingListResponse>  "/shoppingList/addFoodstuffs"
+    let private sendAddFoodstuffToShoppingList accessToken (request: AddFoodstuffsToShoppingListRequest) =
+        post "/shoppingList/addFoodstuffs" (Json.serialize request) (Some accessToken) Json.deserialize<AddFoodstuffsToShoppingListResponse> parseAddFoodstuffToShoppingListError
         
     // Set foodstuff amount in shopping list
+
+    let private parseSetFoodstuffAmountInShoppingListError (apiError: ApiError) =
+        match apiError.Message with
+        | "Foodstuff not in list." -> SetFoodstuffAmountError.FoodstuffNotInList
+        | _ -> unhandledError ()
     
-    let private sendSetFoodstuffAmountInShoppingList =
-        successPost<SetFoodstuffAmountRequest, SetFoodstuffAmountResponse>  "/shoppingList/changeAmount" 
+    let private sendSetFoodstuffAmountInShoppingList accessToken (request: SetFoodstuffAmountRequest) =
+        post "/shoppingList/changeAmount"  (Json.serialize request) (Some accessToken) Json.deserialize<SetFoodstuffAmountResponse> parseSetFoodstuffAmountInShoppingListError
         
     // Remove foodstuff amount in shopping list
+
+    let private parseRemoveFoodstuffsError (apiError: ApiError) =
+        match apiError.Message with
+        | "Foodstuff not in list." -> FoodstuffNotInList
+        | _ -> unhandledError ()
     
-    let private sendRemoveFoodstuffFromShoppingList =
-        successPost<RemoveFoodstuffsRequets, RemoveFoodstuffsResponse> "/shoppingList/removeFoodstuffs"
+    let private sendRemoveFoodstuffFromShoppingList accessToken (request: RemoveFoodstuffsRequets) =
+        post "/shoppingList/removeFoodstuffs" (Json.serialize request) (Some accessToken) Json.deserialize<RemoveFoodstuffsResponse> parseRemoveFoodstuffsError
         
     // Remove foodstuff amount in shopping list
+
+    let private parseAddRecipesToShoppingListError (apiError: ApiError) =
+        match apiError.Message with
+        | "Item already added." -> RecipeAlreadyInShoppingList
+        | _ -> unhandledError ()
     
-    let private sendAddRecipesToShoppingList =
-        successPost<AddRecipesToShoppingListRequest, AddRecipesToShoppingListResponse> "/shoppingList/addRecipes"
+    let private sendAddRecipesToShoppingList accessToken (request: AddRecipesToShoppingListRequest) =
+        post "/shoppingList/addRecipes" (Json.serialize request) (Some accessToken) Json.deserialize<AddRecipesToShoppingListResponse> parseAddRecipesToShoppingListError
         
     // Remove foodstuff amount in shopping list
+
+    let private parseRemoveRecipesFromShoppingListError (apiError: ApiError) =
+        match apiError.Message with
+        | "Recipe not in list." -> RecipeNotInShoppingList
+        | _ -> unhandledError ()
     
-    let private sendRemoveRecipesFromShoppingList =
-        successPost<RemoveRecipesFromShoppingListRequest, RemoveRecipesFromShoppingListResponse> "/shoppingList/removeRecipes"
+    let private sendRemoveRecipesFromShoppingList accessToken (request: RemoveRecipesFromShoppingListRequest) =
+        post "/shoppingList/removeRecipes" (Json.serialize request) (Some accessToken) Json.deserialize<RemoveRecipesFromShoppingListResponse> parseRemoveRecipesFromShoppingListError
         
     // Recommend
     

@@ -116,20 +116,20 @@ module MockedApi =
             let foodstuffs = List.map (fun id -> Map.find id sampleFoodstuffsMap) r.ItemIds
             let newItems = List.map (fun (f: Foodstuff) -> { FoodstuffId = f.Id; Amount = f.BaseAmount.Value }) foodstuffs
             sampleShoppingList <- over _items (fun items -> List.append newItems items) sampleShoppingList
-            { AddFoodstuffsToShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
+            { AddFoodstuffsToShoppingListResponse.ShoppingList = sampleShoppingList } |> Ok |> Async.id
         SetFoodstuffAmountInShoppingList = fun r ->
             sampleShoppingList <- setAmount r.FoodstuffId r.Amount sampleShoppingList
-            { SetFoodstuffAmountResponse.ShoppingList = sampleShoppingList } |> Async.id
+            { SetFoodstuffAmountResponse.ShoppingList = sampleShoppingList } |> Ok |> Async.id
         RemoveFoodstuffs = fun r ->
             sampleShoppingList <- setl _items List.empty sampleShoppingList
-            { RemoveFoodstuffsResponse.ShoppingList = sampleShoppingList } |> Async.id
+            { RemoveFoodstuffsResponse.ShoppingList = sampleShoppingList } |> Ok |> Async.id
         GetRecommendedRecipes = fun () -> 
             { GetRecommendedRecipesResponse.Recipes = recipesNotInShoppingList ()} |> Async.id
         AddRecipesToShoppingList = fun r -> 
             let newRecipes = List.map (fun id -> { RecipeId = id; PersonCount = 4 }) r.ItemIds
             sampleShoppingList <- over _recipeItems (List.append newRecipes) sampleShoppingList
-            { AddRecipesToShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
+            { AddRecipesToShoppingListResponse.ShoppingList = sampleShoppingList } |> Ok |> Async.id
         RemoveRecipesFromShoppingList = fun r ->
             sampleShoppingList <- over _recipeItems (List.filter (fun i -> not (List.contains i.RecipeId r.Ids))) sampleShoppingList
-            { RemoveRecipesFromShoppingListResponse.ShoppingList = sampleShoppingList } |> Async.id
+            { RemoveRecipesFromShoppingListResponse.ShoppingList = sampleShoppingList } |> Ok |> Async.id
     }

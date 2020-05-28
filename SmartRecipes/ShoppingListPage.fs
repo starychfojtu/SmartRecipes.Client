@@ -89,8 +89,11 @@ module ShoppingListPage =
     
     let tryAddFoodstuff (foodstuff: Foodstuff) = monad {
         let! response = addFoodstuffToShoppingList foodstuff.Id
-        let! items = shoppingListToItems response.ShoppingList
-        return ShoppingListChanged items
+        let! command = 
+            match response with
+            | Ok r -> shoppingListToItems r.ShoppingList |> ReaderT.map (ShoppingListChanged >> Some)
+            | Error _ -> ReaderT(fun _ -> Async.id None) 
+        return command
     }
     
     let setFoodstuffAmount id value = ReaderT(fun env ->
@@ -99,17 +102,23 @@ module ShoppingListPage =
     let amountStepAction (item: Item) f = monad {
         let newValue = f item.Amount item.Foodstuff.AmountStep
         let! response = setFoodstuffAmount item.Foodstuff.Id newValue
-        let! items = shoppingListToItems response.ShoppingList
-        return ShoppingListChanged items
+        let! command = 
+            match response with
+            | Ok r -> shoppingListToItems r.ShoppingList |> ReaderT.map (ShoppingListChanged >> Some)
+            | Error _ -> ReaderT(fun _ -> Async.id None) 
+        return command
     }
     
     let removeFoodstuffs ids = ReaderT(fun env ->
         env.Api.RemoveFoodstuffs { Ids = ids; })
     
     let removeAllItems items = monad {
-        let! response = Seq.map (fun i -> i.Foodstuff.Id) items |> Seq.toList |> removeFoodstuffs 
-        let! items = shoppingListToItems response.ShoppingList
-        return ShoppingListChanged items
+        let! response = Seq.map (fun i -> i.Foodstuff.Id) items |> Seq.toList |> removeFoodstuffs
+        let! command = 
+            match response with
+            | Ok r -> shoppingListToItems r.ShoppingList |> ReaderT.map (ShoppingListChanged >> Some)
+            | Error _ -> ReaderT(fun _ -> Async.id None) 
+        return command
     }
 
     let update model msg env =
@@ -119,9 +128,9 @@ module ShoppingListPage =
         | PageLoaded loadedModel ->
             loadedModel, Cmd.none
         | ItemAmountIncreaseRequested item ->
-            model, amountStepAction item (+) |> Cmd.ofReader env
+            model, amountStepAction item (+) |> Cmd.ofReaderOption env
         | ItemAmountDecreaseRequested item ->
-            model, amountStepAction item (-) |> Cmd.ofReader env
+            model, amountStepAction item (-) |> Cmd.ofReaderOption env
         | ItemRemoved id ->
             model, Cmd.none
         | GoToAddFoodstuffPage ->
@@ -134,11 +143,11 @@ module ShoppingListPage =
             | SearchFoodstuffPage.UpdateResult.ModelUpdated (newModel, cmd) ->
                 { model with AddFoodstuffPage = newModel }, Cmd.map AddFoodstuffPage cmd
             | SearchFoodstuffPage.UpdateResult.FoodstuffSelected f ->
-                model, tryAddFoodstuff f |> Cmd.ofReader env
+                model, tryAddFoodstuff f |> Cmd.ofReaderOption env
         | ShoppingListChanged items ->
             { model with Items = items }, Cmd.none
         | RemoveAllItems ->
-            model, removeAllItems model.Items |> Cmd.ofReader env
+            model, removeAllItems model.Items |> Cmd.ofReaderOption env
         
     // View
 

@@ -94,8 +94,11 @@ module ShoppingListRecipePage =
     
     let addRecipeToShoppingList (recipe: Recipe) = monad {
         let! response = addRecipesToShoppingList [ recipe.Id ]
-        let! items = shoppingListToItems response.ShoppingList
-        return ItemsChanged items
+        let! command = 
+            match response with
+            | Ok r -> shoppingListToItems r.ShoppingList |> ReaderT.map (ItemsChanged >> Some)
+            | Error _ -> ReaderT(fun _ -> Async.id None) 
+        return command
     }
     
     let removeRecipesFromShoppingList ids = ReaderT(fun env ->
@@ -103,8 +106,11 @@ module ShoppingListRecipePage =
     
     let removeRecipeFromShoppingList (recipe: Recipe) = monad {
         let! response = removeRecipesFromShoppingList [ recipe.Id ]
-        let! items = shoppingListToItems response.ShoppingList
-        return ItemsChanged items
+        let! command = 
+            match response with
+            | Ok r -> shoppingListToItems r.ShoppingList |> ReaderT.map (ItemsChanged >> Some)
+            | Error _ -> ReaderT(fun _ -> Async.id None) 
+        return command
     }
     
     let update model msg env =
@@ -114,9 +120,9 @@ module ShoppingListRecipePage =
         | ItemsChanged items ->
             { model with Model.Items = Seq.toList items; IsLoading = false }, Cmd.none
         | RecipeAdded recipe ->
-            model, addRecipeToShoppingList recipe |> Cmd.ofReader env    
+            model, addRecipeToShoppingList recipe |> Cmd.ofReaderOption env    
         | RecipeRemoved recipe ->
-            model, removeRecipeFromShoppingList recipe |> Cmd.ofReader env
+            model, removeRecipeFromShoppingList recipe |> Cmd.ofReaderOption env
         | GoToSearch ->
             { model with SearchPageState = Visible SearchRecipePage.initModel }, Cmd.none
         | HideSearch ->
