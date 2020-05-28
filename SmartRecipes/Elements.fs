@@ -165,6 +165,11 @@ module Elements =
                 recipe.Ingredients
                 |> List.filter (fun i -> Set.contains i.FoodstuffId foodstuffInShoppingList)
 
+            let recipeName = 
+                if recipe.Name.Length > 30
+                    then recipe.Name.Substring(0, 30) + "..."
+                    else recipe.Name
+
             View.Frame(
                 margin = Thickness(16.0, 8.0),
                 content = View.StackLayout(
@@ -175,7 +180,7 @@ module Elements =
                             padding = Thickness(8.0, 0.0),
                             children = [
                                 yield Elements.Label(
-                                    text = recipe.Name,
+                                    text = recipeName,
                                     horizontalOptions = LayoutOptions.Start,
                                     verticalOptions = LayoutOptions.Center
                                 )

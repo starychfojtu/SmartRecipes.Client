@@ -3,6 +3,8 @@ namespace SmartRecipes
 open Domain
 open Elements
 open Xamarin.Forms
+open System.IO
+open System.Net
 
 module RecipeDetailPage =
     open Fabulous.DynamicViews
@@ -28,6 +30,9 @@ module RecipeDetailPage =
     
     let view dispatch model showAdd =
         let recipe = model.Recipe
+        let webClient = new WebClient()
+        let image = webClient.DownloadData(recipe.ImageUrl)
+        let imageStream = new MemoryStream(image)
         View.ContentPage(
             content = View.ScrollView(
                 content = View.StackLayout(
@@ -52,10 +57,10 @@ module RecipeDetailPage =
                             ]
                         )
                         
-                        //yield View.Image(
-                        //    source = ImageSource.FromUri(recipe.ImageUrl),
-                        //    aspect = Aspect.AspectFill
-                        //)
+                        yield View.Image(
+                            source = ImageSource.FromStream(fun () -> imageStream :> Stream),
+                            aspect = Aspect.AspectFill
+                        )
                         
                         yield View.StackLayout(
                             padding = Thickness(horizontalSize = 16.0, verticalSize = 0.0),
