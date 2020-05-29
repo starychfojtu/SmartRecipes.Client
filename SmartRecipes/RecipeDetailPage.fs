@@ -11,14 +11,19 @@ module RecipeDetailPage =
     
     type Model = {
         Recipe: Recipe
+        Image: byte[]
     }
     
     type Message =
         | Add
         
-    let initModel recipe = {
-        Recipe = recipe
-    }
+    let initModel recipe = 
+        let webClient = new WebClient()
+        let image = webClient.DownloadData(recipe.ImageUrl)
+        {
+            Recipe = recipe
+            Image = image
+        }
     
     type UpdateResult = 
         | RecipeAdded
@@ -30,9 +35,7 @@ module RecipeDetailPage =
     
     let view dispatch model showAdd =
         let recipe = model.Recipe
-        let webClient = new WebClient()
-        let image = webClient.DownloadData(recipe.ImageUrl)
-        let imageStream = new MemoryStream(image)
+        let imageStream = new MemoryStream(model.Image)
         View.ContentPage(
             content = View.ScrollView(
                 content = View.StackLayout(
