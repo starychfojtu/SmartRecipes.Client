@@ -104,7 +104,7 @@ module App =
                 | SignUpPage.UpdateResult.ModelUpdated (newModel, cmd) -> 
                     Unauthorized { m with SignUpPage = newModel }, Cmd.map (SignUpPageMessage) cmd
                 | SignUpPage.UpdateResult.SignedUp account ->
-                    let loginPageModel = { m.LoginPage with Email = account.Email.Address }
+                    let loginPageModel = { m.LoginPage with Email = account.Email.Address; Password = "" }
                     Unauthorized { m with CurrentPage = LoginPage; LoginPage = loginPageModel }, Cmd.none
                 | SignUpPage.UpdateResult.SignIn -> 
                     Unauthorized { m with CurrentPage = LoginPage }, Cmd.none

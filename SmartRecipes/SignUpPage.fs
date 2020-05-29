@@ -97,21 +97,25 @@ module SignUpPage =
                 children = [
                     yield fix (fun () -> Elements.LargeLabel(text = "Smart Recipes"))
                     yield fix (fun () -> Elements.LargeLabel(text = "Join organized cooks !"))
-                    yield! dependsOn model.Error (fun model -> errorEntry)
-                    yield Elements.Entry(
-                        placeholder = "First name",
-                        value = "",
-                        callback = (fun _ -> ())
-                    )
-                    yield Elements.Entry(
-                        placeholder = "Last name",
-                        value = "",
-                        callback = (fun _ -> ())
-                    )
-                    yield! dependsOn (model.Email, model.Error) (fun model (email, error) -> emailEntry dispatch email error)
-                    yield! dependsOn (model.Password, model.Error) (fun model (password, error) -> passwordEntry dispatch password error)
-                    yield fix (fun () -> Elements.Button(text = "Sign up", command = (fun () -> dispatch SignUpRequested)))
-                    yield fix (fun () -> Elements.Button(text = "Already have an account? Sign in", command = (fun () -> dispatch GoToSignIn)))
+                    if (model.IsLoading)
+                    then
+                        yield View.ActivityIndicator(isRunning = true)
+                    else
+                        yield! dependsOn model.Error (fun model -> errorEntry)
+                        yield Elements.Entry(
+                            placeholder = "First name",
+                            value = "",
+                            callback = (fun _ -> ())
+                        )
+                        yield Elements.Entry(
+                            placeholder = "Last name",
+                            value = "",
+                            callback = (fun _ -> ())
+                        )
+                        yield! dependsOn (model.Email, model.Error) (fun model (email, error) -> emailEntry dispatch email error)
+                        yield! dependsOn (model.Password, model.Error) (fun model (password, error) -> passwordEntry dispatch password error)
+                        yield fix (fun () -> Elements.Button(text = "Sign up", command = (fun () -> dispatch SignUpRequested)))
+                        yield fix (fun () -> Elements.Button(text = "Already have an account? Sign in", command = (fun () -> dispatch GoToSignIn)))
                 ]
             )
         )
