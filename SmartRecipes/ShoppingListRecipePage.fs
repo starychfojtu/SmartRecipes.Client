@@ -162,16 +162,16 @@ module ShoppingListRecipePage =
         | Visible searchModel ->
             Some <| SearchRecipePage.view (SearchMessage >> dispatch) searchModel ignoredRecipes foodstuffsInShoppingList
             
-    let recipeDetailPage dispatch model =
+    let recipeDetailPage dispatch model foodstuffsInShoppingList =
         match model.RecipeDetailPageState with
         | Hidden ->
             None
         | Visible recipeDetailModel ->
             let showAdd = not <| Seq.exists (fun i -> i.Recipe = recipeDetailModel.Recipe) model.Items
-            Some <| RecipeDetailPage.view (RecipeDetailMessage >> dispatch) recipeDetailModel showAdd
+            Some <| RecipeDetailPage.view (RecipeDetailMessage >> dispatch) recipeDetailModel showAdd foodstuffsInShoppingList
     
     let pages dispatch model foodstuffsInShoppingList =
-        List.choose id [ searchPage dispatch model foodstuffsInShoppingList; recipeDetailPage dispatch model ]
+        List.choose id [ searchPage dispatch model foodstuffsInShoppingList; recipeDetailPage dispatch model foodstuffsInShoppingList ]
             
     let searchRecipeToolbarItem dispatch =
         View.ToolbarItem(

@@ -33,7 +33,7 @@ module RecipeDetailPage =
         | Add ->
             RecipeAdded
     
-    let view dispatch model showAdd =
+    let view dispatch model showAdd foodstuffsInShoppingList =
         let recipe = model.Recipe
         let imageStream = new MemoryStream(model.Image)
         View.ContentPage(
@@ -105,7 +105,8 @@ module RecipeDetailPage =
                                     yield Elements.Label(
                                         text = ingredient.DisplayLine,
                                         horizontalOptions = LayoutOptions.Start,
-                                        horizontalTextAlignment = TextAlignment.Start
+                                        horizontalTextAlignment = TextAlignment.Start,
+                                        fontAttributes = (if Set.contains ingredient.FoodstuffId foodstuffsInShoppingList then FontAttributes.Bold else FontAttributes.None)
                                     )
 
                                 yield Elements.LargeLabel(

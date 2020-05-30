@@ -65,11 +65,11 @@ module RecipeRecommendationPage =
                 
     // View
     
-    let recipeDetailPage dispatch recipesThatCannotBeAdded = function
+    let recipeDetailPage dispatch recipesThatCannotBeAdded foodstuffsInShoppingList = function
         | Hidden -> []
         | Visible (recipeDetailModel: RecipeDetailPage.Model) ->
             let showAdd = not <| Seq.exists (fun r -> r = recipeDetailModel.Recipe) recipesThatCannotBeAdded
-            [ RecipeDetailPage.view (RecipeDetailMessage >> dispatch) recipeDetailModel showAdd ]
+            [ RecipeDetailPage.view (RecipeDetailMessage >> dispatch) recipeDetailModel showAdd foodstuffsInShoppingList ]
 
     let mainContent dispatch isLoading recipes foodstuffInShoppingList =
         Elements.RefreshListPageContent(
@@ -93,6 +93,6 @@ module RecipeRecommendationPage =
             popped = (fun _ -> dispatch HideRecipeDetail),
             pages = [
                 yield dependsOn (model.Recommendations, model.IsLoading) (fun model (rs, isLoading) -> mainPage dispatch isLoading (Seq.toArray rs) foodstuffsInShoppingList)
-                yield! recipeDetailPage dispatch recipeIdsThatCannotBeAdded model.RecipeDetailPageState
+                yield! recipeDetailPage dispatch recipeIdsThatCannotBeAdded foodstuffsInShoppingList model.RecipeDetailPageState
             ]
         )

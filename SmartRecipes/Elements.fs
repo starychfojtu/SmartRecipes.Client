@@ -23,7 +23,7 @@ module Elements =
         
     type Elements() =
            
-        static member Label(text, ?isVisible, ?horizontalOptions, ?verticalOptions, ?horizontalTextAlignment) =
+        static member Label(text, ?isVisible, ?horizontalOptions, ?verticalOptions, ?horizontalTextAlignment, ?fontAttributes) =
             View.Label(
                 text = text,
                 horizontalTextAlignment = defaultArg horizontalTextAlignment TextAlignment.Center,
@@ -32,7 +32,8 @@ module Elements =
                 ?verticalOptions = verticalOptions,
                 fontSize = fontSize,
                 ?isVisible = isVisible,
-                textColor = Colors.textDark
+                textColor = Colors.textDark,
+                fontAttributes = defaultArg fontAttributes FontAttributes.None
             )
             
         static member LargeLabel(text, ?isVisible, ?horizontalOptions, ?verticalOptions, ?horizontalTextAlignment) =
