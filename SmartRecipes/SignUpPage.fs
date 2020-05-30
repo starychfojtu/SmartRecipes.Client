@@ -40,7 +40,7 @@ module SignUpPage =
         |> Cmd.ofAsyncMsg
          
     let processError error model =
-        ({ model with Error = Some error }, Cmd.none)
+        ({ model with Error = Some error; IsLoading = false }, Cmd.none)
         
     type UpdateResult =
         | SignedUp of Account
