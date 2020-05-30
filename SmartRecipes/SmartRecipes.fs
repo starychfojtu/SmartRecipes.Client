@@ -151,16 +151,17 @@ module App =
     let navigationPages = [| (ShoppingListPage, "ShoppingList") |]
              
     let appContainer dispatch detail =
-        View.MasterDetailPage(
-            detail = detail,
-            master = View.ContentPage(
-                title = "Smart Recipes",
-                content = View.ListView(
-                    items = Seq.map (fun (_, text) -> View.Label text) navigationPages,
-                    itemTapped = (fun index -> Array.get navigationPages index |> first |> ChangePage |> dispatch)
-                )
-            )
-        )
+        detail
+        //View.MasterDetailPage(
+        //    detail = detail,
+        //    master = View.ContentPage(
+        //        title = "Smart Recipes",
+        //        content = View.ListView(
+        //            items = Seq.map (fun (_, text) -> View.Label text) navigationPages,
+        //            itemTapped = (fun index -> Array.get navigationPages index |> first |> ChangePage |> dispatch)
+        //        )
+        //    )
+        //)
         
     let shoppingListTabPage chidren =     
          View.TabbedPage(
