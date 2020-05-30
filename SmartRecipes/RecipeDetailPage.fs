@@ -107,6 +107,18 @@ module RecipeDetailPage =
                                         horizontalOptions = LayoutOptions.Start,
                                         horizontalTextAlignment = TextAlignment.Start
                                     )
+
+                                yield Elements.LargeLabel(
+                                    text = "Description",
+                                    horizontalOptions = LayoutOptions.Start,
+                                    horizontalTextAlignment = TextAlignment.Start
+                                )
+
+                                yield Elements.Label(
+                                    text = recipe.Description,
+                                    horizontalOptions = LayoutOptions.Start,
+                                    horizontalTextAlignment = TextAlignment.Start
+                                )
                             ]
                         )
                     ]
