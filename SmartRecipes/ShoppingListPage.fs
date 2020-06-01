@@ -1,4 +1,4 @@
-namespace SmartRecipes
+﻿namespace SmartRecipes
 
 [<RequireQualifiedAccess>]
 module ShoppingListPage =
@@ -121,6 +121,15 @@ module ShoppingListPage =
         return command
     }
 
+    let tryRemoveFoodstuff (foodstuff: Foodstuff) = monad {
+        let! response = removeFoodstuffs [foodstuff.Id]
+        let! command = 
+            match response with
+            | Ok r -> shoppingListToItems r.ShoppingList |> ReaderT.map (ShoppingListChanged >> Some)
+            | Error _ -> ReaderT(fun _ -> Async.id None) 
+        return command
+    }
+
     let update model msg env =
         match msg with
         | Refresh ->
@@ -131,8 +140,8 @@ module ShoppingListPage =
             model, amountStepAction item (+) |> Cmd.ofReaderOption env
         | ItemAmountDecreaseRequested item ->
             model, amountStepAction item (-) |> Cmd.ofReaderOption env
-        | ItemRemoved id ->
-            model, Cmd.none
+        | ItemRemoved item ->
+            model, tryRemoveFoodstuff item.Foodstuff |> Cmd.ofReaderOption env
         | GoToAddFoodstuffPage ->
             { model with ShowAddFoodstuffPage = true }, Cmd.none
         | GoToRootPage ->
@@ -151,14 +160,20 @@ module ShoppingListPage =
         
     // View
 
-    let itemView increase decrease item =
+    let itemView increase decrease remove item =
         Elements.FoodstuffCard(
             actions = [
-                if item.Amount >= item.Foodstuff.AmountStep then
-                    yield Elements.RoundedButton(
-                        text = "-",
-                        command = (fun () -> decrease item)
-                    )
+                if item.Amount >= item.Foodstuff.AmountStep 
+                    then
+                        yield Elements.RoundedButton(
+                            text = "-",
+                            command = (fun () -> decrease item)
+                        )
+                    else
+                        yield Elements.RoundedButton(
+                            text = "✕",
+                            command = (fun () -> remove item)
+                        )
                 yield Elements.RoundedButton(
                     text = "+",
                     command = (fun () -> increase item)
@@ -173,7 +188,7 @@ module ShoppingListPage =
             content = Elements.RefreshListPageContent(
                 isLoading = model.IsLoading,
                 items = List.toArray model.Items,
-                itemView = (itemView (ItemAmountIncreaseRequested >> dispatch) (ItemAmountDecreaseRequested >> dispatch)),
+                itemView = (itemView (ItemAmountIncreaseRequested >> dispatch) (ItemAmountDecreaseRequested >> dispatch) (ItemRemoved >> dispatch)),
                 onTapped = (fun _ -> ()),
                 refresh = (fun () -> dispatch Refresh),
                 emptyText = "No items :( Let's add some !",
