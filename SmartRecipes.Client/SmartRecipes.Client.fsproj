@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Library.fs" />
+    <Compile Include="Domain.fs" />
+    <Compile Include="Api.fs" />
+    <Compile Include="AppEnvironment.fs" />
+    <Compile Include="ProductionApi.fs" />
+    <Compile Include="MockedApi.fs" />
+    <Compile Include="Elements.fs" />
+    <Compile Include="SignUpPage.fs" />
+    <Compile Include="LoginPage.fs" />
+    <Compile Include="SearchFoodstuffPage.fs" />
+    <Compile Include="RecipeDetailPage.fs" />
+    <Compile Include="SearchRecipePage.fs" />
+    <Compile Include="ShoppingListPage.fs" />
+    <Compile Include="ShoppingListRecipePage.fs" />
+    <Compile Include="RecipeRecommendationPage.fs" />
+    <Compile Include="SmartRecipes.Client.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FSharp.Data" Version="3.3.3" />
+    <PackageReference Include="FSharp.Json" Version="0.4.0" />
+    <PackageReference Include="FSharpPlus" Version="1.1.3" />
+    <PackageReference Include="Xamarin.Forms" Version="4.8.0.1269" />
+    <PackageReference Include="Xamarin.Essentials" Version="1.5.3.2" />
+    <PackageReference Include="Fabulous.XamarinForms" Version="0.57.0" />
+    <PackageReference Include="Fabulous.XamarinForms.LiveUpdate" Version="0.57.0" />
+    <PackageReference Include="FSharp.Core" Version="4.7.1" />
+    <PackageReference Update="FSharp.Core" Version="4.7.2" /> <!-- workaround for VSMac bug https://github.com/mono/monodevelop/pull/5137 --> 
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+</Project>
